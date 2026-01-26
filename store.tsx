@@ -93,6 +93,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
   const [currentUser, setCurrentUser] = useState<{ role: UserRole; id?: string; name?: string; salespersonId?: string } | null>(null);
   const [session, setSession] = useState<any>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // App Data Collections
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [cities, setCities] = useState<CityFolder[]>([]);
+  const [modifierGroups, setModifierGroups] = useState<ModifierGroup[]>([]);
+  const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
+  const [generalCosts, setGeneralCosts] = useState<GeneralCost[]>([]);
+  const [workspaceUsers, setWorkspaceUsers] = useState<WorkspaceUser[]>([]);
+  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
