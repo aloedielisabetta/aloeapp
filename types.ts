@@ -31,7 +31,7 @@ export interface WorkspaceUser {
   workspaceId: string;
   salespersonId: string;
   username: string;
-  password?: string;
+  userId?: string; // Linked Supabase Auth ID
 }
 
 export interface ModifierGroup {
@@ -45,6 +45,8 @@ export interface Product {
   id: string;
   workspaceId: string;
   name: string;
+  sku?: string;
+  variantMap?: Record<string, Record<string, string>>; // e.g. { "ALOE-S": { "Size": "Small" } }
   price: number;
   costPerItem: number;
   labourCost: number;
@@ -122,7 +124,8 @@ export interface CityFolder {
 export interface Workspace {
   id: string;
   name: string;
-  adminPassword?: string;
+  adminPassword?: string; // Deprecated
+  ownerId?: string; // Linked Supabase Auth ID
 }
 
 export interface AppData {

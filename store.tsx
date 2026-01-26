@@ -1,9 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { 
-  AppData, Patient, Product, Order, Recipe, 
-  CityFolder, ModifierGroup, Salesperson, 
-  GeneralCost, Workspace, WorkspaceUser, UserRole, RawMaterial 
+import {
+  AppData, Patient, Product, Order, Recipe,
+  CityFolder, ModifierGroup, Salesperson,
+  GeneralCost, Workspace, WorkspaceUser, UserRole, RawMaterial
 } from './types';
 import { supabase } from './supabase';
 
@@ -12,15 +12,15 @@ interface AppContextType extends AppData {
   currentUser: { role: UserRole; id?: string; name?: string; salespersonId?: string } | null;
   setCurrentWorkspace: (w: Workspace | null) => void;
   setCurrentUser: (u: { role: UserRole; id?: string; name?: string; salespersonId?: string } | null) => void;
-  
+
   addPatient: (p: Omit<Patient, 'id' | 'workspaceId'>) => Promise<void>;
   updatePatient: (p: Patient) => Promise<void>;
   deletePatient: (id: string) => Promise<void>;
-  
+
   addOrder: (o: Omit<Order, 'id' | 'workspaceId'>) => Promise<void>;
   updateOrder: (o: Order) => Promise<void>;
   deleteOrder: (id: string) => Promise<void>;
-  
+
   addProduct: (p: Omit<Product, 'id' | 'workspaceId'>) => Promise<void>;
   updateProduct: (p: Product) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
@@ -38,7 +38,7 @@ interface AppContextType extends AppData {
   addGeneralCost: (c: Omit<GeneralCost, 'id' | 'workspaceId' | 'date'>) => Promise<void>;
   deleteGeneralCost: (id: string) => Promise<void>;
 
-  addWorkspaceUser: (u: Omit<WorkspaceUser, 'id' | 'workspaceId'>) => Promise<void>;
+  addWorkspaceUser: (u: Omit<WorkspaceUser, 'id' | 'workspaceId'> & { password?: string }) => Promise<void>;
   deleteWorkspaceUser: (id: string) => Promise<void>;
 
   addModifierGroup: (g: Omit<ModifierGroup, 'id' | 'workspaceId'>) => Promise<void>;
@@ -48,15 +48,16 @@ interface AppContextType extends AppData {
   addRawMaterial: (rm: Omit<RawMaterial, 'id' | 'workspaceId'>) => Promise<void>;
   updateRawMaterial: (rm: RawMaterial) => Promise<void>;
   deleteRawMaterial: (id: string) => Promise<void>;
-  
+
   createWorkspace: (name: string, password?: string) => Promise<Workspace>;
   deleteCurrentWorkspace: () => Promise<void>;
-  
+
   workspaces: Workspace[];
   setWorkspaces: React.Dispatch<React.SetStateAction<Workspace[]>>;
-  
+
   isSyncing: boolean;
   syncData: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -89,45 +90,61 @@ const toCamel = (obj: any): any => {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(() => {
-    const saved = localStorage.getItem('aloe_cur_workspace');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [currentUser, setCurrentUser] = useState<any | null>(() => {
-    const saved = localStorage.getItem('aloe_cur_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [cities, setCities] = useState<CityFolder[]>([]);
-  const [modifierGroups, setModifierGroups] = useState<ModifierGroup[]>([]);
-  const [salespersons, setSalespersons] = useState<Salesperson[]>([]);
-  const [generalCosts, setGeneralCosts] = useState<GeneralCost[]>([]);
-  const [workspaceUsers, setWorkspaceUsers] = useState<WorkspaceUser[]>([]);
-  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ role: UserRole; id?: string; name?: string; salespersonId?: string } | null>(null);
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
-    const loadWorkspaces = async () => {
-      const { data, error } = await supabase.from('workspaces').select('*');
-      if (error) console.error(error);
-      else if (data) setWorkspaces(data.map(toCamel));
-    };
-    loadWorkspaces();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session) {
+        setCurrentUser(null);
+        setCurrentWorkspace(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
+  // Load User Data based on Session
   useEffect(() => {
-    if (currentWorkspace) localStorage.setItem('aloe_cur_workspace', JSON.stringify(currentWorkspace));
-    else localStorage.removeItem('aloe_cur_workspace');
-  }, [currentWorkspace]);
+    const loadUserData = async () => {
+      if (!session?.user) return;
 
-  useEffect(() => {
-    if (currentUser) localStorage.setItem('aloe_cur_user', JSON.stringify(currentUser));
-    else localStorage.removeItem('aloe_cur_user');
-  }, [currentUser]);
+      // Check if Admin (Owner of a workspace)
+      const { data: ownedWorkspaces } = await supabase.from('workspaces').select('*').eq('owner_id', session.user.id);
+
+      if (ownedWorkspaces && ownedWorkspaces.length > 0) {
+        setWorkspaces(ownedWorkspaces.map(toCamel));
+        setCurrentWorkspace(toCamel(ownedWorkspaces[0]));
+        setCurrentUser({ role: 'admin', id: session.user.id, name: session.user.email });
+        return;
+      }
+
+      // Check if Collaborator
+      const { data: memberUser } = await supabase.from('workspace_users').select('*, workspaces(*)').eq('user_id', session.user.id).single();
+
+      if (memberUser) {
+        const ws = toCamel(memberUser.workspaces);
+        setWorkspaces([ws]);
+        setCurrentWorkspace(ws);
+        setCurrentUser({
+          role: 'user',
+          id: memberUser.id,
+          name: memberUser.username,
+          salespersonId: memberUser.salesperson_id
+        });
+      }
+    };
+
+    loadUserData();
+  }, [session]);
 
   const syncData = useCallback(async () => {
     if (!currentWorkspace?.id) return;
@@ -139,11 +156,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return (data || []).map(toCamel);
       };
       const [p, pr, o, r, c, m, s, g, u, rm] = await Promise.all([
-        fetchT('patients'), fetchT('products'), fetchT('orders'), fetchT('recipes'), 
-        fetchT('city_folders'), fetchT('modifier_groups'), fetchT('salespersons'), 
+        fetchT('patients'), fetchT('products'), fetchT('orders'), fetchT('recipes'),
+        fetchT('city_folders'), fetchT('modifier_groups'), fetchT('salespersons'),
         fetchT('general_costs'), fetchT('workspace_users'), fetchT('raw_materials')
       ]);
-      setPatients(p); setProducts(pr); setOrders(o); setRecipes(r); setCities(c); 
+      setPatients(p); setProducts(pr); setOrders(o); setRecipes(r); setCities(c);
       setModifierGroups(m); setSalespersons(s); setGeneralCosts(g); setWorkspaceUsers(u); setRawMaterials(rm);
     } catch (e) {
       console.error(e);
@@ -277,10 +294,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setGeneralCosts(prev => prev.filter(c => c.id !== id));
   };
 
-  const addWorkspaceUser = async (u: Omit<WorkspaceUser, 'id' | 'workspaceId'>) => {
+  const addWorkspaceUser = async (u: Omit<WorkspaceUser, 'id' | 'workspaceId'> & { password?: string }) => {
     if (!currentWorkspace) return;
+
+    // Note: The actual Auth creation happens in the UI component (Users.tsx) using a temporary client
+    // Here we just save the record to the database linking the Auth ID (userId)
+
     const newU = { ...u, id: crypto.randomUUID(), workspaceId: currentWorkspace.id };
-    const { error } = await supabase.from('workspace_users').insert(toSnake(newU));
+    // Remove password from the object before saving to table (security best practice, auth handles it)
+    const { password, ...userRecord } = newU as any;
+
+    const { error } = await supabase.from('workspace_users').insert(toSnake(userRecord));
     if (error) throw error;
     setWorkspaceUsers(prev => [...prev, newU as WorkspaceUser]);
   };
@@ -333,10 +357,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const createWorkspace = async (name: string, password?: string) => {
-    const newWs = { id: crypto.randomUUID(), name, adminPassword: password };
+    if (!session?.user?.id) throw new Error('Not authenticated');
+    // We still keep adminPassword for now if used for other things, but rely on ownerId for auth
+    const newWs = { id: crypto.randomUUID(), name, adminPassword: password, ownerId: session.user.id };
     const { error } = await supabase.from('workspaces').insert(toSnake(newWs));
     if (error) throw error;
     setWorkspaces(prev => [...prev, newWs]);
+    // Do NOT auto-login/select here anymore per user request. 
+    // The component handles the next steps (sign out / redirect).
     return newWs;
   };
 
@@ -345,16 +373,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await supabase.from('workspaces').delete().eq('id', currentWorkspace.id);
     setCurrentWorkspace(null);
     setCurrentUser(null);
+    // Optional: stay logged in but no workspace, or reload
     window.location.reload();
   };
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setCurrentUser(null);
+    setCurrentWorkspace(null);
+  };
+
   return (
-    <AppContext.Provider value={{ 
+    <AppContext.Provider value={{
       patients, products, orders, recipes, cities, modifierGroups, salespersons, generalCosts, workspaceUsers, rawMaterials,
       addPatient, updatePatient, deletePatient, addOrder, updateOrder, deleteOrder, addProduct, updateProduct, deleteProduct,
       addRecipe, updateRecipe, deleteRecipe, addCity, deleteCity, addSalesperson, deleteSalesperson, addGeneralCost, deleteGeneralCost,
       addWorkspaceUser, deleteWorkspaceUser, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
-      createWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData
+      createWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut
     }}>
       {children}
     </AppContext.Provider>

@@ -2,30 +2,30 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
 import { Product, ModifierGroup, RawMaterial } from '../types';
-import { 
-  Plus, Tag, DollarSign, Trash2, Layers, CheckSquare, 
-  Settings2, X, Edit2, UserCheck, Beaker, RefreshCw, 
-  Package, Coins, ChevronRight, Loader2 
+import {
+  Plus, Tag, DollarSign, Trash2, Layers, CheckSquare,
+  Settings2, X, Edit2, UserCheck, Beaker, RefreshCw,
+  Package, Coins, ChevronRight, Loader2
 } from 'lucide-react';
 
 const Products: React.FC = () => {
-  const { 
+  const {
     products, addProduct, updateProduct, deleteProduct,
     modifierGroups, addModifierGroup, updateModifierGroup, deleteModifierGroup,
     rawMaterials, addRawMaterial, updateRawMaterial, deleteRawMaterial,
-    recipes, isSyncing 
+    recipes, isSyncing
   } = useApp();
 
   const [showAdd, setShowAdd] = useState(false);
   const [showManageGroups, setShowManageGroups] = useState(false);
   const [showManageRawMaterials, setShowManageRawMaterials] = useState(false);
-  
+
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingGroup, setEditingGroup] = useState<ModifierGroup | null>(null);
   const [editingRM, setEditingRM] = useState<RawMaterial | null>(null);
-  
+
   const [formData, setFormData] = useState<Partial<Product>>({
-    name: '', price: 0, costPerItem: 0, labourCost: 0, externalCommission: 0, modifierGroupIds: []
+    name: '', sku: '', price: 0, costPerItem: 0, labourCost: 0, externalCommission: 0, modifierGroupIds: []
   });
 
   const [groupFormData, setGroupFormData] = useState({ name: '', options: [] as string[] });
@@ -58,7 +58,7 @@ const Products: React.FC = () => {
   const closeProductModal = () => {
     setShowAdd(false);
     setEditingProduct(null);
-    setFormData({ name: '', price: 0, costPerItem: 0, labourCost: 0, externalCommission: 0, modifierGroupIds: [] });
+    setFormData({ name: '', sku: '', price: 0, costPerItem: 0, labourCost: 0, externalCommission: 0, modifierGroupIds: [] });
   };
 
   const removeProduct = async (id: string) => {
@@ -76,7 +76,7 @@ const Products: React.FC = () => {
     const product = products.find(p => p.id === productId);
     const recipe = recipes.find(r => r.productId === productId);
     if (!recipe || !product) return;
-    
+
     const calculatedCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.quantity * ing.costPerUnit), 0);
     await updateProduct({ ...product, costPerItem: calculatedCost });
   };
@@ -89,7 +89,7 @@ const Products: React.FC = () => {
   const handleAddGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!groupFormData.name || groupFormData.options.length === 0) return;
-    
+
     try {
       if (editingGroup) {
         await updateModifierGroup({ ...editingGroup, ...groupFormData });
@@ -136,8 +136,8 @@ const Products: React.FC = () => {
 
     try {
       if (editingRM) {
-        await updateRawMaterial({ 
-          ...editingRM, 
+        await updateRawMaterial({
+          ...editingRM,
           name: rmFormData.name!,
           unit: rmFormData.unit!,
           totalQuantity: rmFormData.totalQuantity!,
@@ -159,6 +159,103 @@ const Products: React.FC = () => {
     }
   };
 
+  const generateSku = (name: string) => {
+    return name
+      .toUpperCase()
+      .replace(/[^A-Z0-9\s]/g, '') // Remove special chars
+      .replace(/\s+/g, '-') // Space to dash
+      .slice(0, 15);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    // Auto-generate SKU only if we are creating new or SKU was manually cleared/empty
+    // And don't overwrite if user might have typed a custom one? 
+    // Let's just do it if SKU is empty OR matches the previous auto-generated version.
+    // Simpler: Just do it if SKU is empty or user is typing.
+
+    // We will auto-fill if the current SKU box is empty or matches a simple slug of the OLD name.
+    // For simplicity in this interaction: Update SKU if it's not "locked" - but we don't have lock state.
+    // UX Decision: Only auto-fill if SKU is empty.
+    if (!formData.name && !formData.sku) {
+      // First char typing
+      setFormData({ ...formData, name: newName, sku: generateSku(newName) });
+    } else if (formData.sku === generateSku(formData.name || '')) {
+      // Updating name and SKU was auto-generated before (matches pattern), so update SKU too
+      setFormData({ ...formData, name: newName, sku: generateSku(newName) });
+    } else {
+      // Just update name
+      setFormData({ ...formData, name: newName });
+    }
+  };
+
+  // Helper to generate Cartesian product of arrays
+  const cartesian = (args: any[][]): any[][] => {
+    const r: any[][] = [];
+    const max = args.length - 1;
+    function helper(arr: any[], i: number) {
+      for (let j = 0, l = args[i].length; j < l; j++) {
+        const a = arr.slice(0); // clone arr
+        a.push(args[i][j]);
+        if (i === max) r.push(a);
+        else helper(a, i + 1);
+      }
+    }
+    helper([], 0);
+    return r;
+  };
+
+  const handleExportSkus = () => {
+    if (products.length === 0) {
+      alert("Nessun prodotto da esportare.");
+      return;
+    }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Product Name,SKU,Variant Combination,Generated Variant SKU,Price\n";
+
+    products.forEach(product => {
+      const baseSku = product.sku || generateSku(product.name);
+
+      // Get linked modifier groups
+      const linkedGroups = modifierGroups.filter(g => product.modifierGroupIds.includes(g.id));
+
+      if (linkedGroups.length === 0) {
+        // Simple product
+        csvContent += `"${product.name}","${baseSku}","N/A","${baseSku}","${product.price}"\n`;
+      } else {
+        // Complex product - generate combinations
+        // Prepare arrays of options: [ ["Small", "Large"], ["Mint", "Lemon"] ]
+        const groupOptions = linkedGroups.map(g => g.options);
+
+        // If there are options, calculate combinations
+        if (groupOptions.length > 0 && groupOptions.every(o => o.length > 0)) {
+          const combinations = cartesian(groupOptions);
+
+          combinations.forEach(combo => {
+            // Combo is ["Small", "Mint"]
+            const variantSuffix = combo.map(c => c.toUpperCase().replace(/\s+/g, '').slice(0, 3)).join('-');
+            const variantSku = `${baseSku}-${variantSuffix}`;
+            const variantName = combo.join(' / ');
+
+            csvContent += `"${product.name}","${baseSku}","${variantName}","${variantSku}","${product.price}"\n`;
+          });
+        } else {
+          // Groups exist but explicit options might be empty? Fallback
+          csvContent += `"${product.name}","${baseSku}","Varianti non configurate","${baseSku}","${product.price}"\n`;
+        }
+      }
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `ALOE_SKU_EXPORT_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -167,19 +264,19 @@ const Products: React.FC = () => {
           <p className="text-slate-500 font-medium">Gestisci il listino, i margini e le varianti disponibili.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button 
+          <button
             onClick={() => setShowManageRawMaterials(true)}
             className="bg-rose-50 text-rose-700 px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-rose-100 transition-all font-bold text-sm shadow-sm border border-rose-100"
           >
             <Package size={18} /> Crea/Gestisci Materie Prime
           </button>
-          <button 
+          <button
             onClick={() => setShowManageGroups(true)}
             className="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-slate-200 transition-all font-bold text-sm shadow-sm"
           >
             <Settings2 size={18} /> Crea/Gestisci Varianti
           </button>
-          <button 
+          <button
             onClick={() => setShowAdd(true)}
             className="bg-green-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all font-bold text-sm shadow-xl shadow-green-100"
           >
@@ -192,13 +289,13 @@ const Products: React.FC = () => {
         {products.map(product => {
           const totalCostInternal = product.costPerItem + product.labourCost;
           const totalCostExternal = totalCostInternal + (product.externalCommission || 0);
-          
+
           const profitInternal = product.price - totalCostInternal;
           const profitExternal = product.price - totalCostExternal;
-          
+
           const gpInternal = product.price > 0 ? (profitInternal / product.price) * 100 : 0;
           const gpExternal = product.price > 0 ? (profitExternal / product.price) * 100 : 0;
-          
+
           const linkedGroups = modifierGroups.filter(g => product.modifierGroupIds.includes(g.id));
           const productRecipe = recipes.find(r => r.productId === product.id);
           const recipeCost = productRecipe?.ingredients.reduce((sum, ing) => sum + (ing.quantity * ing.costPerUnit), 0) || 0;
@@ -210,12 +307,12 @@ const Products: React.FC = () => {
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                       <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">{product.name}</h3>
-                       {productRecipe && (
-                         <span className="bg-green-50 text-green-600 text-[9px] font-black px-2 py-0.5 rounded-full border border-green-100 flex items-center gap-1">
-                           <Beaker size={10} /> RICETTA
-                         </span>
-                       )}
+                      <h3 className="font-black text-xl text-slate-800 uppercase tracking-tight">{product.name}</h3>
+                      {productRecipe && (
+                        <span className="bg-green-50 text-green-600 text-[9px] font-black px-2 py-0.5 rounded-full border border-green-100 flex items-center gap-1">
+                          <Beaker size={10} /> RICETTA
+                        </span>
+                      )}
                     </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{linkedGroups.length} gruppi varianti collegati</p>
                   </div>
@@ -232,15 +329,15 @@ const Products: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button 
-                        onClick={() => handleOpenEditProduct(product)} 
+                      <button
+                        onClick={() => handleOpenEditProduct(product)}
                         className="text-slate-400 hover:text-blue-600 p-4 bg-slate-50 rounded-2xl transition-all shadow-sm flex items-center justify-center active:scale-95"
                         title="Modifica"
                       >
                         <Edit2 size={20} />
                       </button>
-                      <button 
-                        onClick={() => removeProduct(product.id)} 
+                      <button
+                        onClick={() => removeProduct(product.id)}
                         className="text-slate-400 hover:text-red-600 p-4 bg-slate-50 rounded-2xl transition-all shadow-sm flex items-center justify-center active:scale-95 group/del"
                         title="Elimina"
                       >
@@ -258,7 +355,7 @@ const Products: React.FC = () => {
                         €{product.costPerItem.toFixed(2)}
                       </p>
                       {isCostMisaligned && (
-                        <button 
+                        <button
                           onClick={() => syncWithRecipe(product.id)}
                           className="text-amber-500 hover:text-green-600 transition-colors"
                           title={`Ricetta indica €${recipeCost.toFixed(2)}. Clicca per sincronizzare.`}
@@ -301,9 +398,9 @@ const Products: React.FC = () => {
         })}
         {products.length === 0 && (
           <div className="col-span-full py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-slate-300">
-             <Package size={48} className="opacity-10 mb-4" />
-             <p className="text-sm font-black uppercase tracking-widest">Nessun prodotto a catalogo</p>
-             <button onClick={() => setShowAdd(true)} className="mt-4 text-[10px] font-black text-green-600 uppercase underline underline-offset-4">Aggiungi il tuo primo prodotto</button>
+            <Package size={48} className="opacity-10 mb-4" />
+            <p className="text-sm font-black uppercase tracking-widest">Nessun prodotto a catalogo</p>
+            <button onClick={() => setShowAdd(true)} className="mt-4 text-[10px] font-black text-green-600 uppercase underline underline-offset-4">Aggiungi il tuo primo prodotto</button>
           </div>
         )}
       </div>
@@ -314,29 +411,43 @@ const Products: React.FC = () => {
             <div className="p-8 max-h-[90vh] overflow-y-auto">
               <h3 className="text-2xl font-black mb-8 text-slate-800 uppercase tracking-tight">{editingProduct ? 'Modifica Prodotto' : 'Nuovo Prodotto'}</h3>
               <form onSubmit={handleAddProduct} className="space-y-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome del Prodotto</label>
-                  <input required className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="col-span-2 space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome del Prodotto</label>
+                    <input required className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Codice SKU</label>
+                    <div className="relative">
+                      <Tag className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <input
+                        className="w-full pl-12 pr-5 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all placeholder:text-slate-300"
+                        placeholder="ALOE-001"
+                        value={formData.sku || ''}
+                        onChange={e => setFormData({ ...formData, sku: e.target.value })}
+                      />
+                    </div>
+                  </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Prezzo Vendita (€)</label>
-                    <input type="number" step="0.01" className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value === '' ? 0 : parseFloat(e.target.value)})} />
+                    <input type="number" step="0.01" className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.price || ''} onChange={e => setFormData({ ...formData, price: e.target.value === '' ? 0 : parseFloat(e.target.value) })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Costo Materiali (€)</label>
-                    <input type="number" step="0.01" className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.costPerItem || ''} onChange={e => setFormData({...formData, costPerItem: e.target.value === '' ? 0 : parseFloat(e.target.value)})} />
+                    <input type="number" step="0.01" className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.costPerItem || ''} onChange={e => setFormData({ ...formData, costPerItem: e.target.value === '' ? 0 : parseFloat(e.target.value) })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manodopera (€)</label>
-                    <input type="number" step="0.01" className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.labourCost || ''} onChange={e => setFormData({...formData, labourCost: e.target.value === '' ? 0 : parseFloat(e.target.value)})} />
+                    <input type="number" step="0.01" className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.labourCost || ''} onChange={e => setFormData({ ...formData, labourCost: e.target.value === '' ? 0 : parseFloat(e.target.value) })} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1 flex items-center gap-2">
-                      <UserCheck size={12}/> Provv. Esterna (€)
+                      <UserCheck size={12} /> Provv. Esterna (€)
                     </label>
-                    <input type="number" step="0.01" className="w-full p-5 bg-orange-50/30 border border-orange-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-orange-500/10 transition-all" value={formData.externalCommission || ''} onChange={e => setFormData({...formData, externalCommission: e.target.value === '' ? 0 : parseFloat(e.target.value)})} />
+                    <input type="number" step="0.01" className="w-full p-5 bg-orange-50/30 border border-orange-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-orange-500/10 transition-all" value={formData.externalCommission || ''} onChange={e => setFormData({ ...formData, externalCommission: e.target.value === '' ? 0 : parseFloat(e.target.value) })} />
                   </div>
                 </div>
 
@@ -348,11 +459,10 @@ const Products: React.FC = () => {
                         key={group.id}
                         type="button"
                         onClick={() => toggleGroupSelection(group.id)}
-                        className={`p-4 text-left rounded-2xl border transition-all flex items-center justify-between group ${
-                          formData.modifierGroupIds?.includes(group.id)
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm'
-                            : 'bg-white border-slate-100 text-slate-500 hover:border-slate-300'
-                        }`}
+                        className={`p-4 text-left rounded-2xl border transition-all flex items-center justify-between group ${formData.modifierGroupIds?.includes(group.id)
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm'
+                          : 'bg-white border-slate-100 text-slate-500 hover:border-slate-300'
+                          }`}
                       >
                         <span className="text-[10px] font-black uppercase tracking-tight">{group.name}</span>
                         {formData.modifierGroupIds?.includes(group.id) && <CheckSquare size={16} className="text-emerald-600" />}
@@ -380,7 +490,7 @@ const Products: React.FC = () => {
               <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Varianti Prodotti</h3>
               <button onClick={() => { setShowManageGroups(false); setEditingGroup(null); }} className="p-3 bg-white hover:bg-slate-50 rounded-2xl text-slate-400 transition-all border border-slate-100">×</button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-8 space-y-8">
               <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-inner">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
@@ -389,29 +499,29 @@ const Products: React.FC = () => {
                 <form onSubmit={handleAddGroup} className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Nome Gruppo</label>
-                    <input 
-                      className="w-full p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" 
+                    <input
+                      className="w-full p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
                       placeholder="e.g. Tipo Dolcificante"
                       value={groupFormData.name}
-                      onChange={e => setGroupFormData({...groupFormData, name: e.target.value})}
+                      onChange={e => setGroupFormData({ ...groupFormData, name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Aggiungi Opzioni</label>
                     <div className="flex gap-2">
-                      <input 
-                        className="flex-1 p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all" 
+                      <input
+                        className="flex-1 p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
                         placeholder="Nome opzione..."
                         value={newOption}
                         onChange={e => setNewOption(e.target.value)}
-                        onKeyDown={e => { if(e.key === 'Enter') { e.preventDefault(); (document.getElementById('addOptBtn') as HTMLButtonElement).click(); } }}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); (document.getElementById('addOptBtn') as HTMLButtonElement).click(); } }}
                       />
-                      <button 
+                      <button
                         id="addOptBtn"
-                        type="button" 
+                        type="button"
                         onClick={() => {
-                          if(newOption && !groupFormData.options.includes(newOption)) {
-                            setGroupFormData({...groupFormData, options: [...groupFormData.options, newOption]});
+                          if (newOption && !groupFormData.options.includes(newOption)) {
+                            setGroupFormData({ ...groupFormData, options: [...groupFormData.options, newOption] });
                             setNewOption('');
                           }
                         }}
@@ -423,13 +533,13 @@ const Products: React.FC = () => {
                     {groupFormData.options.map(opt => (
                       <span key={opt} className="bg-white border border-slate-100 px-4 py-2 rounded-xl text-[10px] font-black text-slate-700 flex items-center gap-3 shadow-sm uppercase tracking-tight">
                         {opt}
-                        <button type="button" onClick={() => setGroupFormData({...groupFormData, options: groupFormData.options.filter(o => o !== opt)})} className="text-red-300 hover:text-red-500 transition-colors">×</button>
+                        <button type="button" onClick={() => setGroupFormData({ ...groupFormData, options: groupFormData.options.filter(o => o !== opt) })} className="text-red-300 hover:text-red-500 transition-colors">×</button>
                       </span>
                     ))}
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button 
-                      type="submit" 
+                    <button
+                      type="submit"
                       className="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-xl shadow-emerald-100"
                       disabled={!groupFormData.name || groupFormData.options.length === 0}
                     >
@@ -474,9 +584,9 @@ const Products: React.FC = () => {
                 <Package className="text-rose-600" size={28} />
                 <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Gestione Materie Prime</h3>
               </div>
-              <button onClick={() => { setShowManageRawMaterials(false); setEditingRM(null); setRMFormData({name: '', unit: 'gr', totalQuantity: 0, totalPrice: 0}); }} className="p-3 bg-white hover:bg-slate-50 rounded-2xl text-slate-400 transition-all border border-slate-100">×</button>
+              <button onClick={() => { setShowManageRawMaterials(false); setEditingRM(null); setRMFormData({ name: '', unit: 'gr', totalQuantity: 0, totalPrice: 0 }); }} className="p-3 bg-white hover:bg-slate-50 rounded-2xl text-slate-400 transition-all border border-slate-100">×</button>
             </div>
-            
+
             <div id="rm-modal-scroll" className="flex-1 overflow-y-auto p-8 space-y-8 hide-scrollbar">
               <div className={`p-6 rounded-[2rem] border transition-all shadow-inner ${editingRM ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
                 <h4 className={`text-[10px] font-black uppercase tracking-widest mb-4 ${editingRM ? 'text-amber-600' : 'text-slate-400'}`}>
@@ -486,36 +596,36 @@ const Products: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Nome Ingrediente</label>
-                      <input 
-                        className="w-full p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-rose-500/10 transition-all" 
+                      <input
+                        className="w-full p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-rose-500/10 transition-all"
                         placeholder="e.g. Miele di Acacia Bio"
                         value={rmFormData.name}
-                        onChange={e => setRMFormData({...rmFormData, name: e.target.value})}
+                        onChange={e => setRMFormData({ ...rmFormData, name: e.target.value })}
                         required
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Prezzo Totale (€)</label>
-                      <input 
+                      <input
                         type="number" step="0.01"
-                        className="w-full p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-rose-500/10 transition-all" 
+                        className="w-full p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-rose-500/10 transition-all"
                         placeholder="0.00"
                         value={rmFormData.totalPrice || ''}
-                        onChange={e => setRMFormData({...rmFormData, totalPrice: parseFloat(e.target.value) || 0})}
+                        onChange={e => setRMFormData({ ...rmFormData, totalPrice: parseFloat(e.target.value) || 0 })}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Dimensione Confezione</label>
                       <div className="flex gap-2">
-                        <input 
+                        <input
                           type="number" step="0.01"
-                          className="flex-1 p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-rose-500/10 transition-all" 
+                          className="flex-1 p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-rose-500/10 transition-all"
                           placeholder="1000"
                           value={rmFormData.totalQuantity || ''}
-                          onChange={e => setRMFormData({...rmFormData, totalQuantity: parseFloat(e.target.value) || 0})}
+                          onChange={e => setRMFormData({ ...rmFormData, totalQuantity: parseFloat(e.target.value) || 0 })}
                           required
                         />
-                        <select className="p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 uppercase text-[10px] w-24" value={rmFormData.unit} onChange={e => setRMFormData({...rmFormData, unit: e.target.value})}>
+                        <select className="p-4 bg-white border border-slate-100 rounded-2xl font-black text-slate-700 uppercase text-[10px] w-24" value={rmFormData.unit} onChange={e => setRMFormData({ ...rmFormData, unit: e.target.value })}>
                           <option value="gr">gr</option>
                           <option value="Kg">Kg</option>
                           <option value="ml">ml</option>
@@ -537,17 +647,17 @@ const Products: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-3">
-                    <button 
-                      type="submit" 
+                    <button
+                      type="submit"
                       className={`flex-1 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl ${editingRM ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-100' : 'bg-rose-600 hover:bg-rose-700 shadow-rose-100'} disabled:opacity-50`}
                       disabled={!rmFormData.name || (rmFormData.totalQuantity || 0) <= 0}
                     >
                       {editingRM ? 'Applica Modifiche' : 'Registra'}
                     </button>
                     {editingRM && (
-                      <button type="button" onClick={() => { setEditingRM(null); setRMFormData({name: '', unit: 'gr', totalQuantity: 0, totalPrice: 0}); }} className="px-6 py-4 bg-slate-200 text-slate-600 font-black text-xs uppercase tracking-widest rounded-2xl">Annulla</button>
+                      <button type="button" onClick={() => { setEditingRM(null); setRMFormData({ name: '', unit: 'gr', totalQuantity: 0, totalPrice: 0 }); }} className="px-6 py-4 bg-slate-200 text-slate-600 font-black text-xs uppercase tracking-widest rounded-2xl">Annulla</button>
                     )}
                   </div>
                 </form>

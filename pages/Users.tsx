@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useApp } from '../store';
 import { WorkspaceUser } from '../types';
 import { UserPlus, User, Key, Shield, Trash2, Users, Volume2, AlertCircle, ArrowRight } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
 const UsersPage: React.FC = () => {
   const { salespersons, workspaceUsers, addWorkspaceUser, deleteWorkspaceUser, currentWorkspace } = useApp();
@@ -10,29 +11,63 @@ const UsersPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSalespersonId || !username || !password || !currentWorkspace) return;
 
-    // Check if user already exists for this salesperson
+    // Check if user already exists in local list
     const exists = workspaceUsers.find(u => u.salespersonId === selectedSalespersonId);
     if (exists) {
       alert("Esiste già un account per questo collaboratore.");
       return;
     }
 
-    await addWorkspaceUser({
-      salespersonId: selectedSalespersonId,
-      username: username,
-      password: password
-    });
+    try {
+      // 1. Create Supabase Auth User (using a temporary client to avoid logging out Admin)
+      const tempClient = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        {
+          auth: {
+            persistSession: false, // Critical: Don't overwrite admin session
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+          }
+        }
+      );
 
-    setSelectedSalespersonId('');
-    setUsername('');
-    setPassword('');
-    
-    const msg = `Account creato per ${username}. RICORDA: La password va comunicata A VOCE al collaboratore.`;
-    alert(msg);
+      // Email format for username (fake email if just username provided)
+      const email = username.includes('@') ? username : `${username.toLowerCase().replace(/\s+/g, '')}@aloe.system`;
+
+      const { data: authData, error: authError } = await tempClient.auth.signUp({
+        email: email,
+        password: password,
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("No user returned from Auth");
+
+      // 2. Add to Workspace Users Table (Linked by user_id)
+      await addWorkspaceUser({
+        salespersonId: selectedSalespersonId,
+        username: username, // Display name
+        userId: authData.user.id,
+        // Password is not saved to DB here, but passed to function to satisfy type (refactor artifact)
+        // actually addWorkspaceUser implementation strips it.
+      });
+
+      setSelectedSalespersonId('');
+      setUsername('');
+      setPassword('');
+
+      const msg = `Account creato per ${username}.\n\nCREDENTIALS:\nEmail/User: ${email}\nPassword: ${password}\n\nComunicare A VOCE.`;
+      alert(msg);
+
+    } catch (err: any) {
+      console.error(err);
+      alert(`Errore creazione utente: ${err.message}`);
+    }
   };
 
   const deleteUser = async (id: string) => {
@@ -51,20 +86,20 @@ const UsersPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white p-8 md:p-10 rounded-[3rem] border border-slate-100 shadow-sm space-y-8">
           <div className="flex items-center gap-4">
-             <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center border border-emerald-100 shadow-inner">
-               <UserPlus size={28} />
-             </div>
-             <div>
-               <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Nuovo Profilo</h3>
-               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Associa Login ad un Agente</p>
-             </div>
+            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center border border-emerald-100 shadow-inner">
+              <UserPlus size={28} />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Nuovo Profilo</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Associa Login ad un Agente</p>
+            </div>
           </div>
 
           <form onSubmit={handleCreateUser} className="space-y-8">
             <div className="space-y-3">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">1. Seleziona Collaboratore Esterno</label>
               <div className="relative">
-                 <select 
+                <select
                   className="w-full p-5 border border-slate-100 rounded-3xl font-black text-slate-700 bg-slate-50 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all appearance-none"
                   value={selectedSalespersonId}
                   onChange={e => setSelectedSalespersonId(e.target.value)}
@@ -76,7 +111,7 @@ const UsersPage: React.FC = () => {
                   ))}
                 </select>
                 <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                   <Users size={18} />
+                  <Users size={18} />
                 </div>
               </div>
             </div>
@@ -86,7 +121,7 @@ const UsersPage: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">2. Username di Accesso</label>
                 <div className="relative">
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                  <input 
+                  <input
                     className="w-full pl-14 pr-5 py-5 bg-white border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
                     placeholder="e.g. m_rossi"
                     value={username}
@@ -99,7 +134,7 @@ const UsersPage: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">3. Password (Segreta)</label>
                 <div className="relative">
                   <Key className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                  <input 
+                  <input
                     className="w-full pl-14 pr-5 py-5 bg-white border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
                     placeholder="••••••••"
                     value={password}
@@ -111,18 +146,18 @@ const UsersPage: React.FC = () => {
             </div>
 
             <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-start gap-4">
-               <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm shrink-0">
-                 <Volume2 size={20} />
-               </div>
-               <div>
-                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Nota per Elisabetta</p>
-                 <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase">
-                   La password non verrà mostrata nell'app del collaboratore. Dovrai comunicargliela tu vocalmente per garantire la massima sicurezza.
-                 </p>
-               </div>
+              <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm shrink-0">
+                <Volume2 size={20} />
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Nota per Elisabetta</p>
+                <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase">
+                  La password non verrà mostrata nell'app del collaboratore. Dovrai comunicargliela tu vocalmente per garantire la massima sicurezza.
+                </p>
+              </div>
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={!selectedSalespersonId || !username || !password}
               className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl shadow-slate-100 disabled:opacity-30 group"
@@ -151,7 +186,7 @@ const UsersPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => deleteUser(user.id)}
                     className="p-3 text-slate-200 hover:text-red-500 transition-colors bg-slate-50 hover:bg-red-50 rounded-2xl"
                   >
@@ -163,7 +198,7 @@ const UsersPage: React.FC = () => {
             {workspaceUsers.length === 0 && (
               <div className="py-24 bg-slate-50/50 rounded-[3rem] border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-300">
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm">
-                   <Users size={40} className="opacity-20" />
+                  <Users size={40} className="opacity-20" />
                 </div>
                 <p className="font-black uppercase tracking-[0.2em] text-[10px]">Nessun Collaboratore Abilitato</p>
               </div>
