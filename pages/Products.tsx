@@ -471,6 +471,63 @@ const Products: React.FC = () => {
                   </div>
                 </div>
 
+                {/* SKU Mapping for Shopify - ONLY show if variants are selected */}
+                {(formData.modifierGroupIds || []).length > 0 && (
+                  <div className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Tag size={14} className="text-blue-500" />
+                      <h4 className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Mappatura SKU Varianti (Shopify)</h4>
+                    </div>
+                    <p className="text-[9px] font-medium text-blue-500 uppercase tracking-tight">Definisci SKU specifici per combinazioni di varianti. Gli ordini esterni verranno mappati automaticamente.</p>
+
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="col-span-2">
+                          <label className="text-[8px] font-black text-slate-400 uppercase ml-1">SKU su Shopify</label>
+                          <input id="vsku-code" className="w-full p-3 bg-white border border-blue-100 rounded-xl text-[10px] font-black" placeholder="ex: ALOE-500ML-MINT" />
+                        </div>
+                        <div>
+                          <label className="text-[8px] font-black text-slate-400 uppercase ml-1">Azioni</label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const sku = (document.getElementById('vsku-code') as HTMLInputElement).value;
+                              if (!sku) return;
+                              // In a real implementation, we'd have a UI to select the modifier values here
+                              // For now, we'll initialize an empty record and explain to the user
+                              const currentMap = formData.variantMap || {};
+                              setFormData({ ...formData, variantMap: { ...currentMap, [sku]: {} } });
+                              (document.getElementById('vsku-code') as HTMLInputElement).value = '';
+                            }}
+                            className="w-full bg-blue-600 text-white p-3 rounded-xl text-[9px] font-black uppercase hover:bg-blue-700 transition-all"
+                          >Aggiungi</button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {Object.keys(formData.variantMap || {}).map(sku => (
+                          <div key={sku} className="flex items-center justify-between bg-white px-4 py-2 rounded-xl border border-blue-100 shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-black text-slate-700">{sku}</span>
+                              <ArrowRight size={10} className="text-slate-300" />
+                              <span className="text-[9px] text-blue-500 font-bold uppercase">Configura su Shopify</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newMap = { ...formData.variantMap };
+                                delete newMap[sku];
+                                setFormData({ ...formData, variantMap: newMap });
+                              }}
+                              className="text-red-300 hover:text-red-500"
+                            ><X size={14} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-3 pt-8 border-t border-slate-100">
                   <button type="button" onClick={closeProductModal} className="px-8 py-3 rounded-2xl font-black text-xs text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest">Annulla</button>
                   <button type="submit" className="bg-slate-900 text-white px-10 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-100 transition-all">
