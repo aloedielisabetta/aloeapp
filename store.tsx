@@ -314,12 +314,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Here we just save the record to the database linking the Auth ID (userId)
 
     const newU = { ...u, id: crypto.randomUUID(), workspaceId: currentWorkspace.id };
-    // Remove password from the object before saving to table (security best practice, auth handles it)
-    const { password, ...userRecord } = newU as any;
 
-    const { error } = await supabase.from('workspace_users').insert(toSnake(userRecord));
+    // We should include the password in the database record as per the schema requirements
+    // even though Auth handles the main authentication.
+    const { error } = await supabase.from('workspace_users').insert(toSnake(newU));
     if (error) throw error;
-    setWorkspaceUsers(prev => [...prev, newU as WorkspaceUser]);
+
+    // For local state, we can keep the password or remove it
+    const { password: _, ...userWithoutPassword } = newU as any;
+    setWorkspaceUsers(prev => [...prev, userWithoutPassword as WorkspaceUser]);
   };
 
   const deleteWorkspaceUser = async (id: string) => {
