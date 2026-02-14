@@ -140,7 +140,7 @@ const UsersPage: React.FC = () => {
                   required
                 >
                   <option value="">Scegli dalla lista...</option>
-                  {salespersons.filter(s => !s.isHidden || (existingUser && s.id === existingUser.salespersonId)).map(s => (
+                  {salespersons.filter(s => !s.isHidden || workspaceUsers.some(u => u.salespersonId === s.id)).map(s => (
                     <option key={s.id} value={s.id}>{s.name} {s.isHidden ? '(Nascosto)' : ''}</option>
                   ))}
                 </select>
