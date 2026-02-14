@@ -32,6 +32,7 @@ export interface WorkspaceUser {
   salespersonId: string;
   username: string;
   userId?: string; // Linked Supabase Auth ID
+  password?: string;
 }
 
 export interface ModifierGroup {

@@ -328,8 +328,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (error) throw error;
 
     // For local state, we can keep the password or remove it
-    const { password: _, ...userWithoutPassword } = newU as any;
-    setWorkspaceUsers(prev => [...prev, userWithoutPassword as WorkspaceUser]);
+    // const { password: _, ...userWithoutPassword } = newU as any;
+    setWorkspaceUsers(prev => [...prev, newU as WorkspaceUser]);
   };
 
   const deleteWorkspaceUser = async (id: string) => {

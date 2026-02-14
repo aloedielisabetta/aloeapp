@@ -10,6 +10,28 @@ const UsersPage: React.FC = () => {
   const [selectedSalespersonId, setSelectedSalespersonId] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [existingUser, setExistingUser] = useState<WorkspaceUser | null>(null);
+
+  React.useEffect(() => {
+    if (selectedSalespersonId) {
+      const found = workspaceUsers.find(u => u.salespersonId === selectedSalespersonId);
+      if (found) {
+        setExistingUser(found);
+        setUsername(found.username);
+        // If password exists in DB (it should based on schema), show it.
+        // If it was created before this update and not synced, it might be missing locally until re-sync/reload
+        setPassword(found.password || '******');
+      } else {
+        setExistingUser(null);
+        setUsername('');
+        setPassword('');
+      }
+    } else {
+      setExistingUser(null);
+      setUsername('');
+      setPassword('');
+    }
+  }, [selectedSalespersonId, workspaceUsers]);
 
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -118,8 +140,8 @@ const UsersPage: React.FC = () => {
                   required
                 >
                   <option value="">Scegli dalla lista...</option>
-                  {salespersons.filter(s => !s.isHidden).map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
+                  {salespersons.filter(s => !s.isHidden || (existingUser && s.id === existingUser.salespersonId)).map(s => (
+                    <option key={s.id} value={s.id}>{s.name} {s.isHidden ? '(Nascosto)' : ''}</option>
                   ))}
                 </select>
                 <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -139,6 +161,7 @@ const UsersPage: React.FC = () => {
                     value={username}
                     onChange={e => setUsername(e.target.value)}
                     required
+                    readOnly={!!existingUser}
                   />
                 </div>
               </div>
@@ -152,6 +175,7 @@ const UsersPage: React.FC = () => {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
+                    readOnly={!!existingUser}
                   />
                 </div>
               </div>
@@ -171,10 +195,10 @@ const UsersPage: React.FC = () => {
 
             <button
               type="submit"
-              disabled={!selectedSalespersonId || !username || !password}
+              disabled={!selectedSalespersonId || !username || !password || !!existingUser}
               className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl shadow-slate-100 disabled:opacity-30 group"
             >
-              Abilita Accesso <ArrowRight size={18} className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
+              {existingUser ? 'Credenziali Attive (Già Creato)' : 'Abilita Accesso'} <ArrowRight size={18} className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
         </div>
