@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../store';
-import { 
-  MapPin, Plus, Trash2, Briefcase, User, Download, Archive, 
-  Calendar, X, AlertCircle, Check, AlertTriangle, RefreshCcw, 
+import {
+  MapPin, Plus, Trash2, Briefcase, User, Download, Archive,
+  Calendar, X, AlertCircle, Check, AlertTriangle, RefreshCcw,
   Loader2, Database, Code, Cloud, FileCode, Copy, FolderArchive, Zap,
   // Fix: Added missing Settings2 icon import
   Settings2
@@ -13,12 +13,12 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
 const Settings: React.FC = () => {
-  const { 
+  const {
     cities, addCity, deleteCity,
     salespersons, addSalesperson, deleteSalesperson,
-    orders, patients, products, recipes, rawMaterials, generalCosts, modifierGroups, workspaceUsers, currentWorkspace, syncData 
+    orders, patients, products, recipes, rawMaterials, generalCosts, modifierGroups, workspaceUsers, currentWorkspace, syncData
   } = useApp();
-  
+
   const [newCityName, setNewCityName] = useState('');
   const [newSalespersonName, setNewSalespersonName] = useState('');
   const [pendingCityDelete, setPendingCityDelete] = useState<string | null>(null);
@@ -65,7 +65,7 @@ const Settings: React.FC = () => {
       await syncData();
       setShowResetConfirm(false);
       alert("Database resettato.");
-      window.location.reload(); 
+      window.location.reload();
     } catch (e) {
       console.error(e);
     } finally {
@@ -83,7 +83,7 @@ const Settings: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ALOE_BACKUP_${new Date().toISOString().slice(0,10)}.json`;
+    link.download = `ALOE_BACKUP_${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -96,16 +96,16 @@ const Settings: React.FC = () => {
       // In a real environment, we'd fetch these. Since we are in the editor context,
       // we'll bundle the core files that define the app's logic.
       // Note: This collects the files we've been working on.
-      
+
       const filesToInclude = [
-        'index.html', 'index.tsx', 'App.tsx', 'store.tsx', 'types.ts', 
+        'index.html', 'index.tsx', 'App.tsx', 'store.tsx', 'types.ts',
         'supabase.ts', 'metadata.json', 'manifest.json', 'supabase_schema.sql'
       ];
 
       const pages = [
-        'Patients.tsx', 'Products.tsx', 'Orders.tsx', 'Production.tsx', 
-        'Recipes.tsx', 'Materials.tsx', 'Profits.tsx', 'Settings.tsx', 
-        'Reports.tsx', 'GeneralCosts.tsx', 'Login.tsx', 'Users.tsx', 
+        'Patients.tsx', 'Products.tsx', 'Orders.tsx', 'Production.tsx',
+        'Recipes.tsx', 'Materials.tsx', 'Profits.tsx', 'Settings.tsx',
+        'Reports.tsx', 'GeneralCosts.tsx', 'Login.tsx', 'Users.tsx',
         'MySales.tsx', 'Link.tsx'
       ];
 
@@ -156,17 +156,17 @@ const Settings: React.FC = () => {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Organizzazione</h2>
+          <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Crea Città e Collaboratori</h2>
           <p className="text-slate-500 font-medium">Gestione configurazione e strumenti di migrazione.</p>
         </div>
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={() => setShowMigration(true)}
             className="bg-blue-600 text-white px-6 py-3 rounded-2xl flex items-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 font-black text-xs uppercase tracking-widest active:scale-95"
           >
             <Cloud size={18} /> Centro Migrazione
           </button>
-          <button 
+          <button
             onClick={exportFullData}
             className="bg-emerald-600 text-white px-6 py-3 rounded-2xl flex items-center gap-3 hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100 font-black text-xs uppercase tracking-widest active:scale-95"
           >
@@ -189,7 +189,7 @@ const Settings: React.FC = () => {
             {cities.map(city => (
               <div key={city.id} className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-50">
                 <span className="font-black text-slate-600 uppercase text-[10px] tracking-widest">{city.name}</span>
-                <button onClick={() => setPendingCityDelete(city.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={18}/></button>
+                <button onClick={() => setPendingCityDelete(city.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={18} /></button>
               </div>
             ))}
           </div>
@@ -208,7 +208,7 @@ const Settings: React.FC = () => {
             {salespersons.map(person => (
               <div key={person.id} className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-50">
                 <span className="font-black text-slate-600 uppercase text-[10px] tracking-widest">{person.name}</span>
-                <button onClick={() => setPendingSalespersonDelete(person.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={18}/></button>
+                <button onClick={() => setPendingSalespersonDelete(person.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={18} /></button>
               </div>
             ))}
           </div>
@@ -220,16 +220,16 @@ const Settings: React.FC = () => {
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl flex items-center justify-center z-[100] p-4 md:p-10">
           <div className="bg-white rounded-[4rem] shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden">
             <div className="p-10 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-               <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 bg-blue-600 text-white rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-100">
-                    <Cloud size={32} />
-                  </div>
-                  <div>
-                    <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">Centro Migrazione</h3>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Pronto per Google Antigravity</p>
-                  </div>
-               </div>
-               <button onClick={() => setShowMigration(false)} className="p-4 hover:bg-white rounded-[1.5rem] text-slate-400 transition-all border border-slate-100"><X size={24} /></button>
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-blue-600 text-white rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-100">
+                  <Cloud size={32} />
+                </div>
+                <div>
+                  <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">Centro Migrazione</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Pronto per Google Antigravity</p>
+                </div>
+              </div>
+              <button onClick={() => setShowMigration(false)} className="p-4 hover:bg-white rounded-[1.5rem] text-slate-400 transition-all border border-slate-100"><X size={24} /></button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-10 grid grid-cols-1 lg:grid-cols-3 gap-10 scrollbar-hide">
@@ -239,8 +239,8 @@ const Settings: React.FC = () => {
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Passo 1: Esportazione</h4>
                   <div className="bg-blue-50 p-8 rounded-[3rem] border border-blue-100 space-y-6 shadow-sm">
                     <p className="text-xs text-blue-900 leading-relaxed font-bold uppercase">Scarica l'intero codice sorgente e la struttura per il nuovo server.</p>
-                    
-                    <button 
+
+                    <button
                       onClick={downloadProjectZip}
                       disabled={isBundling}
                       className="w-full bg-blue-600 text-white py-5 rounded-2xl flex items-center justify-between px-6 hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95 disabled:opacity-50"
@@ -252,7 +252,7 @@ const Settings: React.FC = () => {
                       {!isBundling && <Zap size={16} className="text-blue-200" />}
                     </button>
 
-                    <button 
+                    <button
                       onClick={exportFullData}
                       className="w-full bg-white border-2 border-blue-100 text-blue-600 py-5 rounded-2xl flex items-center justify-between px-6 hover:bg-blue-100/50 transition-all font-black uppercase tracking-widest text-[10px]"
                     >
@@ -285,44 +285,44 @@ const Settings: React.FC = () => {
               <div className="lg:col-span-2 space-y-8">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Passo 2: Istruzioni per Google Antigravity</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white space-y-4 shadow-2xl">
-                      <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
-                         <Database className="text-white" size={24} />
-                      </div>
-                      <h5 className="font-black uppercase text-sm tracking-tight">1. Database</h5>
-                      <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                        Crea un nuovo progetto su **Supabase**. Apri il SQL Editor e incolla il contenuto di <code className="text-blue-400">supabase_schema.sql</code> (che trovi nello ZIP). Esegui lo script per creare le tabelle.
-                      </p>
-                   </div>
+                  <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white space-y-4 shadow-2xl">
+                    <div className="w-12 h-12 bg-blue-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
+                      <Database className="text-white" size={24} />
+                    </div>
+                    <h5 className="font-black uppercase text-sm tracking-tight">1. Database</h5>
+                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                      Crea un nuovo progetto su **Supabase**. Apri il SQL Editor e incolla il contenuto di <code className="text-blue-400">supabase_schema.sql</code> (che trovi nello ZIP). Esegui lo script per creare le tabelle.
+                    </p>
+                  </div>
 
-                   <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] space-y-4 shadow-sm">
-                      <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/20">
-                         <Cloud className="text-white" size={24} />
-                      </div>
-                      <h5 className="font-black uppercase text-sm tracking-tight text-slate-800">2. Hosting</h5>
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Estrai i file dello ZIP. Carica l'intero contenuto sul tuo bucket **Google Antigravity** o qualsiasi server di file statici. Assicurati che <code className="text-emerald-600 font-black">index.html</code> sia nella root.
-                      </p>
-                   </div>
+                  <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] space-y-4 shadow-sm">
+                    <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/20">
+                      <Cloud className="text-white" size={24} />
+                    </div>
+                    <h5 className="font-black uppercase text-sm tracking-tight text-slate-800">2. Hosting</h5>
+                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                      Estrai i file dello ZIP. Carica l'intero contenuto sul tuo bucket **Google Antigravity** o qualsiasi server di file statici. Assicurati che <code className="text-emerald-600 font-black">index.html</code> sia nella root.
+                    </p>
+                  </div>
 
-                   <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] space-y-4 shadow-sm md:col-span-2">
-                      <div className="flex items-center gap-4 mb-2">
-                         <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20">
-                            <Settings2 size={24} className="text-white" />
-                         </div>
-                         <h5 className="font-black uppercase text-sm tracking-tight text-slate-800">3. Configurazione Finale</h5>
+                  <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] space-y-4 shadow-sm md:col-span-2">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                        <Settings2 size={24} className="text-white" />
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                        Una volta caricati i file, apri <code className="text-amber-600 font-black">supabase.ts</code> e sostituisci l'URL e la Anon Key con quelli del tuo nuovo progetto Supabase. L'app si connetterà istantaneamente e sarà pronta all'uso.
-                      </p>
-                   </div>
+                      <h5 className="font-black uppercase text-sm tracking-tight text-slate-800">3. Configurazione Finale</h5>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                      Una volta caricati i file, apri <code className="text-amber-600 font-black">supabase.ts</code> e sostituisci l'URL e la Anon Key con quelli del tuo nuovo progetto Supabase. L'app si connetterà istantaneamente e sarà pronta all'uso.
+                    </p>
+                  </div>
                 </div>
-                
+
                 <div className="flex items-center gap-3 p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100">
-                   <Check className="text-emerald-600" size={24} />
-                   <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">
-                     Tutti i file nello ZIP sono configurati per funzionare immediatamente dopo l'estrazione.
-                   </p>
+                  <Check className="text-emerald-600" size={24} />
+                  <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">
+                    Tutti i file nello ZIP sono configurati per funzionare immediatamente dopo l'estrazione.
+                  </p>
                 </div>
               </div>
             </div>

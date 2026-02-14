@@ -16,10 +16,17 @@ const UsersPage: React.FC = () => {
     e.preventDefault();
     if (!selectedSalespersonId || !username || !password || !currentWorkspace) return;
 
-    // Check if user already exists in local list
+    // Check if user already exists in local list (by salesperson ID)
     const exists = workspaceUsers.find(u => u.salespersonId === selectedSalespersonId);
     if (exists) {
       alert("Esiste già un account per questo collaboratore.");
+      return;
+    }
+
+    // Check if username is already in use by another collaborator
+    const usernameExists = workspaceUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (usernameExists) {
+      alert("Questo username è già in uso. Scegline un altro.");
       return;
     }
 
@@ -45,7 +52,12 @@ const UsersPage: React.FC = () => {
         password: password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message === "User already registered") {
+          throw new Error("Questo username o email è già registrato nel sistema globale.");
+        }
+        throw authError;
+      }
       if (!authData.user) throw new Error("No user returned from Auth");
 
       // 2. Add to Workspace Users Table (Linked by user_id)
@@ -79,7 +91,7 @@ const UsersPage: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Gestione Utenti Collaboratori</h2>
+        <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Accesso Collaboratori</h2>
         <p className="text-slate-500 font-medium">Crea le credenziali di accesso per i tuoi collaboratori esterni.</p>
       </div>
 
