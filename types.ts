@@ -25,6 +25,7 @@ export interface Patient {
   aloeTweak: string;
   formMonth?: string;
   testResults?: string;
+  testResults2?: string;
   worsening?: string;
   improvement?: string;
   stability?: string;

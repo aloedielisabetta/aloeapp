@@ -32,7 +32,7 @@ const Patients: React.FC = () => {
     firstName: '', lastName: '', phone: '', address: '',
     city: cities[0]?.name || '', medicalCondition: '',
     conditionType: '', medicalState: 'Buono', aloeTweak: '',
-    formMonth: '', testResults: '', worsening: '', improvement: '', stability: ''
+    formMonth: '', testResults: '', testResults2: '', worsening: '', improvement: '', stability: ''
   });
 
   const handleOpenEdit = (patient: Patient) => {
@@ -48,7 +48,7 @@ const Patients: React.FC = () => {
       firstName: '', lastName: '', phone: '', address: '',
       city: cities[0]?.name || '', medicalCondition: '',
       conditionType: '', medicalState: 'Buono', aloeTweak: '',
-      formMonth: '', testResults: '', worsening: '', improvement: '', stability: ''
+      formMonth: '', testResults: '', testResults2: '', worsening: '', improvement: '', stability: ''
     });
   };
 
@@ -79,6 +79,16 @@ const Patients: React.FC = () => {
       if (h.includes('citt') || h.includes('city')) map['city'] = i.toString();
       if (h.includes('indi') || h.includes('via')) map['address'] = i.toString();
       if (h.includes('patol') || h.includes('malatt')) map['medicalCondition'] = i.toString();
+      // New clinical fields
+      if (h.includes('esami') || h.includes('test')) {
+        if (!map['testResults']) map['testResults'] = i.toString();
+        else map['testResults2'] = i.toString();
+      }
+      if (h.includes('aggrav')) map['worsening'] = i.toString();
+      if (h.includes('miglior')) map['improvement'] = i.toString();
+      if (h.includes('stab')) map['stability'] = i.toString();
+      if (h.includes('mese') || h.includes('month')) map['formMonth'] = i.toString();
+      if (h.includes('cura') || h.includes('aloe') || h.includes('protocol')) map['aloeTweak'] = i.toString();
     });
 
     if (!map['firstName'] || !map['lastName']) {
@@ -100,7 +110,13 @@ const Patients: React.FC = () => {
         address: map['address'] ? cols[parseInt(map['address'])] : '',
         medicalCondition: map['medicalCondition'] ? cols[parseInt(map['medicalCondition'])] : '',
         medicalState: 'Buono',
-        aloeTweak: ''
+        testResults: map['testResults'] ? cols[parseInt(map['testResults'])] : '',
+        testResults2: map['testResults2'] ? cols[parseInt(map['testResults2'])] : '',
+        worsening: map['worsening'] ? cols[parseInt(map['worsening'])] : '',
+        improvement: map['improvement'] ? cols[parseInt(map['improvement'])] : '',
+        stability: map['stability'] ? cols[parseInt(map['stability'])] : '',
+        formMonth: map['formMonth'] ? cols[parseInt(map['formMonth'])] : '',
+        aloeTweak: map['aloeTweak'] ? cols[parseInt(map['aloeTweak'])] : ''
       };
       await addPatient({ ...p, journal: [] } as any);
       count++;
@@ -466,6 +482,10 @@ const Patients: React.FC = () => {
                 <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.improvement}</td>
               </tr>
               <tr>
+                <td className="border border-black p-2 font-bold align-top text-sm">Controllo Esami</td>
+                <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.testResults2}</td>
+              </tr>
+              <tr>
                 <td className="border border-black p-2 font-bold align-top text-sm">Periodo Stabilità</td>
                 <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.stability}</td>
               </tr>
@@ -581,8 +601,8 @@ const Patients: React.FC = () => {
                       <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.formMonth} onChange={e => setFormData({ ...formData, formMonth: e.target.value })} placeholder="E.g. Marzo 2024" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami</label>
-                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.testResults} onChange={e => setFormData({ ...formData, testResults: e.target.value })} placeholder="Valori o note..." />
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami (1)</label>
+                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.testResults} onChange={e => setFormData({ ...formData, testResults: e.target.value })} placeholder="Valori o note inziali..." />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Aggravamento</label>
@@ -591,6 +611,10 @@ const Patients: React.FC = () => {
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Miglioramento</label>
                       <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.improvement} onChange={e => setFormData({ ...formData, improvement: e.target.value })} placeholder="Miglioramenti notati..." />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami (2)</label>
+                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.testResults2} onChange={e => setFormData({ ...formData, testResults2: e.target.value })} placeholder="Esami successivi..." />
                     </div>
                     <div className="space-y-2 col-span-full">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Periodo di Stabilità</label>
