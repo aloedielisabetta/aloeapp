@@ -23,6 +23,11 @@ export interface Patient {
   conditionType: ConditionType;
   medicalState: MedicalState;
   aloeTweak: string;
+  formMonth?: string;
+  testResults?: string;
+  worsening?: string;
+  improvement?: string;
+  stability?: string;
   journal?: JournalEntry[]; // Monthly tracking history
 }
 
