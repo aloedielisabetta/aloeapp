@@ -33,6 +33,7 @@ interface AppContextType extends AppData {
   deleteCity: (id: string) => Promise<void>;
 
   addSalesperson: (name: string) => Promise<void>;
+  updateSalesperson: (s: Salesperson) => Promise<void>;
   deleteSalesperson: (id: string) => Promise<void>;
 
   addGeneralCost: (c: Omit<GeneralCost, 'id' | 'workspaceId' | 'date'>) => Promise<void>;
@@ -281,10 +282,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addSalesperson = async (name: string) => {
     if (!currentWorkspace) return;
-    const newS = { id: crypto.randomUUID(), workspaceId: currentWorkspace.id, name };
+    const newS = { id: crypto.randomUUID(), workspaceId: currentWorkspace.id, name, isHidden: false };
     const { error } = await supabase.from('salespersons').insert(toSnake(newS));
     if (error) throw error;
     setSalespersons(prev => [...prev, newS]);
+  };
+
+  const updateSalesperson = async (s: Salesperson) => {
+    const { error } = await supabase.from('salespersons').update(toSnake(s)).eq('id', s.id);
+    if (error) throw error;
+    setSalespersons(prev => prev.map(item => item.id === s.id ? s : item));
   };
 
   const deleteSalesperson = async (id: string) => {
@@ -404,7 +411,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider value={{
       patients, products, orders, recipes, cities, modifierGroups, salespersons, generalCosts, workspaceUsers, rawMaterials,
       addPatient, updatePatient, deletePatient, addOrder, updateOrder, deleteOrder, addProduct, updateProduct, deleteProduct,
-      addRecipe, updateRecipe, deleteRecipe, addCity, deleteCity, addSalesperson, deleteSalesperson, addGeneralCost, deleteGeneralCost,
+      addRecipe, updateRecipe, deleteRecipe, addCity, deleteCity, addSalesperson, updateSalesperson, deleteSalesperson, addGeneralCost, deleteGeneralCost,
       addWorkspaceUser, deleteWorkspaceUser, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
       createWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut
     }}>

@@ -67,6 +67,7 @@ export interface Salesperson {
   id: string;
   workspaceId: string;
   name: string;
+  isHidden?: boolean;
 }
 
 export interface RawMaterial {

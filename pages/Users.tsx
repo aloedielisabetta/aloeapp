@@ -118,7 +118,7 @@ const UsersPage: React.FC = () => {
                   required
                 >
                   <option value="">Scegli dalla lista...</option>
-                  {salespersons.map(s => (
+                  {salespersons.filter(s => !s.isHidden).map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>

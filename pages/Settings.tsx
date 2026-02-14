@@ -1,12 +1,12 @@
-
+```
 import React, { useState } from 'react';
 import { useApp } from '../store';
 import {
-  MapPin, Plus, Trash2, Briefcase, User, Download, Archive,
-  Calendar, X, AlertCircle, Check, AlertTriangle, RefreshCcw,
+  MapPin, Plus, Trash2, Briefcase, User, Download, Archive, 
+  Calendar, X, AlertCircle, Check, AlertTriangle, RefreshCcw, 
   Loader2, Database, Code, Cloud, FileCode, Copy, FolderArchive, Zap,
   // Fix: Added missing Settings2 icon import
-  Settings2
+  Settings2, Eye, EyeOff
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import JSZip from 'jszip';
@@ -15,14 +15,14 @@ import { saveAs } from 'file-saver';
 const Settings: React.FC = () => {
   const {
     cities, addCity, deleteCity,
-    salespersons, addSalesperson, deleteSalesperson,
+    salespersons, addSalesperson, deleteSalesperson, updateSalesperson,
     orders, patients, products, recipes, rawMaterials, generalCosts, modifierGroups, workspaceUsers, currentWorkspace, syncData
   } = useApp();
 
   const [newCityName, setNewCityName] = useState('');
   const [newSalespersonName, setNewSalespersonName] = useState('');
   const [pendingCityDelete, setPendingCityDelete] = useState<string | null>(null);
-  const [pendingSalespersonDelete, setPendingSalespersonDelete] = useState<string | null>(null);
+  const [showHiddenCollaborators, setShowHiddenCollaborators] = useState(false);
   const [isBundling, setIsBundling] = useState(false);
 
   // Migration Center States
@@ -49,9 +49,11 @@ const Settings: React.FC = () => {
     }
   };
 
-  const confirmRemoveSalesperson = async (id: string) => {
-    await deleteSalesperson(id);
-    setPendingSalespersonDelete(null);
+  const toggleHideSalesperson = async (person: any) => {
+    await updateSalesperson({
+      ...person,
+      isHidden: !person.isHidden
+    });
   };
 
   const handleFullReset = async () => {
@@ -83,7 +85,7 @@ const Settings: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ALOE_BACKUP_${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `ALOE_BACKUP_${ new Date().toISOString().slice(0, 10) }.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -117,7 +119,7 @@ const Settings: React.FC = () => {
           const res = await fetch(path);
           return await res.text();
         } catch (e) {
-          console.warn(`Could not fetch ${path}, skipping...`);
+          console.warn(`Could not fetch ${ path }, skipping...`);
           return null;
         }
       };
@@ -131,14 +133,14 @@ const Settings: React.FC = () => {
       // Add Pages
       const pagesFolder = zip.folder("pages");
       for (const p of pages) {
-        const content = await getFile(`pages/${p}`);
+        const content = await getFile(`pages / ${ p } `);
         if (content) pagesFolder?.file(p, content);
       }
 
       // Add Components
       const compFolder = zip.folder("components");
       for (const c of components) {
-        const content = await getFile(`components/${c}`);
+        const content = await getFile(`components / ${ c } `);
         if (content) compFolder?.file(c, content);
       }
 
@@ -197,20 +199,42 @@ const Settings: React.FC = () => {
 
         {/* Collaborators */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
-          <h3 className="font-black flex items-center gap-3 text-slate-700 uppercase tracking-widest text-xs">
-            <Briefcase size={20} className="text-blue-500" /> Collaboratori Esterni
-          </h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-black flex items-center gap-3 text-slate-700 uppercase tracking-widest text-xs">
+              <Briefcase size={20} className="text-blue-500" /> Collaboratori Esterni
+            </h3>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showHidden"
+                checked={showHiddenCollaborators}
+                onChange={e => setShowHiddenCollaborators(e.target.checked)}
+                className="w-4 h-4 text-slate-900 bg-slate-100 border-slate-300 rounded focus:ring-slate-500"
+              />
+              <label htmlFor="showHidden" className="text-[10px] font-black uppercase tracking-widest text-slate-400 cursor-pointer select-none">Mostra Nascosti</label>
+            </div>
+          </div>
           <div className="flex gap-3">
             <input className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700" placeholder="e.g. Mario Rossi" value={newSalespersonName} onChange={e => setNewSalespersonName(e.target.value)} />
             <button onClick={handleAddSalesperson} className="bg-slate-900 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest">Aggiungi</button>
           </div>
           <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 hide-scrollbar">
-            {salespersons.map(person => (
-              <div key={person.id} className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-50">
-                <span className="font-black text-slate-600 uppercase text-[10px] tracking-widest">{person.name}</span>
-                <button onClick={() => setPendingSalespersonDelete(person.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={18} /></button>
-              </div>
-            ))}
+            {salespersons
+              .filter(p => showHiddenCollaborators || !p.isHidden)
+              .map(person => (
+                <div key={person.id} className={`flex justify - between items - center p - 4 rounded - 2xl border transition - all ${ person.isHidden ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-slate-50/50 border-slate-50' } `}>
+                  <span className={`font - black uppercase text - [10px] tracking - widest ${ person.isHidden ? 'text-slate-400 line-through' : 'text-slate-600' } `}>{person.name}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleHideSalesperson(person)}
+                      className={`p - 3 transition - all ${ person.isHidden ? 'text-slate-400 hover:text-slate-700 bg-slate-200 hover:bg-slate-300' : 'text-slate-300 hover:text-orange-500 hover:bg-orange-50' } rounded - 2xl`}
+                      title={person.isHidden ? "Riattiva Collaboratore" : "Nascondi Collaboratore (Non elimina dati passati)"}
+                    >
+                      {person.isHidden ? <Eye size={18} /> : <EyeOff size={18} />}
+                    </button>
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
       </div>
