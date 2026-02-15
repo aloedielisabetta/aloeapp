@@ -482,7 +482,7 @@ const Patients: React.FC = () => {
                 <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.improvement}</td>
               </tr>
               <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm">Controllo Esami</td>
+                <td className="border border-black p-2 font-bold align-top text-sm">Controllo Esami dopo Aloe</td>
                 <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.testResults2}</td>
               </tr>
               <tr>
@@ -563,16 +563,15 @@ const Patients: React.FC = () => {
                     <input required className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                   </div>
                   <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Indirizzo per Spedizione</label>
+                    <input required className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cartella Città</label>
                     <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none appearance-none" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })}>
                       {cities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </select>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Indirizzo per Spedizione</label>
-                  <input required className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -613,7 +612,7 @@ const Patients: React.FC = () => {
                       <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.improvement} onChange={e => setFormData({ ...formData, improvement: e.target.value })} placeholder="Miglioramenti notati..." />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami (2)</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami dopo Aloe</label>
                       <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.testResults2} onChange={e => setFormData({ ...formData, testResults2: e.target.value })} placeholder="Esami successivi..." />
                     </div>
                     <div className="space-y-2 col-span-full">
