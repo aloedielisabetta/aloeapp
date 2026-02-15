@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  Users, Package, ShoppingBag, TrendingUp, 
+import {
+  Users, Package, ShoppingBag, TrendingUp,
   Settings, ClipboardList, Database, Thermometer,
   ChevronLeft, ChevronRight, FileText, UserPlus, LogOut, ShieldCheck, CloudLightning, Check, Share2, Receipt
 } from 'lucide-react';
@@ -35,7 +35,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       { to: '/profits', icon: <TrendingUp size={20} />, label: 'Profitti' },
       { to: '/reports', icon: <FileText size={20} />, label: 'Report' },
       { to: '/users', icon: <UserPlus size={20} />, label: 'Accesso Collaboratori' },
-      { to: '/settings', icon: <Settings size={20} />, label: 'Crea Città e Collaboratori' },
+      { to: '/settings', icon: <Settings size={20} />, label: 'Impostazioni' },
       { to: '/link', icon: <Share2 size={20} />, label: 'Condivisione App' }
     );
   } else {
@@ -46,10 +46,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <aside 
-        className={`${
-          isCollapsed ? 'w-20' : 'w-64'
-        } bg-white border-r border-slate-200 flex flex-col shrink-0 transition-all duration-300 ease-in-out relative`}
+      <aside
+        className={`${isCollapsed ? 'w-20' : 'w-64'
+          } bg-white border-r border-slate-200 flex flex-col shrink-0 transition-all duration-300 ease-in-out relative`}
       >
         <div className={`p-6 border-b border-slate-100 flex flex-col ${isCollapsed ? 'items-center' : ''}`}>
           <div className="flex items-center justify-between w-full mb-2">
@@ -63,11 +62,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
           {!isCollapsed && (
             <div className="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
-               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentWorkspace?.name}</p>
-               <div className="flex items-center gap-1.5 mt-1">
-                 {isAdmin ? <ShieldCheck size={12} className="text-blue-500" /> : <Users size={12} className="text-orange-500" />}
-                 <p className="text-[10px] font-bold text-slate-600 truncate">{isAdmin ? 'Amministratore' : currentUser?.name}</p>
-               </div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{currentWorkspace?.name}</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                {isAdmin ? <ShieldCheck size={12} className="text-blue-500" /> : <Users size={12} className="text-orange-500" />}
+                <p className="text-[10px] font-bold text-slate-600 truncate">{isAdmin ? 'Amministratore' : currentUser?.name}</p>
+              </div>
             </div>
           )}
         </div>
@@ -85,12 +84,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl transition-all ${
-                  isCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'
-                } ${
-                  isActive 
-                    ? 'bg-green-50 text-green-700 font-semibold shadow-sm' 
-                    : 'text-slate-600 hover:bg-slate-50'
+                `flex items-center gap-3 rounded-xl transition-all ${isCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'
+                } ${isActive
+                  ? 'bg-green-50 text-green-700 font-semibold shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-50'
                 }`
               }
             >
@@ -105,20 +102,20 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="p-4 border-t border-slate-100 space-y-2">
           {!isCollapsed && (
             <div className="flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-               {isSyncing ? (
-                 <>
-                   <CloudLightning size={12} className="animate-pulse text-blue-500" />
-                   <span>Sincronizzazione...</span>
-                 </>
-               ) : (
-                 <>
-                   <Check size={12} className="text-green-500" />
-                   <span>Cloud Attivo</span>
-                 </>
-               )}
+              {isSyncing ? (
+                <>
+                  <CloudLightning size={12} className="animate-pulse text-blue-500" />
+                  <span>Sincronizzazione...</span>
+                </>
+              ) : (
+                <>
+                  <Check size={12} className="text-green-500" />
+                  <span>Cloud Attivo</span>
+                </>
+              )}
             </div>
           )}
-          <button 
+          <button
             onClick={handleLogout}
             className={`flex items-center gap-3 w-full p-3 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all ${isCollapsed ? 'justify-center' : ''}`}
           >
