@@ -129,24 +129,6 @@ const Patients: React.FC = () => {
     }, 200);
   };
 
-  const handleImportInitialList = async () => {
-    if (!confirm('Vuoi davvero importare la lista iniziale di ~56 pazienti?')) return;
-
-    let count = 0;
-    for (const p of initialPatients) {
-      await addPatient({
-        ...p,
-        city: p.city || cities[0]?.name || 'Altro',
-        address: p.address || '',
-        conditionType: 'Cronico',
-        medicalState: 'Buono',
-        journal: []
-      } as any);
-      count++;
-    }
-    alert(`Importati ${count} pazienti iniziali con successo!`);
-  };
-
   const filtered = patients.filter(p => {
     const matchesSearch = `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase());
     const matchesCity = selectedCity === 'Tutte' || p.city === selectedCity;
