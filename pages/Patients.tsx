@@ -374,10 +374,6 @@ const Patients: React.FC = () => {
           <table className="w-full border-collapse border border-black mb-8">
             <tbody>
               <tr>
-                <td className="border border-black p-2 font-bold w-1/4 align-top text-sm">Mese</td>
-                <td className="border border-black p-2 bg-slate-50 align-top text-sm">{activeProtocolPatient?.formMonth || ''}&nbsp;</td>
-              </tr>
-              <tr>
                 <td className="border border-black p-2 font-bold align-top text-sm">Nome & telefono</td>
                 <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.firstName} {activeProtocolPatient?.lastName} - {activeProtocolPatient?.phone}</td>
               </tr>
@@ -400,22 +396,6 @@ const Patients: React.FC = () => {
               <tr>
                 <td className="border border-black p-2 font-bold align-top text-sm">Controllo Esami</td>
                 <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.testResults}</td>
-              </tr>
-              <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm">Aggravamento</td>
-                <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.worsening}</td>
-              </tr>
-              <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm">Miglioramento</td>
-                <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.improvement}</td>
-              </tr>
-              <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm">Controllo Esami dopo Aloe</td>
-                <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.testResults2}</td>
-              </tr>
-              <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm">Periodo Stabilità</td>
-                <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.stability}</td>
               </tr>
             </tbody>
           </table>
@@ -470,7 +450,7 @@ const Patients: React.FC = () => {
                 <div className="p-3 bg-green-600 text-white rounded-2xl shadow-lg shadow-green-100">
                   <UserPlus size={24} />
                 </div>
-                <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{editingPatient ? 'Modifica Scheda' : 'Nuovo Onboarding'}</h3>
+                <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{editingPatient ? 'Modifica Scheda' : 'Nuovo Onboarding (v3.0)'}</h3>
               </div>
               <button onClick={closePatientModal} className="p-3 hover:bg-white rounded-2xl text-slate-400 transition-all border border-slate-100"><X size={24} /></button>
             </div>
