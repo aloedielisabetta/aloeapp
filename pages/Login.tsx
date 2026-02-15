@@ -34,20 +34,38 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
 
-    // Auto-append domain if not present to support simple usernames
-    // Note: We use @gmail.com as a fallback because Supabase often validates TLDs rigidly. 
-    // In a real production app with custom SMTP, any domain works, but for this default setup, a valid-looking one is safer.
-    const emailToUse = username.includes('@') ? username : `${username.toLowerCase().replace(/\s+/g, '')}@gmail.com`;
+    const baseUser = username.toLowerCase().replace(/\s+/g, '');
+    const domains = ['@gmail.com', '@aloe.system'];
+    let success = false;
+    let lastError = null;
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: emailToUse,
-      password: password,
-    });
-    setLoading(false);
-    if (error) {
-      setError("Credenziali non valide"); // Generic error message
+    // Try domains sequentially if no @ present
+    if (!username.includes('@')) {
+      for (const dom of domains) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: `${baseUser}${dom}`,
+          password: password,
+        });
+        if (!error) {
+          success = true;
+          break;
+        }
+        lastError = error;
+      }
     } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: username,
+        password: password,
+      });
+      if (!error) success = true;
+      lastError = error;
+    }
+
+    setLoading(false);
+    if (success) {
       navigate('/');
+    } else {
+      setError(lastError?.message === "Invalid login credentials" ? "Credenziali non valide" : (lastError?.message || "Errore di accesso"));
     }
   };
 
