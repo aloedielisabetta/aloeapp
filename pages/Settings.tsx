@@ -208,7 +208,7 @@ const Settings: React.FC = () => {
           </div>
           <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 hide-scrollbar">
             {salespersons
-              .filter(p => showHiddenCollaborators || !p.isHidden)
+              .filter(p => showHiddenCollaborators || p.isHidden !== true)
               .map(person => (
                 <div key={person.id} className={`flex justify-between items-center p-4 rounded-2xl border transition-all ${person.isHidden ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-slate-50/50 border-slate-50'}`}>
                   <span className={`font-black uppercase text-[10px] tracking-widest ${person.isHidden ? 'text-slate-400 line-through' : 'text-slate-600'}`}>{person.name}</span>

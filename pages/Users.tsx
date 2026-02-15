@@ -18,9 +18,7 @@ const UsersPage: React.FC = () => {
       if (found) {
         setExistingUser(found);
         setUsername(found.username);
-        // If password exists in DB (it should based on schema), show it.
-        // If it was created before this update and not synced, it might be missing locally until re-sync/reload
-        setPassword(found.password || '******');
+        setPassword(found.password || '');
       } else {
         setExistingUser(null);
         setUsername('');
@@ -87,8 +85,7 @@ const UsersPage: React.FC = () => {
         salespersonId: selectedSalespersonId,
         username: username, // Display name
         userId: authData.user.id,
-        // Password is not saved to DB here, but passed to function to satisfy type (refactor artifact)
-        // actually addWorkspaceUser implementation strips it.
+        password: password, // Important: pass the password to satisfy the DB constraint
       });
 
       setSelectedSalespersonId('');
