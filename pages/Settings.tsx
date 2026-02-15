@@ -14,7 +14,7 @@ const Settings: React.FC = () => {
   const {
     cities, addCity, deleteCity,
     salespersons, addSalesperson, deleteSalesperson, updateSalesperson,
-    orders, patients, products, recipes, rawMaterials, generalCosts, modifierGroups, workspaceUsers, currentWorkspace, syncData
+    orders, patients, products, recipes, rawMaterials, generalCosts, modifierGroups, workspaceUsers, currentWorkspace, updateWorkspace, syncData
   } = useApp();
 
   const [newCityName, setNewCityName] = useState('');
@@ -27,6 +27,20 @@ const Settings: React.FC = () => {
   const [showMigration, setShowMigration] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [adminEmail, setAdminEmail] = useState(currentWorkspace?.ownerEmail || '');
+
+  React.useEffect(() => {
+    if (currentWorkspace?.ownerEmail) {
+      setAdminEmail(currentWorkspace.ownerEmail);
+    }
+  }, [currentWorkspace?.ownerEmail]);
+
+  const handleUpdateAdminEmail = async (val: string) => {
+    setAdminEmail(val);
+    if (currentWorkspace) {
+      await updateWorkspace({ ...currentWorkspace, ownerEmail: val });
+    }
+  };
 
   const handleAddCity = async () => {
     if (newCityName.trim()) {
@@ -163,13 +177,8 @@ const Settings: React.FC = () => {
               type="email"
               placeholder="tua_email@gmail.com"
               className="w-full bg-slate-800 border border-slate-700 p-5 rounded-2xl font-black text-sm text-blue-400 outline-none focus:ring-4 focus:ring-blue-500/20 transition-all placeholder:text-slate-600"
-              value={currentWorkspace?.ownerEmail || ''}
-              onChange={async (e) => {
-                if (currentWorkspace) {
-                  await syncData(); // Ensure we have latest
-                  updateWorkspace({ ...currentWorkspace, ownerEmail: e.target.value });
-                }
-              }}
+              value={adminEmail}
+              onChange={(e) => handleUpdateAdminEmail(e.target.value)}
             />
           </div>
         </div>
