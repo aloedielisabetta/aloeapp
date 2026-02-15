@@ -52,12 +52,17 @@ const Patients: React.FC = () => {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingPatient) {
-      await updatePatient({ ...editingPatient, ...formData as Patient });
-    } else {
-      await addPatient({ ...formData, journal: [] } as Omit<Patient, 'id' | 'workspaceId'>);
+    try {
+      if (editingPatient) {
+        await updatePatient({ ...editingPatient, ...formData as Patient });
+      } else {
+        await addPatient({ ...formData, journal: [] } as Omit<Patient, 'id' | 'workspaceId'>);
+      }
+      closePatientModal();
+    } catch (error: any) {
+      alert(`Errore nel salvataggio: ${error.message || 'Contattare supporto'}`);
+      console.error(error);
     }
-    closePatientModal();
   };
 
 
@@ -496,14 +501,14 @@ const Patients: React.FC = () => {
                     </select>
                   </div>
                   <div className="space-y-2 col-span-full">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Patologia</label>
-                    <textarea rows={2} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all resize-none" value={formData.medicalCondition} onChange={e => setFormData({ ...formData, medicalCondition: e.target.value })} placeholder="E.g. Diabete di tipo 2, Ipertensione..." />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Patologie</label>
+                    <textarea rows={4} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all resize-none" value={formData.medicalCondition} onChange={e => setFormData({ ...formData, medicalCondition: e.target.value })} placeholder="E.g. Diabete di tipo 2, Ipertensione..." />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                    <Clipboard size={12} /> Cura
+                    <Clipboard size={12} /> Indicazioni Protocollo Aloe (Base)
                   </label>
                   <textarea rows={4} className="w-full p-5 bg-white border border-emerald-100 rounded-[2rem] font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-inner" value={formData.aloeTweak} onChange={e => setFormData({ ...formData, aloeTweak: e.target.value })} placeholder="Dettaglia la cura e frequenza di assunzione consigliata..." />
                 </div>
