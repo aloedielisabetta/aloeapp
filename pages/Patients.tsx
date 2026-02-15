@@ -7,7 +7,6 @@ import {
   X, Calendar, Tag, Layers, Edit2, FileText, Download,
   Loader2, Activity, Scale, Clipboard, Save, MessageSquare, UploadCloud, Smartphone
 } from 'lucide-react';
-import { initialPatients } from '../data/initialData';
 
 const Patients: React.FC = () => {
   const { patients, addPatient, updatePatient, deletePatient, cities } = useApp();
@@ -63,68 +62,7 @@ const Patients: React.FC = () => {
     closePatientModal();
   };
 
-  const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const text = await file.text();
-    const rows = text.split('\n');
-    const headers = rows[0].toLowerCase().split(/[;,]/).map(h => h.trim().replace(/"/g, ''));
-
-    // Map headers to fields
-    const map: Record<string, string> = {};
-    headers.forEach((h, i) => {
-      if (h.includes('nome')) map['firstName'] = i.toString();
-      if (h.includes('cognome')) map['lastName'] = i.toString();
-      if (h.includes('telef') || h.includes('cell')) map['phone'] = i.toString();
-      if (h.includes('citt') || h.includes('city')) map['city'] = i.toString();
-      if (h.includes('indi') || h.includes('via')) map['address'] = i.toString();
-      if (h.includes('patol') || h.includes('malatt')) map['medicalCondition'] = i.toString();
-      // New clinical fields
-      if (h.includes('esami') || h.includes('test')) {
-        if (!map['testResults']) map['testResults'] = i.toString();
-        else map['testResults2'] = i.toString();
-      }
-      if (h.includes('aggrav')) map['worsening'] = i.toString();
-      if (h.includes('miglior')) map['improvement'] = i.toString();
-      if (h.includes('stab')) map['stability'] = i.toString();
-      if (h.includes('mese') || h.includes('month')) map['formMonth'] = i.toString();
-      if (h.includes('cura') || h.includes('aloe') || h.includes('protocol')) map['aloeTweak'] = i.toString();
-    });
-
-    if (!map['firstName'] || !map['lastName']) {
-      alert("CSV non valido. Assicurati che ci siano le colonne 'Nome' e 'Cognome'.");
-      return;
-    }
-
-    let count = 0;
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i].trim();
-      if (!row) continue;
-      const cols = row.split(/[;,]/).map(c => c.trim().replace(/"/g, ''));
-
-      const p: Partial<Patient> = {
-        firstName: cols[parseInt(map['firstName'])] || 'Sconosciuto',
-        lastName: cols[parseInt(map['lastName'])] || '',
-        phone: map['phone'] ? cols[parseInt(map['phone'])] : '',
-        city: map['city'] ? cols[parseInt(map['city'])] : cities[0]?.name || 'Altro',
-        address: map['address'] ? cols[parseInt(map['address'])] : '',
-        medicalCondition: map['medicalCondition'] ? cols[parseInt(map['medicalCondition'])] : '',
-        medicalState: 'Buono',
-        testResults: map['testResults'] ? cols[parseInt(map['testResults'])] : '',
-        testResults2: map['testResults2'] ? cols[parseInt(map['testResults2'])] : '',
-        worsening: map['worsening'] ? cols[parseInt(map['worsening'])] : '',
-        improvement: map['improvement'] ? cols[parseInt(map['improvement'])] : '',
-        stability: map['stability'] ? cols[parseInt(map['stability'])] : '',
-        formMonth: map['formMonth'] ? cols[parseInt(map['formMonth'])] : '',
-        aloeTweak: map['aloeTweak'] ? cols[parseInt(map['aloeTweak'])] : ''
-      };
-      await addPatient({ ...p, journal: [] } as any);
-      count++;
-    }
-    alert(`Importati ${count} pazienti con successo!`);
-    e.target.value = ''; // Reset input
-  };
 
   const handleAddJournal = async () => {
     if (!showJournal || !newJournal.healthStatus) return;
@@ -226,21 +164,12 @@ const Patients: React.FC = () => {
           <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Gestione Pazienti <span className="text-xs bg-red-500 text-white px-2 py-1 rounded ml-2">v2.0</span></h2>
           <p className="text-slate-500 font-medium">Onboarding, protocolli e monitoraggio mensile.</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={handleImportInitialList} className="bg-slate-800 text-white px-4 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-slate-900 transition-all font-black text-xs uppercase tracking-widest active:scale-95 shadow-lg">
-            💾 Importa Lista
-          </button>
-          <label className="bg-orange-500 text-white border border-orange-600 px-6 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-orange-600 transition-all font-black text-xs uppercase tracking-widest cursor-pointer active:scale-95 shadow-lg">
-            <UploadCloud size={18} /> Importa CSV
-            <input type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
-          </label>
-          <button
-            onClick={() => setShowAdd(true)}
-            className="bg-green-600 text-white px-8 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all shadow-xl shadow-green-100 font-black text-xs uppercase tracking-widest active:scale-95"
-          >
-            <UserPlus size={18} /> Registra Paziente
-          </button>
-        </div>
+        <button
+          onClick={() => setShowAdd(true)}
+          className="bg-green-600 text-white px-8 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all shadow-xl shadow-green-100 font-black text-xs uppercase tracking-widest active:scale-95"
+        >
+          <UserPlus size={18} /> Registra Paziente
+        </button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-[2.5rem] border border-slate-100 shadow-sm text-sm">
