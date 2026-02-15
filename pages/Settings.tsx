@@ -29,6 +29,9 @@ const Settings: React.FC = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [adminEmail, setAdminEmail] = useState(currentWorkspace?.ownerEmail || '');
 
+  const [isSavingEmail, setIsSavingEmail] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   React.useEffect(() => {
     if (currentWorkspace?.ownerEmail) {
       setAdminEmail(currentWorkspace.ownerEmail);
@@ -37,8 +40,19 @@ const Settings: React.FC = () => {
 
   const handleUpdateAdminEmail = async (val: string) => {
     setAdminEmail(val);
-    if (currentWorkspace) {
+    if (!currentWorkspace) return;
+
+    setIsSavingEmail(true);
+    setSaveSuccess(false);
+
+    try {
       await updateWorkspace({ ...currentWorkspace, ownerEmail: val });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSavingEmail(false);
     }
   };
 
@@ -172,14 +186,18 @@ const Settings: React.FC = () => {
               Configura l'email (Gmail) dove vuoi ricevere i promemoria di fine cura dei tuoi pazienti.
             </p>
           </div>
-          <div className="w-full md:w-auto min-w-[300px]">
+          <div className="w-full md:w-auto min-w-[300px] relative">
             <input
               type="email"
               placeholder="tua_email@gmail.com"
-              className="w-full bg-slate-800 border border-slate-700 p-5 rounded-2xl font-black text-sm text-blue-400 outline-none focus:ring-4 focus:ring-blue-500/20 transition-all placeholder:text-slate-600"
+              className="w-full bg-slate-800 border border-slate-700 p-5 rounded-2xl font-black text-sm text-blue-400 outline-none focus:ring-4 focus:ring-blue-500/20 transition-all placeholder:text-slate-600 pr-14"
               value={adminEmail}
               onChange={(e) => handleUpdateAdminEmail(e.target.value)}
             />
+            <div className="absolute right-5 top-1/2 -translate-y-1/2">
+              {isSavingEmail && <Loader2 size={18} className="animate-spin text-blue-400" />}
+              {saveSuccess && <Check size={18} className="text-emerald-400" />}
+            </div>
           </div>
         </div>
       </div>
