@@ -129,6 +129,26 @@ const Patients: React.FC = () => {
     }, 200);
   };
 
+  const generateCalendarLink = (patient: Patient) => {
+    if (!patient.treatmentDuration) return null;
+
+    const durationMonths = parseInt(patient.treatmentDuration);
+    const now = new Date();
+    // Start of next month
+    const startDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    // Add duration
+    const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + durationMonths, 1);
+
+    const year = endDate.getFullYear();
+    const month = String(endDate.getMonth() + 1).padStart(2, '0');
+    const day = "01";
+
+    const dateStr = `${year}${month}${day}`;
+    const title = encodeURIComponent(`*Ultimo mese cura - ${patient.firstName} ${patient.lastName}, ${patient.city || ''}, ${patient.phone || ''}`);
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=Promemoria+automatico+fine+cura+Aloe+di+Elisabetta.`;
+  };
+
   const filtered = patients.filter(p => {
     const matchesSearch = `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase());
     const matchesCity = selectedCity === 'Tutte' || p.city === selectedCity;
@@ -211,6 +231,17 @@ const Patients: React.FC = () => {
               >
                 <Edit2 size={18} />
               </button>
+              {patient.treatmentDuration && (
+                <a
+                  href={generateCalendarLink(patient) || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
+                  title="Aggiungi Promemoria Fine Cura a Google Calendar"
+                >
+                  <Calendar size={18} />
+                </a>
+              )}
             </div>
 
             <div className="flex items-center gap-4 mb-6 pt-2">
@@ -370,6 +401,12 @@ const Patients: React.FC = () => {
                 <td className="border border-black p-2 font-bold align-top text-sm">Patologia</td>
                 <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.medicalCondition}</td>
               </tr>
+              {activeProtocolPatient?.treatmentDuration && (
+                <tr>
+                  <td className="border border-black p-2 font-bold align-top text-sm">Durata Cura</td>
+                  <td className="border border-black p-2 align-top text-sm font-bold text-red-600">{activeProtocolPatient?.treatmentDuration}</td>
+                </tr>
+              )}
               <tr>
                 <td className="border border-black p-2 font-bold align-top text-sm h-64">Cura</td>
                 <td className="border border-black p-4 align-top text-sm relative">
@@ -479,9 +516,21 @@ const Patients: React.FC = () => {
                   <textarea rows={4} className="w-full p-5 bg-white border border-emerald-100 rounded-[2rem] font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-inner" value={formData.aloeTweak} onChange={e => setFormData({ ...formData, aloeTweak: e.target.value })} placeholder="Dettaglia la cura e frequenza di assunzione consigliata..." />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami</label>
-                  <textarea rows={3} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.testResults} onChange={e => setFormData({ ...formData, testResults: e.target.value })} placeholder="Note esami..." />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Durata Cura</label>
+                    <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none appearance-none" value={formData.treatmentDuration} onChange={e => setFormData({ ...formData, treatmentDuration: e.target.value })}>
+                      <option value="">Scegli durata...</option>
+                      <option value="3 mesi">3 mesi</option>
+                      <option value="6 mesi">6 mesi</option>
+                      <option value="9 mesi">9 mesi</option>
+                      <option value="12 mesi">12 mesi</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami</label>
+                    <textarea rows={1} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.testResults} onChange={e => setFormData({ ...formData, testResults: e.target.value })} placeholder="Note esami..." />
+                  </div>
                 </div>
 
                 <div className="pt-6 border-t border-slate-100 flex gap-4">

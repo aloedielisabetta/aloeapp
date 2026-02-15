@@ -382,13 +382,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const createWorkspace = async (name: string, password?: string) => {
     if (!session?.user?.id) throw new Error('Not authenticated');
     // We still keep adminPassword for now if used for other things, but rely on ownerId for auth
-    const newWs = { id: crypto.randomUUID(), name, adminPassword: password, ownerId: session.user.id };
+    const newWs = { id: crypto.randomUUID(), name, adminPassword: password, ownerId: session.user.id, ownerEmail: session.user.email };
     const { error } = await supabase.from('workspaces').insert(toSnake(newWs));
     if (error) throw error;
     setWorkspaces(prev => [...prev, newWs]);
     // Do NOT auto-login/select here anymore per user request. 
     // The component handles the next steps (sign out / redirect).
     return newWs;
+  };
+
+  const updateWorkspace = async (ws: Workspace) => {
+    const { error } = await supabase.from('workspaces').update(toSnake(ws)).eq('id', ws.id);
+    if (error) throw error;
+    setCurrentWorkspace(ws);
+    setWorkspaces(prev => prev.map(item => item.id === ws.id ? ws : item));
   };
 
   const deleteCurrentWorkspace = async () => {
@@ -413,7 +420,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addPatient, updatePatient, deletePatient, addOrder, updateOrder, deleteOrder, addProduct, updateProduct, deleteProduct,
       addRecipe, updateRecipe, deleteRecipe, addCity, deleteCity, addSalesperson, updateSalesperson, deleteSalesperson, addGeneralCost, deleteGeneralCost,
       addWorkspaceUser, deleteWorkspaceUser, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
-      createWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut
+      createWorkspace, updateWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut
     }}>
       {children}
     </AppContext.Provider>

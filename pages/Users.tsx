@@ -9,6 +9,7 @@ const UsersPage: React.FC = () => {
   const { salespersons, workspaceUsers, addWorkspaceUser, deleteWorkspaceUser, currentWorkspace } = useApp();
   const [selectedSalespersonId, setSelectedSalespersonId] = useState('');
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [existingUser, setExistingUser] = useState<WorkspaceUser | null>(null);
 
@@ -19,10 +20,12 @@ const UsersPage: React.FC = () => {
         setExistingUser(found);
         setUsername(found.username);
         setPassword(found.password || '');
+        setEmail(found.email || '');
       } else {
         setExistingUser(null);
         setUsername('');
         setPassword('');
+        setEmail('');
       }
     } else {
       setExistingUser(null);
@@ -84,6 +87,7 @@ const UsersPage: React.FC = () => {
       await addWorkspaceUser({
         salespersonId: selectedSalespersonId,
         username: username, // Display name
+        email: email.trim(), // Link notification email
         userId: authData.user.id,
         password: password, // Important: pass the password to satisfy the DB constraint
       });
@@ -144,6 +148,21 @@ const UsersPage: React.FC = () => {
                 <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                   <Users size={18} />
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email per Notifiche (GCal)</label>
+              <div className="relative">
+                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                <input
+                  className="w-full pl-14 pr-5 py-5 bg-white border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono"
+                  placeholder="email@gmail.com"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                />
               </div>
             </div>
 

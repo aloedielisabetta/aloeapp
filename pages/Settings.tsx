@@ -146,6 +146,35 @@ const Settings: React.FC = () => {
 
   return (
     <div className="space-y-8 pb-20">
+      <div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full -translate-y-32 translate-x-32 blur-3xl group-hover:bg-blue-500/20 transition-all duration-700"></div>
+        <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
+          <div className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-500/20">
+            <User size={32} />
+          </div>
+          <div className="flex-1 space-y-2 text-center md:text-left">
+            <h3 className="text-xl font-black uppercase tracking-tight">Profilo Amministratore</h3>
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest leading-relaxed">
+              Configura l'email (Gmail) dove vuoi ricevere i promemoria di fine cura dei tuoi pazienti.
+            </p>
+          </div>
+          <div className="w-full md:w-auto min-w-[300px]">
+            <input
+              type="email"
+              placeholder="tua_email@gmail.com"
+              className="w-full bg-slate-800 border border-slate-700 p-5 rounded-2xl font-black text-sm text-blue-400 outline-none focus:ring-4 focus:ring-blue-500/20 transition-all placeholder:text-slate-600"
+              value={currentWorkspace?.ownerEmail || ''}
+              onChange={async (e) => {
+                if (currentWorkspace) {
+                  await syncData(); // Ensure we have latest
+                  updateWorkspace({ ...currentWorkspace, ownerEmail: e.target.value });
+                }
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Crea Città e Collaboratori</h2>

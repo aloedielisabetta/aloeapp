@@ -22,6 +22,7 @@ export interface Patient {
   medicalCondition: string; // Patologia
   aloeTweak: string;      // Cura
   testResults?: string;   // Controllo Esami
+  treatmentDuration?: string; // Durata Cura (3, 6, 9, 12 mesi)
   journal?: JournalEntry[]; // Keep for future tracking
 }
 
@@ -30,6 +31,7 @@ export interface WorkspaceUser {
   workspaceId: string;
   salespersonId: string;
   username: string;
+  email?: string; // Notification Email
   userId?: string; // Linked Supabase Auth ID
   password?: string;
 }
@@ -125,6 +127,7 @@ export interface CityFolder {
 export interface Workspace {
   id: string;
   name: string;
+  ownerEmail?: string; // Admin Notification Email
   adminPassword?: string; // Deprecated
   ownerId?: string; // Linked Supabase Auth ID
 }
