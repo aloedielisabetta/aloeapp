@@ -316,6 +316,16 @@ const Orders: React.FC = () => {
                                 <Sparkles size={8} /> Interno
                               </span>
                             )}
+                            {order.isShipping && (
+                              <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-blue-100 flex items-center gap-1">
+                                <Truck size={8} /> Spedizione
+                              </span>
+                            )}
+                            {order.isFree && (
+                              <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-purple-100 flex items-center gap-1">
+                                <Gift size={8} /> Omaggio
+                              </span>
+                            )}
                           </div>
                         </div>
                       ) : <p className="text-[10px] font-black text-red-400 uppercase tracking-widest">Paziente Non Trovato</p>}
@@ -454,8 +464,8 @@ const Orders: React.FC = () => {
                                   </label>
                                   <select
                                     className={`w-full p-3 border rounded-2xl text-[10px] font-black outline-none transition-all ${item.selectedModifiers[mgId]
-                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                                        : 'bg-white border-slate-200 text-slate-400'
+                                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                      : 'bg-white border-slate-200 text-slate-400'
                                       }`}
                                     value={item.selectedModifiers[mgId] || ''}
                                     onChange={e => updateItemModifier(idx, mgId, e.target.value)}
