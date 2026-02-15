@@ -7,6 +7,7 @@ import {
   X, Calendar, Tag, Layers, Edit2, FileText, Download,
   Loader2, Activity, Scale, Clipboard, Save, MessageSquare, UploadCloud, Smartphone
 } from 'lucide-react';
+import { initialPatients } from '../data/initialData';
 
 const Patients: React.FC = () => {
   const { patients, addPatient, updatePatient, deletePatient, cities } = useApp();
@@ -190,6 +191,24 @@ const Patients: React.FC = () => {
     }, 200);
   };
 
+  const handleImportInitialList = async () => {
+    if (!confirm('Vuoi davvero importare la lista iniziale di ~56 pazienti?')) return;
+
+    let count = 0;
+    for (const p of initialPatients) {
+      await addPatient({
+        ...p,
+        city: p.city || cities[0]?.name || 'Altro',
+        address: p.address || '',
+        conditionType: 'Cronico',
+        medicalState: 'Buono',
+        journal: []
+      } as any);
+      count++;
+    }
+    alert(`Importati ${count} pazienti iniziali con successo!`);
+  };
+
   const filtered = patients.filter(p => {
     const matchesSearch = `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase());
     const matchesCity = selectedCity === 'Tutte' || p.city === selectedCity;
@@ -207,32 +226,9 @@ const Patients: React.FC = () => {
           <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Gestione Pazienti <span className="text-xs bg-red-500 text-white px-2 py-1 rounded ml-2">v2.0</span></h2>
           <p className="text-slate-500 font-medium">Onboarding, protocolli e monitoraggio mensile.</p>
         </div>
-        import {initialPatients} from '../data/initialData';
-
-// ... (CSV logic remains the same)
-
-  const handleImportInitialList = async () => {
-    if (!confirm('Vuoi davvero importare la lista iniziale di ~50 pazienti?')) return;
-
-        let count = 0;
-        for (const p of initialPatients) {
-          await addPatient({
-            ...p,
-            city: p.city || 'Altro', // Fill city if empty
-            address: p.address || 'N/D', // Fill address if empty
-            conditionType: 'Cronico',
-            medicalState: 'Buono',
-            journal: []
-          } as any);
-        count++;
-    }
-        alert(`Importati ${count} pazienti iniziali!`);
-  };
-
-        // ... (inside return)
         <div className="flex gap-3">
           <button onClick={handleImportInitialList} className="bg-slate-800 text-white px-4 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-slate-900 transition-all font-black text-xs uppercase tracking-widest active:scale-95 shadow-lg">
-            💾 Importa Lista Iniziale
+            💾 Importa Lista
           </button>
           <label className="bg-orange-500 text-white border border-orange-600 px-6 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-orange-600 transition-all font-black text-xs uppercase tracking-widest cursor-pointer active:scale-95 shadow-lg">
             <UploadCloud size={18} /> Importa CSV
