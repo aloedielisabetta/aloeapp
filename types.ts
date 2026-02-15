@@ -14,22 +14,15 @@ export interface JournalEntry {
 export interface Patient {
   id: string;
   workspaceId: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  address: string;
-  city: string;
-  medicalCondition: string;
-  conditionType: ConditionType;
-  medicalState: MedicalState;
-  aloeTweak: string;
-  formMonth?: string;
-  testResults?: string;
-  testResults2?: string;
-  worsening?: string;
-  improvement?: string;
-  stability?: string;
-  journal?: JournalEntry[]; // Monthly tracking history
+  firstName: string;      // Nome
+  lastName: string;       // Cognome
+  phone: string;          // Telefono
+  address: string;        // Indirizzo
+  city: string;           // Città
+  medicalCondition: string; // Patologia
+  aloeTweak: string;      // Cura
+  testResults?: string;   // Controllo Esami
+  journal?: JournalEntry[]; // Keep for future tracking
 }
 
 export interface WorkspaceUser {

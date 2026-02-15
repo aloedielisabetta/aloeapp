@@ -31,8 +31,7 @@ const Patients: React.FC = () => {
   const [formData, setFormData] = useState<Partial<Patient>>({
     firstName: '', lastName: '', phone: '', address: '',
     city: cities[0]?.name || '', medicalCondition: '',
-    conditionType: '', medicalState: 'Buono', aloeTweak: '',
-    formMonth: '', testResults: '', testResults2: '', worsening: '', improvement: '', stability: ''
+    aloeTweak: '', testResults: ''
   });
 
   const handleOpenEdit = (patient: Patient) => {
@@ -47,8 +46,7 @@ const Patients: React.FC = () => {
     setFormData({
       firstName: '', lastName: '', phone: '', address: '',
       city: cities[0]?.name || '', medicalCondition: '',
-      conditionType: '', medicalState: 'Buono', aloeTweak: '',
-      formMonth: '', testResults: '', testResults2: '', worsening: '', improvement: '', stability: ''
+      aloeTweak: '', testResults: ''
     });
   };
 
@@ -226,16 +224,8 @@ const Patients: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="flex justify-between items-center py-3 border-y border-slate-50">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Stato Recente</span>
-                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${patient.medicalState === 'Critico' ? 'bg-red-50 text-red-600' :
-                  patient.medicalState === 'Grave' ? 'bg-orange-50 text-orange-600' :
-                    patient.medicalState === 'Discreto' ? 'bg-blue-50 text-blue-600' : 'bg-green-50 text-green-600'
-                  }`}>{patient.medicalState}</span>
-              </div>
-
               <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Protocollo Base</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Cura</p>
                 <p className="text-xs text-slate-600 font-medium leading-relaxed line-clamp-2 italic">
                   {patient.aloeTweak || 'Nessuna nota specifica.'}
                 </p>
@@ -481,7 +471,7 @@ const Patients: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-8 scrollbar-hide">
-              <form onSubmit={handleAdd} className="space-y-8">
+              <form onSubmit={handleAdd} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome</label>
@@ -496,70 +486,31 @@ const Patients: React.FC = () => {
                     <input required className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Indirizzo per Spedizione</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Indirizzo</label>
                     <input required className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cartella Città</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Città</label>
                     <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none appearance-none" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })}>
                       {cities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </select>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Patologia Principale</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Patologia</label>
                     <input className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.medicalCondition} onChange={e => setFormData({ ...formData, medicalCondition: e.target.value })} placeholder="E.g. Diabete di tipo 2" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stato Clinico Attuale</label>
-                    <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none" value={formData.medicalState} onChange={e => setFormData({ ...formData, medicalState: e.target.value as MedicalState })}>
-                      <option value="Buono">Ottimo / Buono</option>
-                      <option value="Discreto">Discreto</option>
-                      <option value="Grave">Grave</option>
-                      <option value="Critico">Critico</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* NEW FIELDS SECTION */}
-                <div className="bg-slate-50 p-5 rounded-[2rem] border border-slate-100 space-y-4">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dettagli Scheda PDF</h4>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mese (Header)</label>
-                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.formMonth} onChange={e => setFormData({ ...formData, formMonth: e.target.value })} placeholder="E.g. Marzo 2024" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami (1)</label>
-                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.testResults} onChange={e => setFormData({ ...formData, testResults: e.target.value })} placeholder="Valori o note inziali..." />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Aggravamento</label>
-                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.worsening} onChange={e => setFormData({ ...formData, worsening: e.target.value })} placeholder="Sintomi peggiorati..." />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Miglioramento</label>
-                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.improvement} onChange={e => setFormData({ ...formData, improvement: e.target.value })} placeholder="Miglioramenti notati..." />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami dopo Aloe</label>
-                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.testResults2} onChange={e => setFormData({ ...formData, testResults2: e.target.value })} placeholder="Esami successivi..." />
-                    </div>
-                    <div className="space-y-2 col-span-full">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Periodo di Stabilità</label>
-                      <input className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none" value={formData.stability} onChange={e => setFormData({ ...formData, stability: e.target.value })} placeholder="Durata stabilità..." />
-                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                    <Clipboard size={12} /> Indicazioni Protocollo Aloe (Cura)
+                    <Clipboard size={12} /> Cura
                   </label>
                   <textarea rows={4} className="w-full p-5 bg-white border border-emerald-100 rounded-[2rem] font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-inner" value={formData.aloeTweak} onChange={e => setFormData({ ...formData, aloeTweak: e.target.value })} placeholder="Dettaglia la cura e frequenza di assunzione consigliata..." />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami</label>
+                  <textarea rows={3} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.testResults} onChange={e => setFormData({ ...formData, testResults: e.target.value })} placeholder="Note esami..." />
                 </div>
 
                 <div className="pt-6 border-t border-slate-100 flex gap-4">
