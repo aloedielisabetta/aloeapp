@@ -495,9 +495,9 @@ const Patients: React.FC = () => {
                       {cities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 col-span-full">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Patologia</label>
-                    <input className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.medicalCondition} onChange={e => setFormData({ ...formData, medicalCondition: e.target.value })} placeholder="E.g. Diabete di tipo 2" />
+                    <textarea rows={2} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all resize-none" value={formData.medicalCondition} onChange={e => setFormData({ ...formData, medicalCondition: e.target.value })} placeholder="E.g. Diabete di tipo 2, Ipertensione..." />
                   </div>
                 </div>
 
