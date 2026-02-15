@@ -1,11 +1,9 @@
-```
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useApp } from '../store';
 import {
-  MapPin, Plus, Trash2, Briefcase, User, Download, Archive, 
-  Calendar, X, AlertCircle, Check, AlertTriangle, RefreshCcw, 
+  MapPin, Plus, Trash2, Briefcase, User, Download, Archive,
+  Calendar, X, AlertCircle, Check, AlertTriangle, RefreshCcw,
   Loader2, Database, Code, Cloud, FileCode, Copy, FolderArchive, Zap,
-  // Fix: Added missing Settings2 icon import
   Settings2, Eye, EyeOff
 } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -85,7 +83,7 @@ const Settings: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `ALOE_BACKUP_${ new Date().toISOString().slice(0, 10) }.json`;
+    link.download = `ALOE_BACKUP_${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -95,10 +93,6 @@ const Settings: React.FC = () => {
     const zip = new JSZip();
 
     try {
-      // In a real environment, we'd fetch these. Since we are in the editor context,
-      // we'll bundle the core files that define the app's logic.
-      // Note: This collects the files we've been working on.
-
       const filesToInclude = [
         'index.html', 'index.tsx', 'App.tsx', 'store.tsx', 'types.ts',
         'supabase.ts', 'metadata.json', 'manifest.json', 'supabase_schema.sql'
@@ -113,34 +107,30 @@ const Settings: React.FC = () => {
 
       const components = ['Layout.tsx'];
 
-      // Fetch helper to get content of local files
       const getFile = async (path: string) => {
         try {
           const res = await fetch(path);
           return await res.text();
         } catch (e) {
-          console.warn(`Could not fetch ${ path }, skipping...`);
+          console.warn(`Could not fetch ${path}, skipping...`);
           return null;
         }
       };
 
-      // Add Root Files
       for (const f of filesToInclude) {
         const content = await getFile(f);
         if (content) zip.file(f, content);
       }
 
-      // Add Pages
       const pagesFolder = zip.folder("pages");
       for (const p of pages) {
-        const content = await getFile(`pages / ${ p } `);
+        const content = await getFile(`pages/${p}`);
         if (content) pagesFolder?.file(p, content);
       }
 
-      // Add Components
       const compFolder = zip.folder("components");
       for (const c of components) {
-        const content = await getFile(`components / ${ c } `);
+        const content = await getFile(`components/${c}`);
         if (content) compFolder?.file(c, content);
       }
 
@@ -178,7 +168,6 @@ const Settings: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* City Folders */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
           <h3 className="font-black flex items-center gap-3 text-slate-700 uppercase tracking-widest text-xs">
             <MapPin size={20} className="text-emerald-500" /> Cartelle Città
@@ -197,7 +186,6 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
-        {/* Collaborators */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="font-black flex items-center gap-3 text-slate-700 uppercase tracking-widest text-xs">
@@ -222,12 +210,12 @@ const Settings: React.FC = () => {
             {salespersons
               .filter(p => showHiddenCollaborators || !p.isHidden)
               .map(person => (
-                <div key={person.id} className={`flex justify - between items - center p - 4 rounded - 2xl border transition - all ${ person.isHidden ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-slate-50/50 border-slate-50' } `}>
-                  <span className={`font - black uppercase text - [10px] tracking - widest ${ person.isHidden ? 'text-slate-400 line-through' : 'text-slate-600' } `}>{person.name}</span>
+                <div key={person.id} className={`flex justify-between items-center p-4 rounded-2xl border transition-all ${person.isHidden ? 'bg-slate-100 border-slate-200 opacity-60' : 'bg-slate-50/50 border-slate-50'}`}>
+                  <span className={`font-black uppercase text-[10px] tracking-widest ${person.isHidden ? 'text-slate-400 line-through' : 'text-slate-600'}`}>{person.name}</span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => toggleHideSalesperson(person)}
-                      className={`p - 3 transition - all ${ person.isHidden ? 'text-slate-400 hover:text-slate-700 bg-slate-200 hover:bg-slate-300' : 'text-slate-300 hover:text-orange-500 hover:bg-orange-50' } rounded - 2xl`}
+                      className={`p-3 transition-all ${person.isHidden ? 'text-slate-400 hover:text-slate-700 bg-slate-200 hover:bg-slate-300' : 'text-slate-300 hover:text-orange-500 hover:bg-orange-50'} rounded-2xl`}
                       title={person.isHidden ? "Riattiva Collaboratore" : "Nascondi Collaboratore (Non elimina dati passati)"}
                     >
                       {person.isHidden ? <Eye size={18} /> : <EyeOff size={18} />}
@@ -239,7 +227,6 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* MIGRATION CENTER MODAL */}
       {showMigration && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xl flex items-center justify-center z-[100] p-4 md:p-10">
           <div className="bg-white rounded-[4rem] shadow-2xl w-full max-w-5xl h-full flex flex-col overflow-hidden">
@@ -257,7 +244,6 @@ const Settings: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-10 grid grid-cols-1 lg:grid-cols-3 gap-10 scrollbar-hide">
-              {/* Main Actions */}
               <div className="lg:col-span-1 space-y-8">
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Passo 1: Esportazione</h4>
@@ -305,7 +291,6 @@ const Settings: React.FC = () => {
                 </div>
               </div>
 
-              {/* Instructions */}
               <div className="lg:col-span-2 space-y-8">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Passo 2: Istruzioni per Google Antigravity</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

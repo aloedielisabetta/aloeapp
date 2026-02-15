@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useApp } from '../store';
 import { Patient, MedicalState, JournalEntry } from '../types';
@@ -65,8 +64,6 @@ const Patients: React.FC = () => {
     }
   };
 
-
-
   const handleAddJournal = async () => {
     if (!showJournal || !newJournal.healthStatus) return;
 
@@ -113,7 +110,7 @@ const Patients: React.FC = () => {
       if (!protocolRef.current) return;
 
       const opt = {
-        margin: 0, // Zero margin for full bleed or custom CSS margin
+        margin: 0,
         filename: `Scheda_Paziente_${patient.firstName}_${patient.lastName}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
@@ -272,7 +269,6 @@ const Patients: React.FC = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 lg:grid-cols-2 gap-10 scrollbar-hide">
-              {/* Add Entry Form */}
               <div className="space-y-6">
                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2">
                   <Plus size={16} className="text-blue-500" /> Nuovo Check-up Mensile
@@ -303,7 +299,6 @@ const Patients: React.FC = () => {
                 </div>
               </div>
 
-              {/* History Timeline */}
               <div className="space-y-6">
                 <h4 className="text-xs font-black text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2">
                   <History size={16} className="text-slate-400" /> Cronologia Progressi
@@ -352,25 +347,19 @@ const Patients: React.FC = () => {
         </div>
       )}
 
-      {/* CUSTOM PDF TEMPLATE */}
       <div className="hidden">
         <div ref={protocolRef} className="bg-white" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', boxSizing: 'border-box', fontFamily: 'Arial, sans-serif' }}>
-
-          {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-red-600 mb-1">Elisabetta 3620871005</h1>
             <p className="text-sm text-red-500 font-medium">contattabile via telefono o messaggio: Dal Lunedi al Venerdi 17.00-20.00</p>
           </div>
 
-          {/* Logo (Placeholder/Actual) */}
           <div className="absolute top-10 right-10">
-            {/* Using a simple placeholder if no image available, or generic icon */}
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center border-2 border-emerald-500">
               <span className="text-2xl">🌱</span>
             </div>
           </div>
 
-          {/* Main Data Table */}
           <table className="w-full border-collapse border border-black mb-8">
             <tbody>
               <tr>
@@ -409,7 +398,6 @@ const Patients: React.FC = () => {
             <p className="text-xs font-normal mt-1 text-slate-500">Il barattolo va sempre tenuto in frigo e sbattuto.</p>
           </div>
 
-          {/* Dosage Table */}
           <table className="w-full border-collapse border border-black text-sm mb-6">
             <tbody>
               <tr>
@@ -438,7 +426,6 @@ const Patients: React.FC = () => {
             significa che non ne avete <span className="underline">più bisogno,</span> al contrario se la situazione fisica tende a
             <span className="text-blue-500"> peggiorare,ne avete ancora bisogno";</span>generalmente equivale ai mesi che vi ho prescritto.
           </p>
-
         </div>
       </div>
 
