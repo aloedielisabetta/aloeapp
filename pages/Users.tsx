@@ -206,7 +206,11 @@ const UsersPage: React.FC = () => {
             {workspaceUsers.map(user => {
               const salesperson = salespersons.find(s => s.id === user.salespersonId);
               return (
-                <div key={user.id} className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm flex items-center justify-between group hover:border-emerald-200 transition-all hover:shadow-md">
+                <div
+                  key={user.id}
+                  onClick={() => setSelectedSalespersonId(user.salespersonId)}
+                  className={`p-8 bg-white border rounded-[2.5rem] shadow-sm flex items-center justify-between group hover:border-emerald-200 transition-all hover:shadow-md cursor-pointer ${selectedSalespersonId === user.salespersonId ? 'border-emerald-500 bg-emerald-50/10' : 'border-slate-100'}`}
+                >
                   <div className="flex items-center gap-5">
                     <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-all shadow-inner">
                       <Shield size={24} />
