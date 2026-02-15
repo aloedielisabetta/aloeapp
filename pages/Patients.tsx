@@ -419,12 +419,11 @@ const Patients: React.FC = () => {
             </tbody>
           </table>
 
-          <p className="text-[10px] text-blue-700 leading-relaxed text-justify">
-            Per alcune patologie si deve attendere alcuni giorni per iniziare l'assunzione del barattolo
-            successivo;<span className="text-blue-500 underline">dal 2° mese per una settimana,si rimane sempre senza del preparato di aloe:</span>
-            questo <span className="underline">perché</span> come dice Padre Romano Zago"se quella settimana senza,si sta bene
-            significa che non ne avete <span className="underline">più bisogno,</span> al contrario se la situazione fisica tende a
-            <span className="text-blue-500"> peggiorare,ne avete ancora bisogno";</span>generalmente equivale ai mesi che vi ho prescritto.
+          <p className="text-[11px] text-blue-800 leading-relaxed text-justify border-t border-blue-50 pt-4">
+            <strong>Un consiglio importante:</strong> tra un mese e l'altro, <u>specialmente dal 2° mese in poi, ti chiedo di sospendere l'assunzione per una settimana.</u>
+            <br /><br />
+            Questo serve a verificare la risposta del tuo organismo. Come insegnava Padre Romano Zago, se in quella settimana di pausa ti senti in forze, il beneficio è consolidato.
+            Se invece i sintomi tendono a ripresentarsi, è segno che è necessario continuare la cura per il periodo che abbiamo stabilito insieme.
           </p>
         </div>
       </div>
