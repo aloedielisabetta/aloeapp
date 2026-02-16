@@ -24,7 +24,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { to: '/', icon: <Users size={20} />, label: 'Pazienti' },
     { to: '/orders', icon: <ShoppingBag size={20} />, label: 'Ordini' },
     { to: '/production', icon: <ClipboardList size={20} />, label: 'Produzione' },
-    { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo' },
   ];
 
   if (isAdmin) {
@@ -37,11 +36,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       { to: '/reports', icon: <FileText size={20} />, label: 'Report' },
       { to: '/users', icon: <UserPlus size={20} />, label: 'Accesso Collaboratori' },
       { to: '/settings', icon: <Settings size={20} />, label: 'Crea Città e Collaboratori' },
-      { to: '/link', icon: <Share2 size={20} />, label: 'Condivisione App' }
+      { to: '/link', icon: <Share2 size={20} />, label: 'Condivisione App' },
+      { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo' }
     );
   } else {
     navItems.push(
-      { to: '/my-sales', icon: <TrendingUp size={20} />, label: 'Mie Vendite' }
+      { to: '/my-sales', icon: <TrendingUp size={20} />, label: 'Mie Vendite' },
+      { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo' }
     );
   }
 
