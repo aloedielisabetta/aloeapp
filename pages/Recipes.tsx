@@ -5,21 +5,56 @@ import { Recipe, IngredientRequirement, RawMaterial } from '../types';
 import { Plus, Beaker, Trash2, Droplets, Edit3, X, Settings2, Package, Coins, Info, AlertCircle } from 'lucide-react';
 
 const Recipes: React.FC = () => {
-  const { 
-    products, updateProduct, recipes, addRecipe, updateRecipe, deleteRecipe, 
-    currentWorkspace, modifierGroups, rawMaterials, addRawMaterial, deleteRawMaterial 
+  const {
+    products, updateProduct, recipes, addRecipe, updateRecipe, deleteRecipe,
+    currentWorkspace, modifierGroups, rawMaterials, addRawMaterial, deleteRawMaterial
   } = useApp();
-  
+
   const [showModal, setShowModal] = useState(false);
-  
+
   const [recipeType, setRecipeType] = useState<'product' | 'modifier'>('product');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('');
   const [selectedOption, setSelectedOption] = useState('');
-  
+
   const [editingIngredients, setEditingIngredients] = useState<IngredientRequirement[]>([]);
-  
+
   const [ingForm, setIngForm] = useState({ name: '', qty: 0, unit: 'gr', cost: 0, rawMaterialId: '' });
+
+  const CONVERSIONS: Record<string, Record<string, number>> = {
+    'kg': { 'gr': 1000, 'g': 1000 },
+    'Kg': { 'gr': 1000, 'g': 1000 },
+    'gr': { 'kg': 0.001, 'Kg': 0.001, 'g': 1 },
+    'g': { 'kg': 0.001, 'Kg': 0.001, 'gr': 1 },
+    'lit': { 'ml': 1000 },
+    'l': { 'ml': 1000 },
+    'ml': { 'lit': 0.001, 'l': 0.001 },
+  };
+
+  const convertQuantity = (quantity: number, fromUnit: string, toUnit: string) => {
+    if (fromUnit.toLowerCase() === toUnit.toLowerCase()) return quantity;
+    const factor = CONVERSIONS[fromUnit]?.[toUnit];
+    if (factor) return quantity * factor;
+    return quantity;
+  };
+
+  const getIngredientDynamicCostValue = (ing: IngredientRequirement) => {
+    if (ing.rawMaterialId) {
+      const rm = rawMaterials.find(r => r.id === ing.rawMaterialId);
+      if (rm && rm.totalQuantity > 0) {
+        const baseCostPerUnit = rm.totalPrice / rm.totalQuantity;
+        // Convert ingredient quantity from its unit to the raw material's base unit
+        // If RM is KG and Ing is GR, factor is 0.001 (divide by 1000)
+        const factor = CONVERSIONS[ing.unit]?.[rm.unit] || 1;
+        return (ing.quantity * factor) * baseCostPerUnit;
+      }
+    }
+    return ing.quantity * ing.costPerUnit;
+  };
+
+  const sessionTotalCost = useMemo(() => {
+    return editingIngredients.reduce((sum, ing) => sum + getIngredientDynamicCostValue(ing), 0);
+  }, [editingIngredients, rawMaterials]);
 
   const resetState = () => {
     setSelectedProductId('');
@@ -55,7 +90,7 @@ const Recipes: React.FC = () => {
     } else {
       existing = recipes.find(r => r.modifierGroupId === selectedGroupId && r.modifierOption === selectedOption);
     }
-    
+
     if (existing) {
       await updateRecipe({ ...existing, ingredients: editingIngredients });
     } else {
@@ -66,7 +101,7 @@ const Recipes: React.FC = () => {
         ingredients: editingIngredients
       });
     }
-    
+
     setShowModal(false);
     resetState();
   };
@@ -76,18 +111,6 @@ const Recipes: React.FC = () => {
     if (!product) return;
     await updateProduct({ ...product, costPerItem: calculatedCost });
   };
-
-  const getIngredientDynamicCostValue = (ing: IngredientRequirement) => {
-    if (ing.rawMaterialId) {
-      const rm = rawMaterials.find(r => r.id === ing.rawMaterialId);
-      if (rm && rm.totalQuantity > 0) return (rm.totalPrice / rm.totalQuantity) * ing.quantity;
-    }
-    return ing.quantity * ing.costPerUnit;
-  };
-
-  const sessionTotalCost = useMemo(() => {
-    return editingIngredients.reduce((sum, ing) => sum + getIngredientDynamicCostValue(ing), 0);
-  }, [editingIngredients, rawMaterials]);
 
   const handleRMSelectInForm = (rmId: string) => {
     const rm = rawMaterials.find(r => r.id === rmId);
@@ -123,7 +146,7 @@ const Recipes: React.FC = () => {
           const product = products.find(p => p.id === recipe.productId);
           const group = modifierGroups.find(g => g.id === recipe.modifierGroupId);
           const totalCost = recipe.ingredients.reduce((sum, ing) => sum + getIngredientDynamicCostValue(ing), 0);
-          
+
           return (
             <div key={recipe.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden group hover:shadow-md transition-all">
               <div className="p-6">
@@ -171,14 +194,14 @@ const Recipes: React.FC = () => {
           <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
             <div className="p-8 border-b border-slate-100 flex justify-between items-center shrink-0 bg-slate-50/50">
               <div className="flex items-center gap-3">
-                 <div className={`p-2 rounded-xl ${recipeType === 'product' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-600'}`}>
-                    {recipeType === 'product' ? <Droplets size={24} /> : <Settings2 size={24} />}
-                 </div>
-                 <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight leading-none">{recipeType === 'product' ? 'Formula Prodotto' : 'Formula Variante'}</h3>
+                <div className={`p-2 rounded-xl ${recipeType === 'product' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-600'}`}>
+                  {recipeType === 'product' ? <Droplets size={24} /> : <Settings2 size={24} />}
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight leading-none">{recipeType === 'product' ? 'Formula Prodotto' : 'Formula Variante'}</h3>
               </div>
               <button onClick={() => setShowModal(false)} className="p-3 hover:bg-white rounded-2xl text-slate-400 transition-all border border-slate-100"><X size={24} /></button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 scroll-smooth hide-scrollbar">
               <div className="space-y-6">
                 {/* Selezione Prodotto/Variante */}
@@ -212,9 +235,9 @@ const Recipes: React.FC = () => {
                 <div className="p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-4 shadow-inner">
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-rose-500 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                      <Coins size={10}/> Usa Materia Prima (Facoltativo)
+                      <Coins size={10} /> Usa Materia Prima (Facoltativo)
                     </label>
-                    <select 
+                    <select
                       className="w-full p-3 border border-rose-100 bg-white rounded-xl text-xs font-bold text-rose-800 outline-none focus:ring-4 focus:ring-rose-500/10"
                       value={ingForm.rawMaterialId}
                       onChange={e => handleRMSelectInForm(e.target.value)}
@@ -235,17 +258,17 @@ const Recipes: React.FC = () => {
 
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Ingrediente</label>
-                    <input className="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold disabled:bg-slate-100 disabled:text-slate-400" placeholder="E.g. Aloe Arborescens" value={ingForm.name} onChange={e => setIngForm({...ingForm, name: e.target.value})} disabled={!!ingForm.rawMaterialId} />
+                    <input className="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold disabled:bg-slate-100 disabled:text-slate-400" placeholder="E.g. Aloe Arborescens" value={ingForm.name} onChange={e => setIngForm({ ...ingForm, name: e.target.value })} disabled={!!ingForm.rawMaterialId} />
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-1">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Qtà</label>
-                      <input type="number" className="w-full p-3 border border-slate-200 rounded-xl text-sm font-black" placeholder="0" value={ingForm.qty || ''} onChange={e => setIngForm({...ingForm, qty: parseFloat(e.target.value) || 0})} />
+                      <input type="number" className="w-full p-3 border border-slate-200 rounded-xl text-sm font-black" placeholder="0" value={ingForm.qty || ''} onChange={e => setIngForm({ ...ingForm, qty: parseFloat(e.target.value) || 0 })} />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Unità</label>
-                      <select className="w-full p-3 border border-slate-200 rounded-xl text-xs font-black uppercase disabled:bg-slate-100 disabled:text-slate-400" value={ingForm.unit} onChange={e => setIngForm({...ingForm, unit: e.target.value})} disabled={!!ingForm.rawMaterialId}>
+                      <select className="w-full p-3 border border-slate-200 rounded-xl text-xs font-black uppercase" value={ingForm.unit} onChange={e => setIngForm({ ...ingForm, unit: e.target.value })}>
                         <option value="gr">gr</option>
                         <option value="Kg">Kg</option>
                         <option value="ml">ml</option>
@@ -255,25 +278,25 @@ const Recipes: React.FC = () => {
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Costo Unit.</label>
-                      <input type="number" step="0.0001" className="w-full p-3 border border-slate-200 rounded-xl text-sm font-black disabled:bg-slate-100 disabled:text-slate-400" placeholder="0.00" value={ingForm.cost || ''} onChange={e => setIngForm({...ingForm, cost: parseFloat(e.target.value) || 0})} disabled={!!ingForm.rawMaterialId} />
+                      <input type="number" step="0.0001" className="w-full p-3 border border-slate-200 rounded-xl text-sm font-black disabled:bg-slate-100 disabled:text-slate-400" placeholder="0.00" value={ingForm.cost || ''} onChange={e => setIngForm({ ...ingForm, cost: parseFloat(e.target.value) || 0 })} disabled={!!ingForm.rawMaterialId} />
                     </div>
                   </div>
 
-                  <button 
-                    onClick={() => { 
-                      if(ingForm.name && ingForm.qty > 0) {
-                        setEditingIngredients([...editingIngredients, { 
-                          name: ingForm.name, 
-                          quantity: ingForm.qty, 
-                          unit: ingForm.unit, 
+                  <button
+                    onClick={() => {
+                      if (ingForm.name && ingForm.qty > 0) {
+                        setEditingIngredients([...editingIngredients, {
+                          name: ingForm.name,
+                          quantity: ingForm.qty,
+                          unit: ingForm.unit,
                           costPerUnit: ingForm.cost,
                           rawMaterialId: ingForm.rawMaterialId || undefined
-                        }]); 
-                        setIngForm({ name: '', qty: 0, unit: 'gr', cost: 0, rawMaterialId: '' }); 
+                        }]);
+                        setIngForm({ name: '', qty: 0, unit: 'gr', cost: 0, rawMaterialId: '' });
                       } else {
                         alert("Inserisci nome e quantità dell'ingrediente.");
                       }
-                    }} 
+                    }}
                     className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                   >
                     Aggiungi alla formula
@@ -295,24 +318,24 @@ const Recipes: React.FC = () => {
                 <div className="flex-1 overflow-y-auto space-y-2 max-h-[400px] pr-2 hide-scrollbar">
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Composizione Attuale</h4>
                   {editingIngredients.map((ing, idx) => {
-                    const dynamicCpu = ing.rawMaterialId 
-                      ? (rawMaterials.find(r => r.id === ing.rawMaterialId)?.totalPrice / (rawMaterials.find(r => r.id === ing.rawMaterialId)?.totalQuantity || 1) || ing.costPerUnit) 
+                    const dynamicCpu = ing.rawMaterialId
+                      ? (rawMaterials.find(r => r.id === ing.rawMaterialId)?.totalPrice / (rawMaterials.find(r => r.id === ing.rawMaterialId)?.totalQuantity || 1) || ing.costPerUnit)
                       : ing.costPerUnit;
-                    
+
                     return (
                       <div key={idx} className="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm group hover:border-blue-100 transition-all">
                         <div className="flex items-center gap-3">
-                           {ing.rawMaterialId ? (
-                              <div className="p-2 bg-rose-50 text-rose-500 rounded-lg shadow-inner"><Coins size={14}/></div>
-                           ) : (
-                              <div className="p-2 bg-slate-50 text-slate-400 rounded-lg"><Beaker size={14}/></div>
-                           )}
-                           <div>
-                              <p className="font-black text-slate-800 text-sm uppercase tracking-tight leading-none mb-1">{ing.name}</p>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                {ing.quantity} {ing.unit} • €{(dynamicCpu * ing.quantity).toFixed(2)} totali
-                              </p>
-                           </div>
+                          {ing.rawMaterialId ? (
+                            <div className="p-2 bg-rose-50 text-rose-500 rounded-lg shadow-inner"><Coins size={14} /></div>
+                          ) : (
+                            <div className="p-2 bg-slate-50 text-slate-400 rounded-lg"><Beaker size={14} /></div>
+                          )}
+                          <div>
+                            <p className="font-black text-slate-800 text-sm uppercase tracking-tight leading-none mb-1">{ing.name}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                              {ing.quantity} {ing.unit} • €{dynamicCpu.toFixed(2)} totali
+                            </p>
+                          </div>
                         </div>
                         <button onClick={() => setEditingIngredients(editingIngredients.filter((_, i) => i !== idx))} className="p-2 text-slate-200 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
                           <Trash2 size={18} />
@@ -327,12 +350,12 @@ const Recipes: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="pt-6 border-t border-slate-100 flex gap-4 bg-white mt-auto">
                   <button onClick={() => setShowModal(false)} className="flex-1 py-5 font-black text-xs text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Annulla</button>
-                  <button 
-                    onClick={handleSaveRecipe} 
-                    disabled={editingIngredients.length === 0} 
+                  <button
+                    onClick={handleSaveRecipe}
+                    disabled={editingIngredients.length === 0}
                     className={`flex-[2] py-5 rounded-[1.8rem] font-black text-xs uppercase tracking-widest shadow-xl text-white transition-all active:scale-95 ${recipeType === 'product' ? 'bg-green-600 shadow-green-100 hover:bg-green-700' : 'bg-slate-700 shadow-slate-100 hover:bg-slate-800'} disabled:opacity-30 disabled:shadow-none`}
                   >
                     Salva Formula Completa

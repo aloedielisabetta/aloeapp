@@ -5,7 +5,7 @@ import { Product, ModifierGroup, RawMaterial } from '../types';
 import {
   Plus, Tag, DollarSign, Trash2, Layers, CheckSquare,
   Settings2, X, Edit2, UserCheck, Beaker, RefreshCw,
-  Package, Coins, ChevronRight, Loader2
+  Package, Coins, ChevronRight, Loader2, ArrowRight
 } from 'lucide-react';
 
 const Products: React.FC = () => {
@@ -34,6 +34,28 @@ const Products: React.FC = () => {
   const [rmFormData, setRMFormData] = useState<Partial<RawMaterial>>({
     name: '', unit: 'gr', totalQuantity: 0, totalPrice: 0
   });
+
+  const CONVERSIONS: Record<string, Record<string, number>> = {
+    'kg': { 'gr': 1000, 'g': 1000 },
+    'Kg': { 'gr': 1000, 'g': 1000 },
+    'gr': { 'kg': 0.001, 'Kg': 0.001, 'g': 1 },
+    'g': { 'kg': 0.001, 'Kg': 0.001, 'gr': 1 },
+    'lit': { 'ml': 1000 },
+    'l': { 'ml': 1000 },
+    'ml': { 'lit': 0.001, 'l': 0.001 },
+  };
+
+  const getIngredientDynamicCostValue = (ing: any) => {
+    if (ing.rawMaterialId) {
+      const rm = rawMaterials.find(r => r.id === ing.rawMaterialId);
+      if (rm && rm.totalQuantity > 0) {
+        const baseCostPerUnit = rm.totalPrice / rm.totalQuantity;
+        const factor = CONVERSIONS[ing.unit]?.[rm.unit] || 1;
+        return (ing.quantity * factor) * baseCostPerUnit;
+      }
+    }
+    return ing.quantity * ing.costPerUnit;
+  };
 
   const handleOpenEditProduct = (product: Product) => {
     setEditingProduct(product);
@@ -77,7 +99,7 @@ const Products: React.FC = () => {
     const recipe = recipes.find(r => r.productId === productId);
     if (!recipe || !product) return;
 
-    const calculatedCost = recipe.ingredients.reduce((sum, ing) => sum + (ing.quantity * ing.costPerUnit), 0);
+    const calculatedCost = recipe.ingredients.reduce((sum, ing) => sum + getIngredientDynamicCostValue(ing), 0);
     await updateProduct({ ...product, costPerItem: calculatedCost });
   };
 
@@ -298,7 +320,7 @@ const Products: React.FC = () => {
 
           const linkedGroups = modifierGroups.filter(g => product.modifierGroupIds.includes(g.id));
           const productRecipe = recipes.find(r => r.productId === product.id);
-          const recipeCost = productRecipe?.ingredients.reduce((sum, ing) => sum + (ing.quantity * ing.costPerUnit), 0) || 0;
+          const recipeCost = productRecipe?.ingredients.reduce((sum, ing) => sum + getIngredientDynamicCostValue(ing), 0) || 0;
           const isCostMisaligned = productRecipe && Math.abs(product.costPerItem - recipeCost) > 0.01;
 
           return (

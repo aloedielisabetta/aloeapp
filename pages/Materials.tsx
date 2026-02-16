@@ -16,21 +16,51 @@ const Materials: React.FC = () => {
     return ing.costPerUnit;
   };
 
+  const CONVERSIONS: Record<string, Record<string, number>> = {
+    'kg': { 'gr': 1000, 'g': 1000 },
+    'Kg': { 'gr': 1000, 'g': 1000 },
+    'gr': { 'kg': 0.001, 'Kg': 0.001, 'g': 1 },
+    'g': { 'kg': 0.001, 'Kg': 0.001, 'gr': 1 },
+    'lit': { 'ml': 1000 },
+    'l': { 'ml': 1000 },
+    'ml': { 'lit': 0.001, 'l': 0.001 },
+  };
+
+  const getDynamicCostValue = (ing: any, quantity: number) => {
+    if (ing.rawMaterialId) {
+      const rm = rawMaterials.find(r => r.id === ing.rawMaterialId);
+      if (rm && rm.totalQuantity > 0) {
+        const baseCostPerUnit = rm.totalPrice / rm.totalQuantity;
+        const factor = CONVERSIONS[ing.unit]?.[rm.unit] || 1;
+        return (quantity * factor) * baseCostPerUnit;
+      }
+    }
+    return quantity * ing.costPerUnit;
+  };
+
   const materialTotals: Record<string, { quantity: number; unit: string; cost: number; isRawMaterial: boolean }> = {};
 
-  orders.forEach(order => {
+  orders.filter(o => o.status !== 'Completato').forEach(order => {
     order.items.forEach(item => {
       // 1. Ingredienti dalla ricetta base del prodotto
       const productRecipe = recipes.find(r => r.productId === item.productId);
       if (productRecipe) {
         productRecipe.ingredients.forEach(ing => {
-          const key = `${ing.name}-${ing.unit}`;
+          const rm = ing.rawMaterialId ? rawMaterials.find(r => r.id === ing.rawMaterialId) : null;
+          const displayUnit = rm ? rm.unit : ing.unit;
+          const key = rm ? `rm-${rm.id}` : `${ing.name}-${ing.unit}`;
+
           if (!materialTotals[key]) {
-            materialTotals[key] = { quantity: 0, unit: ing.unit, cost: 0, isRawMaterial: !!ing.rawMaterialId };
+            materialTotals[key] = { quantity: 0, unit: displayUnit, cost: 0, isRawMaterial: !!rm };
           }
-          const cpu = getDynamicCostPerUnit(ing);
-          materialTotals[key].quantity += ing.quantity * item.quantity;
-          materialTotals[key].cost += cpu * (ing.quantity * item.quantity);
+
+          // Total quantity in current ingredient's unit
+          const totalIngQty = ing.quantity * item.quantity;
+          // Convert to RM unit if linked
+          const factor = rm ? (CONVERSIONS[ing.unit]?.[rm.unit] || 1) : 1;
+
+          materialTotals[key].quantity += totalIngQty * factor;
+          materialTotals[key].cost += getDynamicCostValue(ing, totalIngQty);
         });
       }
 
@@ -39,23 +69,31 @@ const Materials: React.FC = () => {
         const modifierRecipe = recipes.find(r => r.modifierGroupId === groupId && r.modifierOption === option);
         if (modifierRecipe) {
           modifierRecipe.ingredients.forEach(ing => {
-            const key = `${ing.name}-${ing.unit}`;
+            const rm = ing.rawMaterialId ? rawMaterials.find(r => r.id === ing.rawMaterialId) : null;
+            const displayUnit = rm ? rm.unit : ing.unit;
+            const key = rm ? `rm-${rm.id}` : `${ing.name}-${ing.unit}`;
+
             if (!materialTotals[key]) {
-              materialTotals[key] = { quantity: 0, unit: ing.unit, cost: 0, isRawMaterial: !!ing.rawMaterialId };
+              materialTotals[key] = { quantity: 0, unit: displayUnit, cost: 0, isRawMaterial: !!rm };
             }
-            const cpu = getDynamicCostPerUnit(ing);
-            materialTotals[key].quantity += ing.quantity * item.quantity;
-            materialTotals[key].cost += cpu * (ing.quantity * item.quantity);
+
+            const totalIngQty = ing.quantity * item.quantity;
+            const factor = rm ? (CONVERSIONS[ing.unit]?.[rm.unit] || 1) : 1;
+
+            materialTotals[key].quantity += totalIngQty * factor;
+            materialTotals[key].cost += getDynamicCostValue(ing, totalIngQty);
           });
         }
       });
     });
   });
 
-  const materialList = Object.entries(materialTotals).map(([key, data]) => ({
-    name: key.split('-')[0],
-    ...data
-  }));
+  const materialList = Object.entries(materialTotals).map(([key, data]) => {
+    let name = key.includes('rm-')
+      ? rawMaterials.find(r => r.id === key.replace('rm-', ''))?.name || 'Materia Prima'
+      : key.split('-')[0];
+    return { name, ...data };
+  });
 
   const totalProcurementCost = materialList.reduce((sum, m) => sum + m.cost, 0);
 
@@ -80,8 +118,8 @@ const Materials: React.FC = () => {
                 {m.isRawMaterial ? <Coins size={24} /> : <Database size={24} />}
               </div>
               <div className="text-right">
-                 <p className="text-2xl font-black text-slate-800">{m.quantity.toFixed(1)} <span className="text-xs text-slate-400 uppercase tracking-widest">{m.unit}</span></p>
-                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Qtà Totale Richiesta</p>
+                <p className="text-2xl font-black text-slate-800">{m.quantity.toFixed(1)} <span className="text-xs text-slate-400 uppercase tracking-widest">{m.unit}</span></p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Qtà Totale Richiesta</p>
               </div>
             </div>
             <div className="flex items-center gap-2 mb-1">
@@ -91,17 +129,17 @@ const Materials: React.FC = () => {
               )}
             </div>
             <div className="flex justify-between items-center pt-4 border-t border-slate-50">
-               <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Costo Stimato</span>
-               <span className="text-lg font-black text-green-600">€{m.cost.toFixed(2)}</span>
+              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Costo Stimato</span>
+              <span className="text-lg font-black text-green-600">€{m.cost.toFixed(2)}</span>
             </div>
           </div>
         ))}
         {materialList.length === 0 && (
-           <div className="col-span-full py-32 flex flex-col items-center justify-center bg-white border border-dashed border-slate-200 rounded-[3rem] text-slate-300">
-              <AlertCircle size={64} className="mb-4 opacity-10" />
-              <p className="text-xs font-black uppercase tracking-[0.2em]">Nessun ordine attivo trovato</p>
-              <p className="text-[10px] font-medium mt-2">Aggiungi ordini e ricette per generare l'inventario.</p>
-           </div>
+          <div className="col-span-full py-32 flex flex-col items-center justify-center bg-white border border-dashed border-slate-200 rounded-[3rem] text-slate-300">
+            <AlertCircle size={64} className="mb-4 opacity-10" />
+            <p className="text-xs font-black uppercase tracking-[0.2em]">Nessun ordine attivo trovato</p>
+            <p className="text-[10px] font-medium mt-2">Aggiungi ordini e ricette per generare l'inventario.</p>
+          </div>
         )}
       </div>
     </div>
