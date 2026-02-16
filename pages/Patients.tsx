@@ -151,7 +151,7 @@ const Patients: React.FC = () => {
 
   const filtered = patients.filter(p => {
     const matchesSearch = `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase());
-    const matchesCity = selectedCity === 'Tutte' || p.city === selectedCity;
+    const matchesCity = selectedCity === 'Tutte' || (p.city?.trim().toLowerCase() === selectedCity.trim().toLowerCase());
     return matchesSearch && matchesCity;
   }).sort((a, b) => {
     const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
@@ -193,7 +193,7 @@ const Patients: React.FC = () => {
           >
             Tutte
           </button>
-          {cities.map(city => (
+          {[...cities].sort((a, b) => a.name.localeCompare(b.name)).map(city => (
             <button
               key={city.id}
               onClick={() => setSelectedCity(city.name)}
