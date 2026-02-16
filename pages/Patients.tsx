@@ -134,13 +134,15 @@ const Patients: React.FC = () => {
 
     const durationMonths = parseInt(patient.treatmentDuration);
     const now = new Date();
-    // Start of next month
-    const startDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    // Add duration
-    const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + durationMonths, 1);
 
-    const year = endDate.getFullYear();
-    const month = String(endDate.getMonth() + 1).padStart(2, '0');
+    // Logic: Order in Month X (now.getMonth())
+    // Treatment starts in Month X + 1
+    // Cycle is D months long (durationMonths)
+    // Reminder is for the 1st day of the LAST month of the cycle: X + D
+    const reminderDate = new Date(now.getFullYear(), now.getMonth() + durationMonths, 1);
+
+    const year = reminderDate.getFullYear();
+    const month = String(reminderDate.getMonth() + 1).padStart(2, '0');
     const day = "01";
 
     const dateStr = `${year}${month}${day}`;
@@ -521,10 +523,9 @@ const Patients: React.FC = () => {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Durata Cura</label>
                     <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none appearance-none" value={formData.treatmentDuration} onChange={e => setFormData({ ...formData, treatmentDuration: e.target.value })}>
                       <option value="">Scegli durata...</option>
-                      <option value="3 mesi">3 mesi</option>
-                      <option value="6 mesi">6 mesi</option>
-                      <option value="9 mesi">9 mesi</option>
-                      <option value="12 mesi">12 mesi</option>
+                      {Array.from({ length: 24 }, (_, i) => i + 1).map(m => (
+                        <option key={m} value={`${m} ${m === 1 ? 'mese' : 'mesi'}`}>{m} {m === 1 ? 'mese' : 'mesi'}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="space-y-2">
