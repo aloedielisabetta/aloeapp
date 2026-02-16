@@ -36,13 +36,27 @@ const Products: React.FC = () => {
   });
 
   const CONVERSIONS: Record<string, Record<string, number>> = {
-    'kg': { 'gr': 1000, 'g': 1000 },
-    'Kg': { 'gr': 1000, 'g': 1000 },
-    'gr': { 'kg': 0.001, 'Kg': 0.001, 'g': 1 },
-    'g': { 'kg': 0.001, 'Kg': 0.001, 'gr': 1 },
-    'lit': { 'ml': 1000 },
-    'l': { 'ml': 1000 },
-    'ml': { 'lit': 0.001, 'l': 0.001 },
+    'kg': { 'gr': 1000, 'g': 1000, 'grammi': 1000 },
+    'kg.': { 'gr': 1000, 'g': 1000, 'grammi': 1000 },
+    'g': { 'kg': 0.001, 'gr': 1, 'grammi': 1 },
+    'gr': { 'kg': 0.001, 'g': 1, 'grammi': 1 },
+    'grammi': { 'kg': 0.001, 'g': 1, 'gr': 1 },
+    'lit': { 'ml': 1000, 'l': 1, 'litro': 1 },
+    'l': { 'ml': 1000, 'lit': 1, 'litro': 1 },
+    'litro': { 'ml': 1000, 'lit': 1, 'l': 1 },
+    'ml': { 'lit': 0.001, 'l': 0.001, 'litro': 0.001 },
+  };
+
+  const getConversionFactor = (from: string, to: string) => {
+    const f = from.toLowerCase().trim();
+    const t = to.toLowerCase().trim();
+    if (f === t) return 1;
+    if (CONVERSIONS[f]?.[t]) return CONVERSIONS[f][t];
+    if ((f === 'kg' || f === 'kg.') && (t === 'gr' || t === 'g' || t === 'grammi')) return 1000;
+    if ((t === 'kg' || t === 'kg.') && (f === 'gr' || f === 'g' || f === 'grammi')) return 0.001;
+    if ((f === 'lit' || f === 'l' || f === 'litro') && t === 'ml') return 1000;
+    if ((t === 'lit' || t === 'l' || t === 'litro') && f === 'ml') return 0.001;
+    return 1;
   };
 
   const getIngredientDynamicCostValue = (ing: any) => {
@@ -50,7 +64,7 @@ const Products: React.FC = () => {
       const rm = rawMaterials.find(r => r.id === ing.rawMaterialId);
       if (rm && rm.totalQuantity > 0) {
         const baseCostPerUnit = rm.totalPrice / rm.totalQuantity;
-        const factor = CONVERSIONS[ing.unit]?.[rm.unit] || 1;
+        const factor = getConversionFactor(ing.unit, rm.unit);
         return (ing.quantity * factor) * baseCostPerUnit;
       }
     }
