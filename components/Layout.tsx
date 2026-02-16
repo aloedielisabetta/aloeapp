@@ -28,7 +28,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   if (isAdmin) {
     navItems.push(
-      { to: '/products', icon: <Package size={20} />, label: 'Prodotti' },
+      { to: '/products', icon: <Package size={20} />, label: 'Cambusa e prodotti' },
       { to: '/recipes', icon: <Thermometer size={20} />, label: 'Ricette' },
       { to: '/general-costs', icon: <Receipt size={20} />, label: 'Costi Generali' },
       { to: '/materials', icon: <Database size={20} />, label: 'Materiali' },

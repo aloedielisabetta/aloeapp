@@ -296,8 +296,8 @@ const Products: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Gestione Prodotti</h2>
-          <p className="text-slate-500 font-medium">Gestisci il listino, i margini e le varianti disponibili.</p>
+          <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Gestione Cambusa e Prodotti</h2>
+          <p className="text-slate-500 font-medium">Gestisci il listino, i prodotti nella cambusa, i margini e le varianti disponibili.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
