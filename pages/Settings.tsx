@@ -276,6 +276,16 @@ const Settings: React.FC = () => {
                     >
                       {person.isHidden ? <Eye size={18} /> : <EyeOff size={18} />}
                     </button>
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Eliminare definitivamente ${person.name}? Questa operazione è irreversibile.`)) {
+                          await deleteSalesperson(person.id);
+                        }
+                      }}
+                      className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </div>
               ))}

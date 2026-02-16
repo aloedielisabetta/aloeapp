@@ -300,6 +300,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { error } = await supabase.from('salespersons').delete().eq('id', id);
     if (error) throw error;
     setSalespersons(prev => prev.filter(s => s.id !== id));
+    setWorkspaceUsers(prev => prev.filter(u => u.salespersonId !== id));
   };
 
   const addGeneralCost = async (c: Omit<GeneralCost, 'id' | 'workspaceId' | 'date'>) => {

@@ -327,9 +327,7 @@ const Recipes: React.FC = () => {
                 <div className="flex-1 overflow-y-auto space-y-2 max-h-[400px] pr-2 hide-scrollbar">
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">Composizione Attuale</h4>
                   {editingIngredients.map((ing, idx) => {
-                    const dynamicCpu = ing.rawMaterialId
-                      ? (rawMaterials.find(r => r.id === ing.rawMaterialId)?.totalPrice / (rawMaterials.find(r => r.id === ing.rawMaterialId)?.totalQuantity || 1) || ing.costPerUnit)
-                      : ing.costPerUnit;
+                    const totalLineCost = getIngredientDynamicCostValue(ing);
 
                     return (
                       <div key={idx} className="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm group hover:border-blue-100 transition-all">
@@ -342,7 +340,7 @@ const Recipes: React.FC = () => {
                           <div>
                             <p className="font-black text-slate-800 text-sm uppercase tracking-tight leading-none mb-1">{ing.name}</p>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                              {ing.quantity} {ing.unit} • €{dynamicCpu.toFixed(2)} totali
+                              {ing.quantity} {ing.unit} • €{totalLineCost.toFixed(2)} totali
                             </p>
                           </div>
                         </div>
