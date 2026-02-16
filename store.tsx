@@ -40,6 +40,7 @@ interface AppContextType extends AppData {
   deleteGeneralCost: (id: string) => Promise<void>;
 
   addWorkspaceUser: (u: Omit<WorkspaceUser, 'id' | 'workspaceId'> & { password?: string }) => Promise<void>;
+  updateWorkspaceUser: (u: WorkspaceUser) => Promise<void>;
   deleteWorkspaceUser: (id: string) => Promise<void>;
 
   addModifierGroup: (g: Omit<ModifierGroup, 'id' | 'workspaceId'>) => Promise<void>;
@@ -51,6 +52,7 @@ interface AppContextType extends AppData {
   deleteRawMaterial: (id: string) => Promise<void>;
 
   createWorkspace: (name: string, password?: string) => Promise<Workspace>;
+  updateWorkspace: (ws: Workspace) => Promise<void>;
   deleteCurrentWorkspace: () => Promise<void>;
 
   workspaces: Workspace[];
@@ -338,6 +340,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWorkspaceUsers(prev => prev.filter(u => u.id !== id));
   };
 
+  const updateWorkspaceUser = async (u: WorkspaceUser) => {
+    const { error } = await supabase.from('workspace_users').update(toSnake(u)).eq('id', u.id);
+    if (error) throw error;
+    setWorkspaceUsers(prev => prev.map(item => item.id === u.id ? u : item));
+    // If it's the current user, update the state as well
+    if (currentUser?.id === u.id) {
+      setCurrentUser({ ...currentUser, email: u.email });
+    }
+  };
+
   const addModifierGroup = async (g: Omit<ModifierGroup, 'id' | 'workspaceId'>) => {
     if (!currentWorkspace) return;
     const newG = { ...g, id: crypto.randomUUID(), workspaceId: currentWorkspace.id };
@@ -419,7 +431,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       patients, products, orders, recipes, cities, modifierGroups, salespersons, generalCosts, workspaceUsers, rawMaterials,
       addPatient, updatePatient, deletePatient, addOrder, updateOrder, deleteOrder, addProduct, updateProduct, deleteProduct,
       addRecipe, updateRecipe, deleteRecipe, addCity, deleteCity, addSalesperson, updateSalesperson, deleteSalesperson, addGeneralCost, deleteGeneralCost,
-      addWorkspaceUser, deleteWorkspaceUser, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
+      addWorkspaceUser, updateWorkspaceUser, deleteWorkspaceUser, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
       createWorkspace, updateWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut
     }}>
       {children}

@@ -67,11 +67,11 @@ const UsersPage: React.FC = () => {
         }
       );
 
-      // Email format for username (fake email if just username provided)
-      const email = username.includes('@') ? username : `${username.toLowerCase().replace(/\s+/g, '')}@aloe.system`;
+      // Login email format for Auth (fake email if only simple username provided)
+      const authEmail = username.includes('@') ? username : `${username.toLowerCase().replace(/\s+/g, '')}@aloe.system`;
 
       const { data: authData, error: authError } = await tempClient.auth.signUp({
-        email: email,
+        email: authEmail,
         password: password,
       });
 
@@ -87,7 +87,7 @@ const UsersPage: React.FC = () => {
       await addWorkspaceUser({
         salespersonId: selectedSalespersonId,
         username: username, // Display name
-        email: email.trim(), // Link notification email
+        email: email.trim(), // The Gmail address typed by Elisabetta
         userId: authData.user.id,
         password: password, // Important: pass the password to satisfy the DB constraint
       });

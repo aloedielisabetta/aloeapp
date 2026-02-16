@@ -4,7 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Users, Package, ShoppingBag, TrendingUp,
   Settings, ClipboardList, Database, Thermometer,
-  ChevronLeft, ChevronRight, FileText, UserPlus, LogOut, ShieldCheck, CloudLightning, Check, Share2, Receipt
+  ChevronLeft, ChevronRight, FileText, UserPlus, LogOut, ShieldCheck, CloudLightning, Check, Share2, Receipt, User
 } from 'lucide-react';
 import { useApp } from '../store';
 
@@ -24,6 +24,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { to: '/', icon: <Users size={20} />, label: 'Pazienti' },
     { to: '/orders', icon: <ShoppingBag size={20} />, label: 'Ordini' },
     { to: '/production', icon: <ClipboardList size={20} />, label: 'Produzione' },
+    { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo' },
   ];
 
   if (isAdmin) {

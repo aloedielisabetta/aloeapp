@@ -17,13 +17,14 @@ import Login from './pages/Login';
 import UsersPage from './pages/Users';
 import MySales from './pages/MySales';
 import LinkPage from './pages/Link';
+import Profile from './pages/Profile';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
   const { currentUser } = useApp();
-  
+
   if (!currentUser) return <Navigate to="/login" replace />;
   if (adminOnly && currentUser.role !== 'admin') return <Navigate to="/" replace />;
-  
+
   return <Layout>{children}</Layout>;
 };
 
@@ -33,12 +34,13 @@ const App: React.FC = () => {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          
+
           <Route path="/" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
-          
+
           <Route path="/my-sales" element={<ProtectedRoute><MySales /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           <Route path="/products" element={<ProtectedRoute adminOnly><Products /></ProtectedRoute>} />
           <Route path="/recipes" element={<ProtectedRoute adminOnly><Recipes /></ProtectedRoute>} />
@@ -49,7 +51,7 @@ const App: React.FC = () => {
           <Route path="/users" element={<ProtectedRoute adminOnly><UsersPage /></ProtectedRoute>} />
           <Route path="/link" element={<ProtectedRoute adminOnly><LinkPage /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute adminOnly><Settings /></ProtectedRoute>} />
-          
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>
