@@ -237,51 +237,54 @@ const Patients: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map(patient => (
-          <div key={patient.id} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-md transition-all group relative">
-            <div className="absolute top-6 right-6 flex gap-1">
-              <button
-                onClick={() => handleDownloadProtocol(patient)}
-                className="p-3 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
-                title="Scarica Scheda Tecnica"
-              >
-                {isGenerating === patient.id ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
-              </button>
-              <button
-                onClick={() => setShowJournal(patient)}
-                className="p-3 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                title="Diario Salute"
-              >
-                <Activity size={18} />
-              </button>
-              <button
-                onClick={() => handleOpenEdit(patient)}
-                className="p-3 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-all"
-                title="Modifica"
-              >
-                <Edit2 size={18} />
-              </button>
-              {patient.treatmentDuration && (
-                <a
-                  href={generateCalendarLink(patient) || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all"
-                  title="Aggiungi Promemoria Fine Cura a Google Calendar"
-                >
-                  <Calendar size={18} />
-                </a>
-              )}
-            </div>
-
-            <div className="flex items-center gap-4 mb-6 pt-2">
-              <div className="w-14 h-14 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center font-black text-slate-300 text-xl shadow-inner uppercase">
-                {patient.firstName[0]}{patient.lastName[0]}
+          <div key={patient.id} className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-md transition-all group relative flex flex-col">
+            {/* Header Section with Actions */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-50 pb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center font-black text-slate-300 text-xl shadow-inner uppercase shrink-0">
+                  {patient.firstName[0]}{patient.lastName[0]}
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-slate-800 uppercase tracking-tight leading-none">{patient.firstName} {patient.lastName}</h3>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
+                    <Tag size={10} className="text-green-500" /> {patient.city}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-black text-lg text-slate-800 uppercase tracking-tight leading-none">{patient.firstName} {patient.lastName}</h3>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
-                  <Tag size={10} className="text-green-500" /> {patient.city}
-                </p>
+
+              <div className="flex items-center gap-1 bg-slate-50/50 p-1.5 rounded-2xl border border-slate-50 w-full sm:w-auto justify-around sm:justify-end shadow-inner">
+                <button
+                  onClick={() => handleDownloadProtocol(patient)}
+                  className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-xl transition-all"
+                  title="Scarica Scheda Tecnica"
+                >
+                  {isGenerating === patient.id ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
+                </button>
+                <button
+                  onClick={() => setShowJournal(patient)}
+                  className="p-3 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm rounded-xl transition-all"
+                  title="Diario Salute"
+                >
+                  <Activity size={18} />
+                </button>
+                <button
+                  onClick={() => handleOpenEdit(patient)}
+                  className="p-3 text-slate-400 hover:text-slate-900 hover:bg-white hover:shadow-sm rounded-xl transition-all"
+                  title="Modifica"
+                >
+                  <Edit2 size={18} />
+                </button>
+                {patient.treatmentDuration && (
+                  <a
+                    href={generateCalendarLink(patient) || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 text-emerald-500 hover:bg-white hover:shadow-sm rounded-xl transition-all text-center"
+                    title="Aggiungi Promemoria Fine Cura a Google Calendar"
+                  >
+                    <Calendar size={18} />
+                  </a>
+                )}
               </div>
             </div>
 
