@@ -203,18 +203,18 @@ const Patients: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-[2.5rem] border border-slate-100 shadow-sm text-sm">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+      <div className="bg-white p-6 rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
+        <div className="relative w-full">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400/50" size={22} />
           <input
             type="text"
-            placeholder="Cerca paziente per nome..."
-            className="pl-14 pr-5 py-4 w-full border border-slate-50 bg-slate-50 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/10 font-bold text-slate-700"
+            placeholder="Cerca paziente per nome o cognome..."
+            className="pl-16 pr-8 py-5 w-full border border-slate-50 bg-slate-50 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-green-500/10 font-black text-slate-700 text-lg shadow-inner transition-all placeholder:text-slate-300"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto scrollbar-hide bg-slate-50/50 p-2 rounded-2xl">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide bg-slate-50/30 p-2 rounded-2xl border border-slate-50/50">
           <button
             onClick={() => setSelectedCity('Tutte')}
             className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedCity === 'Tutte' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'

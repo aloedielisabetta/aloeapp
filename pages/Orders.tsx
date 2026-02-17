@@ -264,26 +264,33 @@ const Orders: React.FC = () => {
       </div>
 
       {/* FILTRI */}
-      <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-2xl border border-slate-100 shadow-inner">
-          <button onClick={() => changeMonth(-1)} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-green-600 transition-colors"><ChevronLeft size={20} /></button>
-          <span className="text-xs font-black text-slate-700 min-w-[150px] text-center uppercase tracking-widest">
-            {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
-          </span>
-          <button onClick={() => changeMonth(1)} className="p-2 bg-white rounded-xl shadow-sm text-slate-400 hover:text-green-600 transition-colors"><ChevronRight size={20} /></button>
-        </div>
-
-        <div className="flex flex-1 w-full md:w-auto gap-4 items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-            <input type="text" placeholder="Filtra pazienti..." className="pl-12 pr-4 py-3 w-full bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/10 text-sm font-bold" value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-[1.8rem] border border-slate-100 shadow-inner w-full md:w-auto">
+            <button onClick={() => changeMonth(-1)} className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-green-600 transition-colors border border-slate-50"><ChevronLeft size={24} /></button>
+            <span className="text-sm font-black text-slate-700 min-w-[200px] text-center uppercase tracking-widest">
+              {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+            </span>
+            <button onClick={() => changeMonth(1)} className="p-3 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-green-600 transition-colors border border-slate-50"><ChevronRight size={24} /></button>
           </div>
-          <div className="flex gap-1 overflow-x-auto bg-slate-50 p-1.5 rounded-2xl shrink-0 border border-slate-100 shadow-inner">
-            <button onClick={() => setSelectedCity('Tutte')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedCity === 'Tutte' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>Tutte</button>
+
+          <div className="flex gap-1 overflow-x-auto bg-slate-50/50 p-2 rounded-2xl w-full md:w-auto shrink-0 border border-slate-50 shadow-inner scrollbar-hide">
+            <button onClick={() => setSelectedCity('Tutte')} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedCity === 'Tutte' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>Tutte</button>
             {cities.map(c => (
-              <button key={c.id} onClick={() => setSelectedCity(c.name)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedCity === c.name ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>{c.name}</button>
+              <button key={c.id} onClick={() => setSelectedCity(c.name)} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedCity === c.name ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>{c.name}</button>
             ))}
           </div>
+        </div>
+
+        <div className="relative w-full">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400/50" size={22} />
+          <input
+            type="text"
+            placeholder="Filtra ordini per nome paziente..."
+            className="pl-16 pr-8 py-5 w-full bg-slate-50 border border-slate-100 rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-green-500/10 text-lg font-black text-slate-700 shadow-inner placeholder:text-slate-300"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
 
