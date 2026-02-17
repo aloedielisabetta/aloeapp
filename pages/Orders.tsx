@@ -186,7 +186,23 @@ const Orders: React.FC = () => {
     const patient = patients.find(p => p.id === order.patientId);
     if (!patient) return !search && selectedCity === 'Tutte';
     const nameMatch = `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(search.toLowerCase());
-    const cityMatch = selectedCity === 'Tutte' || patient.city === selectedCity;
+
+    // Robust city matching: handles both city names and IDs stored in the patient record
+    const cityMatch = selectedCity === 'Tutte' || (() => {
+      if (!patient.city) return false;
+      const normalizedSelected = selectedCity.trim().toLowerCase();
+      const normalizedPatientCity = patient.city.trim().toLowerCase();
+
+      // 1. Direct name match
+      if (normalizedPatientCity === normalizedSelected) return true;
+
+      // 3. ID match: check if patient.city is an ID that belongs to a city with the selected name
+      const cityById = cities.find(c => c.id === patient.city);
+      if (cityById && cityById.name.trim().toLowerCase() === normalizedSelected) return true;
+
+      return false;
+    })();
+
     return nameMatch && cityMatch;
   });
 

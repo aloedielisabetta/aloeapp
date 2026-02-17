@@ -79,6 +79,8 @@ CREATE TABLE IF NOT EXISTS patients (
     condition_type TEXT,
     medical_state TEXT,
     aloe_tweak TEXT,
+    treatment_duration TEXT,
+    test_results TEXT,
     journal JSONB DEFAULT '[]',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );

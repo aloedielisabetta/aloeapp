@@ -29,7 +29,7 @@ const Patients: React.FC = () => {
 
   const [formData, setFormData] = useState<Partial<Patient>>({
     firstName: '', lastName: '', phone: '', address: '',
-    city: cities[0]?.name || '', medicalCondition: '',
+    city: '', medicalCondition: '',
     aloeTweak: '', testResults: ''
   });
 
@@ -44,7 +44,8 @@ const Patients: React.FC = () => {
     setEditingPatient(null);
     setFormData({
       firstName: '', lastName: '', phone: '', address: '',
-      city: cities[0]?.name || '', medicalCondition: '',
+      city: [...cities].sort((a, b) => a.name.localeCompare(b.name))[0]?.name || '',
+      medicalCondition: '',
       aloeTweak: '', testResults: ''
     });
   };
@@ -153,11 +154,29 @@ const Patients: React.FC = () => {
 
   const filtered = patients.filter(p => {
     const matchesSearch = `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase());
-    const matchesCity = selectedCity === 'Tutte' || (p.city?.trim().toLowerCase() === selectedCity.trim().toLowerCase());
+
+    // Robust city matching: handles both city names and IDs stored in the patient record
+    const matchesCity = selectedCity === 'Tutte' || (() => {
+      if (!p.city) return false;
+      const normalizedSelected = selectedCity.trim().toLowerCase();
+      const normalizedPatientCity = p.city.trim().toLowerCase();
+
+      // 1. Direct name match
+      if (normalizedPatientCity === normalizedSelected) return true;
+
+      // 2. ID match: check if p.city is an ID that belongs to a city with the selected name
+      // This handles cases where the city might have been stored as a UUID
+      const cityById = cities.find(c => c.id === p.city);
+      if (cityById && cityById.name.trim().toLowerCase() === normalizedSelected) return true;
+
+      return false;
+    })();
+
     return matchesSearch && matchesCity;
   }).sort((a, b) => {
-    const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
-    const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+    // Alphabetical order: Last Name, then First Name
+    const nameA = `${a.lastName} ${a.firstName}`.toLowerCase();
+    const nameB = `${b.lastName} ${b.firstName}`.toLowerCase();
     return nameA.localeCompare(nameB);
   });
 
@@ -169,7 +188,15 @@ const Patients: React.FC = () => {
           <p className="text-slate-500 font-medium">Onboarding, protocolli e monitoraggio mensile.</p>
         </div>
         <button
-          onClick={() => setShowAdd(true)}
+          onClick={() => {
+            setFormData({
+              firstName: '', lastName: '', phone: '', address: '',
+              city: [...cities].sort((a, b) => a.name.localeCompare(b.name))[0]?.name || '',
+              medicalCondition: '',
+              aloeTweak: '', testResults: ''
+            });
+            setShowAdd(true);
+          }}
           className="bg-green-600 text-white px-8 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all shadow-xl shadow-green-100 font-black text-xs uppercase tracking-widest active:scale-95"
         >
           <UserPlus size={18} /> Registra Paziente
@@ -502,7 +529,7 @@ const Patients: React.FC = () => {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Città</label>
                     <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none appearance-none" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })}>
-                      {cities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                      {[...cities].sort((a, b) => a.name.localeCompare(b.name)).map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2 col-span-full">
