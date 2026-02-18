@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../store';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +5,7 @@ import { Building2, Shield, User, Key, Plus, ArrowRight, Lock, Sparkles, Loader2
 import { supabase } from '../supabase';
 
 const Login: React.FC = () => {
-  const { createWorkspace } = useApp();
+  const { createWorkspace, currentUser, isLoadingProfile } = useApp();
   const navigate = useNavigate();
 
   // State simplification
@@ -20,14 +19,14 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
 
-  const { currentUser, isLoadingProfile } = useApp();
-
-  // Only auto-redirect once we know for sure who the user is
+  // FORCE MANUAL LOGIN: If we land here and have a session, kill it (unless we are currently submitting).
+  // This solves "it logs in automatically" by ensuring the login page always means "Start Over".
   useEffect(() => {
-    if (!isLoadingProfile && currentUser) {
-      navigate('/');
+    if (!isLoadingProfile && currentUser && !loading) {
+      console.log("Auto-logout enabled: Enforcing manual login.");
+      supabase.auth.signOut();
     }
-  }, [currentUser, isLoadingProfile, navigate]);
+  }, [currentUser, isLoadingProfile, loading]);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -38,7 +37,6 @@ const Login: React.FC = () => {
     let success = false;
     let lastError = null;
 
-    // Try domains sequentially if no @ present
     if (!username.includes('@')) {
       for (const dom of domains) {
         const { error } = await supabase.auth.signInWithPassword({
@@ -60,10 +58,11 @@ const Login: React.FC = () => {
       lastError = error;
     }
 
-    setLoading(false);
     if (success) {
+      // Keep loading=true to avoid the signOut useEffect triggering
       navigate('/');
     } else {
+      setLoading(false); // Reset loading only on error
       setError(lastError?.message === "Invalid login credentials" ? "Credenziali non valide" : (lastError?.message || "Errore di accesso"));
     }
   };
@@ -72,10 +71,8 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      // Auto-append domain
       const emailToUse = username.includes('@') ? username : `${username.toLowerCase().replace(/\s+/g, '')}@gmail.com`;
 
-      // 1. Sign Up
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: emailToUse,
         password: newWsPassword,
@@ -83,24 +80,18 @@ const Login: React.FC = () => {
 
       if (signUpError) throw signUpError;
       if (!data.session) {
-        // If session is missing, it usually means email confirm is ON. 
-        // With fake emails, this blocks login. 
-        // We assume the user has disabled it as requested.
         throw new Error('Conferma email richiesta. Disabilita "Confirm Email" in Supabase.');
       }
 
-      // 2. Create Workspace (handled by store, but we need session active)
-      // Since we just signed up and got a session (if email confirm is off or auto-sign-in enabled), we can proceed.
-      // Wait a moment for session propagation in store
       await new Promise(r => setTimeout(r, 500));
 
-      const newWs = await createWorkspace(wsName.trim(), newWsPassword); // adminPassword legacy
+      const newWs = await createWorkspace(wsName.trim(), newWsPassword);
       navigate('/');
+      // Keep loading=true to ensure smooth transition
     } catch (e: any) {
       console.error(e);
       setError(e.message || 'Errore creazione account.');
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only reset on error
     }
   };
 
