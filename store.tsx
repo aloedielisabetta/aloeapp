@@ -91,25 +91,6 @@ const toCamel = (obj: any): any => {
   return obj;
 };
 
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
-  return context;
-};
-
-export const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
-  const { currentUser, isSyncing } = useApp();
-
-  // If we are currently fetching the user profile, show nothing or a loader to avoid premature redirect
-  if (!currentUser && isSyncing) return null;
-
-  if (!currentUser) return <Navigate to="/login" replace />;
-  if (adminOnly && currentUser.role !== 'admin') return <Navigate to="/" replace />;
-
-  return <Layout>{children}</Layout>;
-};
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);

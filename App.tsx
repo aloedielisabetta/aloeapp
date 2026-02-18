@@ -19,8 +19,17 @@ import MySales from './pages/MySales';
 import LinkPage from './pages/Link';
 import Profile from './pages/Profile';
 
-// ProtectedRoute is now imported from store.tsx to avoid duplication and race conditions
-import { ProtectedRoute } from './store';
+const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
+  const { currentUser, isSyncing } = useApp();
+
+  // Wait for profile to load before deciding to redirect
+  if (!currentUser && isSyncing) return null;
+
+  if (!currentUser) return <Navigate to="/login" replace />;
+  if (adminOnly && currentUser.role !== 'admin') return <Navigate to="/" replace />;
+
+  return <Layout>{children}</Layout>;
+};
 
 const App: React.FC = () => {
   return (
