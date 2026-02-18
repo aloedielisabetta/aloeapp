@@ -19,18 +19,46 @@ import MySales from './pages/MySales';
 import LinkPage from './pages/Link';
 import Profile from './pages/Profile';
 
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { LogOut } from 'lucide-react';
+import { supabase } from './supabase';
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
   const { currentUser, isLoadingProfile } = useApp();
+  const [showTimeout, setShowTimeout] = React.useState(false);
 
   // Show a blank loading screen while we determine who the user is.
   // This prevents the race condition where ProtectedRoute redirects to /login
   // before the profile has finished loading from Supabase.
+  React.useEffect(() => {
+    let timeout: any;
+    if (isLoadingProfile) {
+      timeout = setTimeout(() => setShowTimeout(true), 8000); // Show force logout after 8s
+    }
+    return () => clearTimeout(timeout);
+  }, [isLoadingProfile]);
+
   if (isLoadingProfile) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-6">
           <span className="text-4xl animate-pulse">🌱</span>
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Caricamento...</p>
+          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Caricamento Profilo...</p>
+
+          {showTimeout && (
+            <div className="mt-4 flex flex-col items-center gap-2 animate-in fade-in duration-1000">
+              <p className="text-[10px] text-red-400">Sembra impiegare più tempo del previsto...</p>
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  window.location.href = '/login';
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
+              >
+                <LogOut size={14} /> Disconnetti Forzatamente
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -39,7 +67,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean 
   if (!currentUser) return <Navigate to="/login" replace />;
   if (adminOnly && currentUser.role !== 'admin') return <Navigate to="/" replace />;
 
-  return <Layout>{children}</Layout>;
+  return (
+    <ErrorBoundary>
+      <Layout>{children}</Layout>
+    </ErrorBoundary>
+  );
 };
 
 const App: React.FC = () => {
