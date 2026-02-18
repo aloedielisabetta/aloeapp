@@ -116,7 +116,7 @@ const Materials: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Fabbisogno Materiali</h2>
-          <p className="text-slate-500 font-medium">Inventario da acquistare in base agli ordini correnti (incluse varianti).</p>
+          <p className="text-slate-500 font-medium">Quanto materiale serve per fare gli ordini questo mese</p>
         </div>
         <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-right shrink-0">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Spesa Stimata Acquisti</p>

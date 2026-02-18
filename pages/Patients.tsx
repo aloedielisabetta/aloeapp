@@ -8,13 +8,16 @@ import {
 } from 'lucide-react';
 
 const Patients: React.FC = () => {
-  const { patients, addPatient, updatePatient, deletePatient, cities } = useApp();
+  const { patients, addPatient, updatePatient, deletePatient, cities, currentUser, salespersons } = useApp();
   const [showAdd, setShowAdd] = useState(false);
   const [showJournal, setShowJournal] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [search, setSearch] = useState('');
   const [selectedCity, setSelectedCity] = useState<string | 'Tutte'>('Tutte');
+  const [selectedSalespersonId, setSelectedSalespersonId] = useState<string | 'Tutti'>('Tutti');
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
+
+  const isAdmin = currentUser?.role === 'admin';
 
   // Journal form state
   const [newJournal, setNewJournal] = useState<Partial<JournalEntry>>({
@@ -30,7 +33,9 @@ const Patients: React.FC = () => {
   const [formData, setFormData] = useState<Partial<Patient>>({
     firstName: '', lastName: '', phone: '', address: '',
     city: '', medicalCondition: '',
-    aloeTweak: '', testResults: ''
+    aloeTweak: '', testResults: '',
+    dosageMorningWhole: '1', dosageMorningFraction: '½',
+    dosageEveningWhole: '1', dosageEveningFraction: '½'
   });
 
   const handleOpenEdit = (patient: Patient) => {
@@ -46,7 +51,10 @@ const Patients: React.FC = () => {
       firstName: '', lastName: '', phone: '', address: '',
       city: [...cities].sort((a, b) => a.name.localeCompare(b.name))[0]?.name || '',
       medicalCondition: '',
-      aloeTweak: '', testResults: ''
+      aloeTweak: '', testResults: '',
+      dosageMorningWhole: '1', dosageMorningFraction: '½',
+      dosageEveningWhole: '1', dosageEveningFraction: '½',
+      salespersonId: currentUser?.role === 'collaborator' ? currentUser.salespersonId : ''
     });
   };
 
@@ -172,7 +180,9 @@ const Patients: React.FC = () => {
       return false;
     })();
 
-    return matchesSearch && matchesCity;
+    const matchesSalesperson = selectedSalespersonId === 'Tutti' || p.salespersonId === selectedSalespersonId;
+
+    return matchesSearch && matchesCity && matchesSalesperson;
   }).sort((a, b) => {
     // Alphabetical order: Last Name, then First Name
     const nameA = `${a.lastName} ${a.firstName}`.toLowerCase();
@@ -193,7 +203,9 @@ const Patients: React.FC = () => {
               firstName: '', lastName: '', phone: '', address: '',
               city: [...cities].sort((a, b) => a.name.localeCompare(b.name))[0]?.name || '',
               medicalCondition: '',
-              aloeTweak: '', testResults: ''
+              aloeTweak: '', testResults: '',
+              dosageMorningWhole: '1', dosageMorningFraction: '½',
+              dosageEveningWhole: '1', dosageEveningFraction: '½'
             });
             setShowAdd(true);
           }}
@@ -233,6 +245,26 @@ const Patients: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {isAdmin && (
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide bg-orange-50/30 p-2 rounded-2xl border border-orange-50/50">
+            <button
+              onClick={() => setSelectedSalespersonId('Tutti')}
+              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedSalespersonId === 'Tutti' ? 'bg-orange-600 text-white shadow-lg' : 'text-orange-400 hover:text-orange-600'}`}
+            >
+              Tutti Collaboratori
+            </button>
+            {salespersons.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setSelectedSalespersonId(s.id)}
+                className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedSalespersonId === s.id ? 'bg-orange-600 text-white shadow-lg' : 'text-orange-400 hover:text-orange-600'}`}
+              >
+                {s.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -246,8 +278,13 @@ const Patients: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-black text-lg text-slate-800 uppercase tracking-tight leading-none">{patient.firstName} {patient.lastName}</h3>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
-                    <Tag size={10} className="text-green-500" /> {patient.city}
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5 flex flex-wrap items-center gap-2">
+                    <span className="flex items-center gap-1.5"><Tag size={10} className="text-green-500" /> {patient.city}</span>
+                    <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
+                    <span className="flex items-center gap-1.5 text-slate-600">
+                      <User size={10} className="text-orange-500" />
+                      {salespersons.find(s => s.id === patient.salespersonId)?.name || 'Nessun Titolare'}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -483,7 +520,16 @@ const Patients: React.FC = () => {
               </tr>
               <tr>
                 <td className="border border-black p-3 font-bold bg-slate-50">Dal 7° giorno:</td>
-                <td className="border border-black p-3">1 cucchiaio e ½ a colazione, 1 cucchiaio e ½  a cena (o prima di coricarsi). Continuare con queste assunzioni fino al termine del barattolo</td>
+                <td className="border border-black p-3">
+                  {activeProtocolPatient?.dosageMorningWhole !== '0' && activeProtocolPatient?.dosageMorningWhole}
+                  {activeProtocolPatient?.dosageMorningWhole !== '0' && activeProtocolPatient?.dosageMorningFraction !== '0' && ' e '}
+                  {activeProtocolPatient?.dosageMorningFraction !== '0' && activeProtocolPatient?.dosageMorningFraction}
+                  {' '}cucchiaio{(activeProtocolPatient?.dosageMorningWhole && parseInt(activeProtocolPatient.dosageMorningWhole) > 1) ? 'i' : ''} a colazione,{' '}
+                  {activeProtocolPatient?.dosageEveningWhole !== '0' && activeProtocolPatient?.dosageEveningWhole}
+                  {activeProtocolPatient?.dosageEveningWhole !== '0' && activeProtocolPatient?.dosageEveningFraction !== '0' && ' e '}
+                  {activeProtocolPatient?.dosageEveningFraction !== '0' && activeProtocolPatient?.dosageEveningFraction}
+                  {' '}cucchiaio{(activeProtocolPatient?.dosageEveningWhole && parseInt(activeProtocolPatient.dosageEveningWhole) > 1) ? 'i' : ''} a cena (o prima di coricarsi). Continuare con queste assunzioni fino al termine del barattolo
+                </td>
               </tr>
             </tbody>
           </table>
@@ -562,6 +608,15 @@ const Patients: React.FC = () => {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Controllo Esami</label>
                     <textarea rows={1} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10 transition-all" value={formData.testResults} onChange={e => setFormData({ ...formData, testResults: e.target.value })} placeholder="Note esami..." />
                   </div>
+                  {isAdmin && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1">Titolare (Collaboratore)</label>
+                      <select className="w-full p-4 bg-white border border-orange-100 rounded-2xl font-black text-slate-700 outline-none appearance-none" value={formData.salespersonId} onChange={e => setFormData({ ...formData, salespersonId: e.target.value })}>
+                        <option value="">Nessun Titolare (Admin)</option>
+                        {salespersons.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-6 border-t border-slate-100 flex gap-4">

@@ -35,7 +35,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       { to: '/profits', icon: <TrendingUp size={20} />, label: 'Profitti' },
       { to: '/reports', icon: <FileText size={20} />, label: 'Report' },
       { to: '/users', icon: <UserPlus size={20} />, label: 'Accesso Collaboratori' },
-      { to: '/settings', icon: <Settings size={20} />, label: 'Rea Città e Collaboratori' },
+      { to: '/settings', icon: <Settings size={20} />, label: 'Crea Città e Collaboratori' },
       { to: '/link', icon: <Share2 size={20} />, label: 'Condivisione App' },
       { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo' }
     );

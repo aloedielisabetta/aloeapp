@@ -46,7 +46,7 @@ const Settings: React.FC = () => {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Rea Città e Collaboratori</h2>
+          <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Crea Città e Collaboratori</h2>
           <p className="text-slate-500 font-medium">Gestione configurazione locale del workspace.</p>
         </div>
       </div>

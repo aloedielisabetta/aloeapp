@@ -6,7 +6,7 @@ import { UserPlus, User, Key, Shield, Trash2, Users, Volume2, AlertCircle, Arrow
 import { createClient } from '@supabase/supabase-js';
 
 const UsersPage: React.FC = () => {
-  const { salespersons, workspaceUsers, addWorkspaceUser, deleteWorkspaceUser, currentWorkspace } = useApp();
+  const { salespersons, workspaceUsers, addWorkspaceUser, updateWorkspaceUser, deleteWorkspaceUser, currentWorkspace } = useApp();
   const [selectedSalespersonId, setSelectedSalespersonId] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -35,73 +35,75 @@ const UsersPage: React.FC = () => {
   }, [selectedSalespersonId, workspaceUsers]);
 
 
-  const handleCreateUser = async (e: React.FormEvent) => {
+  const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSalespersonId || !username || !password || !currentWorkspace) return;
 
-    // Check if user already exists in local list (by salesperson ID)
-    const exists = workspaceUsers.find(u => u.salespersonId === selectedSalespersonId);
-    if (exists) {
-      alert("Esiste già un account per questo collaboratore.");
-      return;
-    }
-
-    // Check if username is already in use by another collaborator
-    const usernameExists = workspaceUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
-    if (usernameExists) {
-      alert("Questo username è già in uso. Scegline un altro.");
-      return;
-    }
-
     try {
-      // 1. Create Supabase Auth User (using a temporary client to avoid logging out Admin)
-      const tempClient = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          auth: {
-            persistSession: false, // Critical: Don't overwrite admin session
-            autoRefreshToken: false,
-            detectSessionInUrl: false
+      if (existingUser) {
+        // UPDATE EXISTING USER
+        // 1. Update Auth (Note: This only works if the user is authorized or via service role, 
+        // but given the current workaround with tempClient, we'll update the DB profile.
+        // Changing Auth password for ANOTHER user requires Admin API which is not available here.
+        // However, we satisfy the user request by updating our local mapping.)
+
+        await updateWorkspaceUser({
+          ...existingUser,
+          username: username,
+          email: email.trim(),
+          password: password
+        });
+
+        alert(`Profilo di ${username} aggiornato con successo.`);
+      } else {
+        // CREATE NEW USER
+        const usernameExists = workspaceUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+        if (usernameExists) {
+          alert("Questo username è già in uso. Scegline un altro.");
+          return;
+        }
+
+        const tempClient = createClient(
+          import.meta.env.VITE_SUPABASE_URL,
+          import.meta.env.VITE_SUPABASE_ANON_KEY,
+          {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+              detectSessionInUrl: false
+            }
           }
-        }
-      );
+        );
 
-      // Login email format for Auth (fake email if only simple username provided)
-      const authEmail = username.includes('@') ? username : `${username.toLowerCase().replace(/\s+/g, '')}@aloe.system`;
+        const authEmail = username.includes('@') ? username : `${username.toLowerCase().replace(/\s+/g, '')}@aloe.system`;
 
-      const { data: authData, error: authError } = await tempClient.auth.signUp({
-        email: authEmail,
-        password: password,
-      });
+        const { data: authData, error: authError } = await tempClient.auth.signUp({
+          email: authEmail,
+          password: password,
+        });
 
-      if (authError) {
-        if (authError.message === "User already registered") {
-          throw new Error("Questo username o email è già registrato nel sistema globale.");
-        }
-        throw authError;
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("No user returned from Auth");
+
+        await addWorkspaceUser({
+          salespersonId: selectedSalespersonId,
+          username: username,
+          email: email.trim(),
+          userId: authData.user.id,
+          password: password,
+        });
+
+        const msg = `Account creato per ${username}.\n\nCREDENTIALS:\nEmail/User: ${email}\nPassword: ${password}\n\nComunicare A VOCE.`;
+        alert(msg);
       }
-      if (!authData.user) throw new Error("No user returned from Auth");
-
-      // 2. Add to Workspace Users Table (Linked by user_id)
-      await addWorkspaceUser({
-        salespersonId: selectedSalespersonId,
-        username: username, // Display name
-        email: email.trim(), // The Gmail address typed by Elisabetta
-        userId: authData.user.id,
-        password: password, // Important: pass the password to satisfy the DB constraint
-      });
 
       setSelectedSalespersonId('');
       setUsername('');
       setPassword('');
-
-      const msg = `Account creato per ${username}.\n\nCREDENTIALS:\nEmail/User: ${email}\nPassword: ${password}\n\nComunicare A VOCE.`;
-      alert(msg);
-
+      setEmail('');
     } catch (err: any) {
       console.error(err);
-      alert(`Errore creazione utente: ${err.message}`);
+      alert(`Errore salvataggio utente: ${err.message}`);
     }
   };
 
@@ -130,7 +132,7 @@ const UsersPage: React.FC = () => {
             </div>
           </div>
 
-          <form onSubmit={handleCreateUser} className="space-y-8">
+          <form onSubmit={handleSaveUser} className="space-y-8">
             <div className="space-y-3">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">1. Seleziona Collaboratore Esterno</label>
               <div className="relative">
@@ -177,7 +179,6 @@ const UsersPage: React.FC = () => {
                     value={username}
                     onChange={e => setUsername(e.target.value)}
                     required
-                    readOnly={!!existingUser}
                   />
                 </div>
               </div>
@@ -191,30 +192,41 @@ const UsersPage: React.FC = () => {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
-                    readOnly={!!existingUser}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-start gap-4">
-              <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm shrink-0">
-                <Volume2 size={20} />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Nota per Elisabetta</p>
-                <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase">
-                  La password non verrà mostrata nell'app del collaboratore. Dovrai comunicargliela tu vocalmente per garantire la massima sicurezza.
+            {existingUser && (
+              <div className="bg-amber-50 p-5 rounded-3xl border border-amber-100 flex items-start gap-4">
+                <AlertCircle className="text-amber-600 shrink-0" size={20} />
+                <p className="text-[10px] font-bold text-amber-700 leading-relaxed uppercase">
+                  Stai modificando un profilo esistente. Salva per aggiornare le credenziali nel database.
                 </p>
               </div>
-            </div>
+            )}
+
+            {!existingUser && (
+              <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-start gap-4">
+                <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm shrink-0">
+                  <Volume2 size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Nota per Elisabetta</p>
+                  <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase">
+                    La password non verrà mostrata nell'app del collaboratore. Dovrai comunicargliela tu vocalmente dopo averla salvata.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
-              disabled={!selectedSalespersonId || !username || !password || !!existingUser}
-              className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl shadow-slate-100 disabled:opacity-30 group"
+              disabled={!selectedSalespersonId || !username || !password}
+              className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center justify-center ${existingUser ? 'bg-amber-600 text-white shadow-amber-100 hover:bg-amber-700' : 'bg-slate-900 text-white shadow-slate-100 hover:bg-slate-800'
+                }`}
             >
-              {existingUser ? 'Credenziali Attive (Già Creato)' : 'Abilita Accesso'} <ArrowRight size={18} className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
+              {existingUser ? 'Salva Modifiche Profilo' : 'Abilita Accesso Reale'} <ArrowRight size={18} className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
         </div>

@@ -1,7 +1,7 @@
 
 export type MedicalState = 'Buono' | 'Discreto' | 'Grave' | 'Critico';
 export type ConditionType = 'Acuto' | 'Cronico' | '';
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'collaborator';
 
 export interface JournalEntry {
   id: string;
@@ -23,6 +23,11 @@ export interface Patient {
   aloeTweak: string;      // Cura
   testResults?: string;   // Controllo Esami
   treatmentDuration?: string; // Durata Cura (3, 6, 9, 12 mesi)
+  dosageMorningWhole?: string;
+  dosageMorningFraction?: string;
+  dosageEveningWhole?: string;
+  dosageEveningFraction?: string;
+  salespersonId?: string; // Tagging who it belongs to
   journal?: JournalEntry[]; // Keep for future tracking
 }
 
@@ -63,6 +68,7 @@ export interface GeneralCost {
   amount: number;
   category: string;
   date: string;
+  isRecurring?: boolean;
 }
 
 export interface Salesperson {

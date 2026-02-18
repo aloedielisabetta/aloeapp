@@ -133,29 +133,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const loadUserData = async () => {
       if (!session?.user) return;
 
-      // Check if Admin (Owner of a workspace)
-      const { data: ownedWorkspaces } = await supabase.from('workspaces').select('*').eq('owner_id', session.user.id);
-
-      if (ownedWorkspaces && ownedWorkspaces.length > 0) {
-        setWorkspaces(ownedWorkspaces.map(toCamel));
-        setCurrentWorkspace(toCamel(ownedWorkspaces[0]));
-        setCurrentUser({ role: 'admin', id: session.user.id, name: session.user.email });
-        return;
-      }
-
-      // Check if Collaborator
-      const { data: memberUser } = await supabase.from('workspace_users').select('*, workspaces(*)').eq('user_id', session.user.id).single();
+      // 1. Check if Collaborator FIRST (To prevent collaborators seeing too much if they happen to own a test workspace)
+      const { data: memberUser } = await supabase
+        .from('workspace_users')
+        .select('*, workspaces(*)')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
 
       if (memberUser) {
         const ws = toCamel(memberUser.workspaces);
         setWorkspaces([ws]);
         setCurrentWorkspace(ws);
         setCurrentUser({
-          role: 'user',
+          role: 'collaborator',
           id: memberUser.id,
           name: memberUser.username,
           salespersonId: memberUser.salesperson_id
         });
+        return;
+      }
+
+      // 2. Check if Admin (Owner of a workspace)
+      const { data: ownedWorkspaces } = await supabase.from('workspaces').select('*').eq('owner_id', session.user.id);
+
+      if (ownedWorkspaces && ownedWorkspaces.length > 0) {
+        setWorkspaces(ownedWorkspaces.map(toCamel));
+        setCurrentWorkspace(toCamel(ownedWorkspaces[0]));
+        setCurrentUser({ role: 'admin', id: session.user.id, name: session.user.email || 'Admin' });
+        return;
       }
     };
 
@@ -189,10 +194,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addPatient = async (p: Omit<Patient, 'id' | 'workspaceId'>) => {
     if (!currentWorkspace) return;
-    const newP = { ...p, id: crypto.randomUUID(), workspaceId: currentWorkspace.id };
-    const { error } = await supabase.from('patients').insert(toSnake(newP));
+    const patientData = {
+      ...p,
+      id: crypto.randomUUID(),
+      workspaceId: currentWorkspace.id,
+      salespersonId: p.salespersonId || currentUser?.salespersonId // Auto-tag if collaborator, or use selected
+    };
+    const { error } = await supabase.from('patients').insert(toSnake(patientData));
     if (error) throw error;
-    setPatients(prev => [...prev, newP as Patient]);
+    setPatients(prev => [...prev, patientData as Patient]);
   };
 
   const updatePatient = async (p: Patient) => {

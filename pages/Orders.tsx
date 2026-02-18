@@ -25,6 +25,8 @@ const Orders: React.FC = () => {
   const [uiError, setUiError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [showPatientResults, setShowPatientResults] = useState(false);
 
   const isAdmin = currentUser?.role === 'admin';
 
@@ -79,8 +81,20 @@ const Orders: React.FC = () => {
       isShipping: !!order.isShipping,
       isFree: !!order.isFree
     });
+    const patient = patients.find(p => p.id === order.patientId);
+    if (patient) setPatientSearch(`${patient.firstName} ${patient.lastName}`);
     setShowAdd(true);
   };
+
+  const filtered = orders.filter(o => {
+    const patientName = patients.find(p => p.id === o.patientId)?.lastName.toLowerCase() || '';
+    const matchesPatient = patientName.includes(search.toLowerCase());
+
+    // Collaborator only sees their own orders
+    const isOwner = isAdmin || o.salespersonId === currentUser?.salespersonId;
+
+    return matchesPatient && isOwner;
+  });
 
   const handleAdd = async () => {
     if (!orderData.patientId || orderData.items.length === 0 || !currentWorkspace) {
@@ -138,6 +152,7 @@ const Orders: React.FC = () => {
     });
     setEditingOrder(null);
     setIsExternal(false);
+    setPatientSearch('');
   };
 
   const addItem = (productId: string) => {
@@ -253,11 +268,11 @@ const Orders: React.FC = () => {
             <RefreshCw size={18} className={isSyncing ? "animate-spin text-blue-500" : ""} /> Aggiorna
           </button>
           <button onClick={() => { setIsExternal(true); setShowAdd(true); }} className="bg-orange-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-orange-700 transition-all font-bold text-sm shadow-xl shadow-orange-100">
-            <ExternalLink size={18} /> Nuovo Esterno
+            <ExternalLink size={18} /> Ordine collaboratore
           </button>
           {isAdmin && (
             <button onClick={() => { setIsExternal(false); setShowAdd(true); }} className="bg-green-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all font-bold text-sm shadow-xl shadow-green-100">
-              <Plus size={18} /> Nuovo Interno
+              <Plus size={18} /> Mio ordine
             </button>
           )}
         </div>
@@ -332,11 +347,11 @@ const Orders: React.FC = () => {
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{patient.city}</p>
                             {order.isExternal ? (
                               <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-orange-100 flex items-center gap-1">
-                                <User size={8} /> {salesperson?.name || 'Agente Esterno'}
+                                <User size={8} /> {salesperson?.name || 'Collaboratore'}
                               </span>
                             ) : (
                               <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-green-100 flex items-center gap-1">
-                                <Sparkles size={8} /> Interno
+                                <Sparkles size={8} /> Mio ordine
                               </span>
                             )}
                             {order.isShipping && (
@@ -421,7 +436,7 @@ const Orders: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight leading-none">
-                    {editingOrder ? 'Modifica Ordine' : `Nuovo Ordine ${isExternal ? 'Esterno' : 'Interno'}`}
+                    {editingOrder ? 'Modifica Ordine' : (isExternal ? 'Ordine collaboratore' : 'Mio ordine')}
                   </h3>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Configura i prodotti e il paziente</p>
                 </div>
@@ -435,10 +450,47 @@ const Orders: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Seleziona Paziente</label>
                 <div className="relative">
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                  <select className="w-full pl-14 pr-5 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none appearance-none focus:ring-4 focus:ring-green-500/10" value={orderData.patientId} onChange={e => setOrderData({ ...orderData, patientId: e.target.value })}>
-                    <option value="">Scegli Paziente...</option>
-                    {patients.map(p => <option key={p.id} value={p.id}>{p.firstName} {p.lastName} ({p.city})</option>)}
-                  </select>
+                  <input
+                    type="text"
+                    className="w-full pl-14 pr-5 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-green-500/10"
+                    placeholder="Digita nome o iniziali del paziente..."
+                    value={patientSearch}
+                    onChange={(e) => {
+                      setPatientSearch(e.target.value);
+                      setShowPatientResults(true);
+                      if (e.target.value === '') setOrderData({ ...orderData, patientId: '' });
+                    }}
+                    onFocus={() => setShowPatientResults(true)}
+                  />
+                  {showPatientResults && patientSearch.length > 0 && (
+                    <div className="absolute z-[60] left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-60 overflow-y-auto overflow-x-hidden hide-scrollbar">
+                      {patients
+                        .filter(p =>
+                          `${p.firstName} ${p.lastName}`.toLowerCase().includes(patientSearch.toLowerCase()) ||
+                          p.firstName.toLowerCase().startsWith(patientSearch.toLowerCase()) ||
+                          p.lastName.toLowerCase().startsWith(patientSearch.toLowerCase())
+                        )
+                        .map(p => (
+                          <button
+                            key={p.id}
+                            className="w-full text-left px-6 py-4 hover:bg-slate-50 flex flex-col transition-colors border-b border-slate-50 last:border-0"
+                            onClick={() => {
+                              setOrderData({ ...orderData, patientId: p.id });
+                              setPatientSearch(`${p.firstName} ${p.lastName}`);
+                              setShowPatientResults(false);
+                            }}
+                          >
+                            <span className="font-black text-slate-800 text-sm uppercase tracking-tight">{p.firstName} {p.lastName}</span>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{p.city}</span>
+                          </button>
+                        ))}
+                      {patients.filter(p =>
+                        `${p.firstName} ${p.lastName}`.toLowerCase().includes(patientSearch.toLowerCase())
+                      ).length === 0 && (
+                          <div className="px-6 py-4 text-[10px] font-black text-slate-300 uppercase italic">Nessun paziente trovato</div>
+                        )}
+                    </div>
+                  )}
                   <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={20} />
                 </div>
               </div>
@@ -559,7 +611,7 @@ const Orders: React.FC = () => {
             <div className="p-8 border-t border-slate-100 shrink-0 flex gap-4 bg-slate-50/50">
               <button onClick={() => { setShowAdd(false); resetAddForm(); }} className="flex-1 py-4 font-black text-[10px] text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Annulla</button>
               <button onClick={handleAdd} disabled={!orderData.patientId || orderData.items.length === 0} className={`flex-[2] py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest text-white shadow-xl transition-all active:scale-95 disabled:opacity-30 ${isExternal ? 'bg-orange-600 shadow-orange-100' : 'bg-green-600 shadow-green-100'}`}>
-                {editingOrder ? 'Salva Modifiche' : 'Crea Ordine'}
+                {editingOrder ? 'Salva Modifiche' : (isExternal ? 'Crea Ordine collaboratore' : 'Crea Mio ordine')}
               </button>
             </div>
           </div>
