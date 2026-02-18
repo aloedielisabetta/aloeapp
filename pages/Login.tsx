@@ -20,15 +20,14 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
 
-  // Remove old init logic as Auth handles state
+  const { currentUser } = useApp();
+
+  // Auto-redirect if already logged in and profile loaded
   useEffect(() => {
-    // If we have a user/workspace, we are good. Handled by store redir mostly?
-    // Actually we simply wait for store to determine if we are logged in.
-    // However, store already redirects? No, store just holds state.
-    // If we want to auto-redirect:
-    // This is handled better by a wrapper layout, but here:
-    // if (currentUser) navigate('/');
-  }, []);
+    if (currentUser) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
 
   const handleLogin = async () => {
     setLoading(true);

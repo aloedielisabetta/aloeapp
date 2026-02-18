@@ -91,6 +91,26 @@ const toCamel = (obj: any): any => {
   return obj;
 };
 
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+};
+
+export const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
+  const { currentUser, isSyncing } = useApp();
+
+  // If we are currently fetching the user profile, show nothing or a loader to avoid premature redirect
+  if (!currentUser && isSyncing) return null;
+
+  if (!currentUser) return <Navigate to="/login" replace />;
+  if (adminOnly && currentUser.role !== 'admin') return <Navigate to="/" replace />;
+
+  return <Layout>{children}</Layout>;
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
@@ -131,21 +151,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load User Data based on Session
   useEffect(() => {
     const loadUserData = async () => {
-      if (!session?.user) return;
-      console.log("Loading user data for:", session.user.email);
+      if (!session?.user) {
+        setIsSyncing(false);
+        return;
+      }
+
+      console.log("Loading profile for:", session.user.email);
 
       try {
-        // 1. Check if Collaborator FIRST
+        // 1. Try Admin Check First (Owner) - Most common for the owner
+        const { data: ownedWs, error: wsError } = await supabase
+          .from('workspaces')
+          .select('*')
+          .eq('owner_id', session.user.id);
+
+        if (wsError) console.error("Workspace error:", wsError);
+
+        if (ownedWs && ownedWs.length > 0) {
+          console.log("Admin role detected");
+          const ws = toCamel(ownedWs[0]);
+          setWorkspaces(ownedWs.map(toCamel));
+          setCurrentWorkspace(ws);
+          setCurrentUser({
+            role: 'admin',
+            id: session.user.id,
+            name: session.user.email || 'Amministratore'
+          });
+          return;
+        }
+
+        // 2. Try Collaborator Check
         const { data: memberUser, error: memberError } = await supabase
           .from('workspace_users')
           .select('*, workspaces(*)')
           .eq('user_id', session.user.id)
           .maybeSingle();
 
-        if (memberError) console.error("Collaborator lookup error:", memberError);
+        if (memberError) console.error("Collaborator error:", memberError);
 
         if (memberUser && memberUser.workspaces) {
-          console.log("User detected as Collaborator");
+          console.log("Collaborator role detected");
           const ws = toCamel(memberUser.workspaces);
           setWorkspaces([ws]);
           setCurrentWorkspace(ws);
@@ -158,23 +203,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return;
         }
 
-        // 2. Check if Admin (Owner of a workspace)
-        console.log("Checking for Admin/Owner workspaces...");
-        const { data: ownedWorkspaces, error: wsError } = await supabase.from('workspaces').select('*').eq('owner_id', session.user.id);
-
-        if (wsError) console.error("Workspace owner lookup error:", wsError);
-
-        if (ownedWorkspaces && ownedWorkspaces.length > 0) {
-          console.log("User detected as Admin");
-          setWorkspaces(ownedWorkspaces.map(toCamel));
-          setCurrentWorkspace(toCamel(ownedWorkspaces[0]));
-          setCurrentUser({ role: 'admin', id: session.user.id, name: session.user.email || 'Amministratore' });
-          return;
-        }
-
-        console.warn("No workspace or membership found for this user.");
+        console.warn("User authenticated but no workspace profile found.");
+        // If we reach here, the user exists in Auth but has no data. 
+        // We'll leave currentUser null to keep them at login.
       } catch (e) {
-        console.error("Critical error in loadUserData:", e);
+        console.error("Critical identity load error:", e);
+      } finally {
+        setIsSyncing(false);
       }
     };
 
