@@ -132,35 +132,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const loadUserData = async () => {
       if (!session?.user) return;
+      console.log("Loading user data for:", session.user.email);
 
-      // 1. Check if Collaborator FIRST (To prevent collaborators seeing too much if they happen to own a test workspace)
-      const { data: memberUser } = await supabase
-        .from('workspace_users')
-        .select('*, workspaces(*)')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
+      try {
+        // 1. Check if Collaborator FIRST
+        const { data: memberUser, error: memberError } = await supabase
+          .from('workspace_users')
+          .select('*, workspaces(*)')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
 
-      if (memberUser) {
-        const ws = toCamel(memberUser.workspaces);
-        setWorkspaces([ws]);
-        setCurrentWorkspace(ws);
-        setCurrentUser({
-          role: 'collaborator',
-          id: memberUser.id,
-          name: memberUser.username,
-          salespersonId: memberUser.salesperson_id
-        });
-        return;
-      }
+        if (memberError) console.error("Collaborator lookup error:", memberError);
 
-      // 2. Check if Admin (Owner of a workspace)
-      const { data: ownedWorkspaces } = await supabase.from('workspaces').select('*').eq('owner_id', session.user.id);
+        if (memberUser && memberUser.workspaces) {
+          console.log("User detected as Collaborator");
+          const ws = toCamel(memberUser.workspaces);
+          setWorkspaces([ws]);
+          setCurrentWorkspace(ws);
+          setCurrentUser({
+            role: 'collaborator',
+            id: memberUser.id,
+            name: memberUser.username,
+            salespersonId: memberUser.salesperson_id
+          });
+          return;
+        }
 
-      if (ownedWorkspaces && ownedWorkspaces.length > 0) {
-        setWorkspaces(ownedWorkspaces.map(toCamel));
-        setCurrentWorkspace(toCamel(ownedWorkspaces[0]));
-        setCurrentUser({ role: 'admin', id: session.user.id, name: session.user.email || 'Admin' });
-        return;
+        // 2. Check if Admin (Owner of a workspace)
+        console.log("Checking for Admin/Owner workspaces...");
+        const { data: ownedWorkspaces, error: wsError } = await supabase.from('workspaces').select('*').eq('owner_id', session.user.id);
+
+        if (wsError) console.error("Workspace owner lookup error:", wsError);
+
+        if (ownedWorkspaces && ownedWorkspaces.length > 0) {
+          console.log("User detected as Admin");
+          setWorkspaces(ownedWorkspaces.map(toCamel));
+          setCurrentWorkspace(toCamel(ownedWorkspaces[0]));
+          setCurrentUser({ role: 'admin', id: session.user.id, name: session.user.email || 'Amministratore' });
+          return;
+        }
+
+        console.warn("No workspace or membership found for this user.");
+      } catch (e) {
+        console.error("Critical error in loadUserData:", e);
       }
     };
 
@@ -170,21 +184,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const syncData = useCallback(async () => {
     if (!currentWorkspace?.id) return;
     setIsSyncing(true);
+    console.log("Syncing data for workspace:", currentWorkspace.id);
+
     try {
       const fetchT = async (t: string) => {
         const { data, error } = await supabase.from(t).select('*').eq('workspace_id', currentWorkspace.id);
-        if (error) throw error;
+        if (error) {
+          console.error(`Sync error for table ${t}:`, error);
+          // Don't throw, just return empty to allow other tables to load
+          return [];
+        }
         return (data || []).map(toCamel);
       };
+
       const [p, pr, o, r, c, m, s, g, u, rm] = await Promise.all([
         fetchT('patients'), fetchT('products'), fetchT('orders'), fetchT('recipes'),
         fetchT('city_folders'), fetchT('modifier_groups'), fetchT('salespersons'),
         fetchT('general_costs'), fetchT('workspace_users'), fetchT('raw_materials')
       ]);
+
       setPatients(p); setProducts(pr); setOrders(o); setRecipes(r); setCities(c);
       setModifierGroups(m); setSalespersons(s); setGeneralCosts(g); setWorkspaceUsers(u); setRawMaterials(rm);
+      console.log("Sync completed successfully.");
     } catch (e) {
-      console.error(e);
+      console.error("Global sync exception:", e);
     } finally {
       setIsSyncing(false);
     }
