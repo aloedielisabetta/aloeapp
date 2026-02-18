@@ -20,14 +20,14 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
 
-  const { currentUser } = useApp();
+  const { currentUser, isLoadingProfile } = useApp();
 
-  // Auto-redirect if already logged in and profile loaded
+  // Only auto-redirect once we know for sure who the user is
   useEffect(() => {
-    if (currentUser) {
+    if (!isLoadingProfile && currentUser) {
       navigate('/');
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, isLoadingProfile, navigate]);
 
   const handleLogin = async () => {
     setLoading(true);

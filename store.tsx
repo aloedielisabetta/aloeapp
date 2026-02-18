@@ -12,6 +12,7 @@ interface AppContextType extends AppData {
   currentUser: { role: UserRole; id?: string; name?: string; salespersonId?: string } | null;
   setCurrentWorkspace: (w: Workspace | null) => void;
   setCurrentUser: (u: { role: UserRole; id?: string; name?: string; salespersonId?: string } | null) => void;
+  isLoadingProfile: boolean;
 
   addPatient: (p: Omit<Patient, 'id' | 'workspaceId'>) => Promise<void>;
   updatePatient: (p: Patient) => Promise<void>;
@@ -98,6 +99,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentUser, setCurrentUser] = useState<{ role: UserRole; id?: string; name?: string; salespersonId?: string } | null>(null);
   const [session, setSession] = useState<any>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  // Starts true — prevents ProtectedRoute from redirecting before we know who the user is
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   // App Data Collections
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -114,6 +117,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
+      // If no session at all, we're done loading
+      if (!session) setIsLoadingProfile(false);
     });
 
     const {
@@ -123,6 +128,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!session) {
         setCurrentUser(null);
         setCurrentWorkspace(null);
+        setIsLoadingProfile(false);
       }
     });
 
@@ -133,11 +139,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const loadUserData = async () => {
       if (!session?.user) {
-        setIsSyncing(false);
+        setIsLoadingProfile(false);
         return;
       }
 
       console.log("Loading profile for:", session.user.email);
+      setIsLoadingProfile(true);
 
       try {
         // 1. Try Admin Check First (Owner) - Most common for the owner
@@ -185,12 +192,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
 
         console.warn("User authenticated but no workspace profile found.");
-        // If we reach here, the user exists in Auth but has no data. 
+        // If we reach here, the user exists in Auth but has no data.
         // We'll leave currentUser null to keep them at login.
       } catch (e) {
         console.error("Critical identity load error:", e);
       } finally {
         setIsSyncing(false);
+        // Always mark profile loading as done, regardless of outcome
+        setIsLoadingProfile(false);
       }
     };
 
@@ -482,7 +491,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addPatient, updatePatient, deletePatient, addOrder, updateOrder, deleteOrder, addProduct, updateProduct, deleteProduct,
       addRecipe, updateRecipe, deleteRecipe, addCity, deleteCity, addSalesperson, updateSalesperson, deleteSalesperson, addGeneralCost, deleteGeneralCost,
       addWorkspaceUser, updateWorkspaceUser, deleteWorkspaceUser, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
-      createWorkspace, updateWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut
+      createWorkspace, updateWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut, isLoadingProfile
     }}>
       {children}
     </AppContext.Provider>

@@ -20,10 +20,21 @@ import LinkPage from './pages/Link';
 import Profile from './pages/Profile';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
-  const { currentUser, isSyncing } = useApp();
+  const { currentUser, isLoadingProfile } = useApp();
 
-  // Wait for profile to load before deciding to redirect
-  if (!currentUser && isSyncing) return null;
+  // Show a blank loading screen while we determine who the user is.
+  // This prevents the race condition where ProtectedRoute redirects to /login
+  // before the profile has finished loading from Supabase.
+  if (isLoadingProfile) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-4xl animate-pulse">🌱</span>
+          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) return <Navigate to="/login" replace />;
   if (adminOnly && currentUser.role !== 'admin') return <Navigate to="/" replace />;
