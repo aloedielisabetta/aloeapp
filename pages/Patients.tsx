@@ -4,7 +4,7 @@ import { Patient, MedicalState, JournalEntry } from '../types';
 import {
   Plus, Search, ChevronRight, UserPlus, Trash2, History,
   X, Calendar, Tag, Layers, Edit2, FileText, Download,
-  Loader2, Activity, Scale, Clipboard, Save, MessageSquare, UploadCloud, Smartphone
+  Loader2, Activity, Scale, Clipboard, Save, MessageSquare, UploadCloud, Smartphone, User
 } from 'lucide-react';
 
 const Patients: React.FC = () => {
