@@ -216,7 +216,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const { data, error } = await supabase.from(t).select('*').eq('workspace_id', currentWorkspace.id);
         if (error) {
           console.error(`Sync error for table ${t}:`, error);
-          // Don't throw, just return empty to allow other tables to load
           return [];
         }
         return (data || []).map(toCamel);
@@ -228,7 +227,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         fetchT('general_costs'), fetchT('workspace_users'), fetchT('raw_materials')
       ]);
 
-      setPatients(p); setProducts(pr); setOrders(o); setRecipes(r); setCities(c);
+      // Sanitize orders: ensure items is always an array, and each item has selectedModifiers as an object
+      const sanitizedOrders = o.map((order: any) => ({
+        ...order,
+        items: (order.items || []).map((item: any) => ({
+          ...item,
+          selectedModifiers: item.selectedModifiers || {},
+        })),
+      }));
+
+      // Sanitize recipes: ensure ingredients is always an array
+      const sanitizedRecipes = r.map((recipe: any) => ({
+        ...recipe,
+        ingredients: recipe.ingredients || [],
+      }));
+
+      // Sanitize products: ensure modifierGroupIds is always an array
+      const sanitizedProducts = pr.map((product: any) => ({
+        ...product,
+        modifierGroupIds: product.modifierGroupIds || [],
+      }));
+
+      // Sanitize patients: ensure journal is always an array
+      const sanitizedPatients = p.map((patient: any) => ({
+        ...patient,
+        journal: patient.journal || [],
+      }));
+
+      setPatients(sanitizedPatients); setProducts(sanitizedProducts); setOrders(sanitizedOrders);
+      setRecipes(sanitizedRecipes); setCities(c);
       setModifierGroups(m); setSalespersons(s); setGeneralCosts(g); setWorkspaceUsers(u); setRawMaterials(rm);
       console.log("Sync completed successfully.");
     } catch (e) {
