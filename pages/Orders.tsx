@@ -270,7 +270,7 @@ const Orders: React.FC = () => {
             <span className="text-slate-500 font-medium">Visualizzazione mensile.</span>
             <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100 shadow-sm shadow-green-100/50">
               <Database size={12} className="text-green-600" />
-              <span className="text-green-700 text-[10px] font-black uppercase tracking-tighter">{orders.length} ordini</span>
+              <span className="text-green-700 text-[10px] font-black uppercase tracking-tighter">{filteredOrders.length} ordini</span>
             </div>
           </div>
         </div>
