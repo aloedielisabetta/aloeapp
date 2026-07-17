@@ -108,7 +108,7 @@ export interface Recipe {
 
 export interface OrderItem {
   productId: string;
-  selectedModifiers: Record<string, string>;
+  selectedModifiers: Record<string, string[]>;
   quantity: number;
 }
 

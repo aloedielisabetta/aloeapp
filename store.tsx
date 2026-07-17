@@ -227,12 +227,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         fetchT('general_costs'), fetchT('workspace_users'), fetchT('raw_materials')
       ]);
 
-      // Sanitize orders: ensure items is always an array, and each item has selectedModifiers as an object
+      // Sanitize orders: ensure items is always an array, and each item has selectedModifiers as string[]
       const sanitizedOrders = o.map((order: any) => ({
         ...order,
         items: (order.items || []).map((item: any) => ({
           ...item,
-          selectedModifiers: item.selectedModifiers || {},
+          selectedModifiers: Object.fromEntries(
+            Object.entries(item.selectedModifiers || {}).map(([k, v]) => [
+              k,
+              Array.isArray(v) ? v : (v && v !== '' ? [v] : [])
+            ])
+          ),
         })),
       }));
 
@@ -405,18 +410,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addWorkspaceUser = async (u: Omit<WorkspaceUser, 'id' | 'workspaceId'> & { password?: string }) => {
     if (!currentWorkspace) return;
 
-    // Note: The actual Auth creation happens in the UI component (Users.tsx) using a temporary client
-    // Here we just save the record to the database linking the Auth ID (userId)
+    // Generate a simple 6-character magic code
+    const magicCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    const newU = { ...u, id: crypto.randomUUID(), workspaceId: currentWorkspace.id };
+    const newU = {
+      ...u,
+      id: crypto.randomUUID(),
+      workspaceId: currentWorkspace.id,
+      magicCode,
+      inviteStatus: 'pending'
+    };
 
-    // We should include the password in the database record as per the schema requirements
-    // even though Auth handles the main authentication.
     const { error } = await supabase.from('workspace_users').insert(toSnake(newU));
     if (error) throw error;
 
-    // For local state, we can keep the password or remove it
-    // const { password: _, ...userWithoutPassword } = newU as any;
     setWorkspaceUsers(prev => [...prev, newU as WorkspaceUser]);
   };
 

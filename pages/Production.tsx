@@ -79,7 +79,8 @@ const Production: React.FC = () => {
         salespersonName: order.isExternal ? (salesperson?.name || 'Esterno') : 'Interno',
         items: order.items.map(item => {
           const product = products.find(p => p.id === item.productId);
-          const variants = Object.values(item.selectedModifiers as Record<string, string>)
+          const variants = Object.values(item.selectedModifiers)
+            .flat()
             .filter(v => v && v !== '');
           
           return {
@@ -194,7 +195,8 @@ const Production: React.FC = () => {
                 </thead>
                 <tbody>
                   {prod.breakdown.map((item: any, idx: number) => {
-                    const variants = Object.values(item.selectedModifiers as Record<string, string>)
+                    const variants = Object.values(item.selectedModifiers)
+                      .flat()
                       .filter(v => v && v !== '');
 
                     return (
@@ -294,7 +296,8 @@ const Production: React.FC = () => {
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {prod.breakdown.map((item: any, idx: number) => {
-                  const variants = Object.values(item.selectedModifiers as Record<string, string>)
+                  const variants = Object.values(item.selectedModifiers)
+                    .flat()
                     .filter(v => v && v !== '');
 
                   return (

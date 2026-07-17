@@ -79,25 +79,28 @@ const Materials: React.FC = () => {
       }
 
       // 2. Ingredienti dalle ricette delle varianti selezionate
-      Object.entries(item.selectedModifiers).forEach(([groupId, option]) => {
-        const modifierRecipe = recipes.find(r => r.modifierGroupId === groupId && r.modifierOption === option);
-        if (modifierRecipe) {
-          modifierRecipe.ingredients.forEach(ing => {
-            const rm = ing.rawMaterialId ? rawMaterials.find(r => r.id === ing.rawMaterialId) : null;
-            const displayUnit = rm ? rm.unit : ing.unit;
-            const key = rm ? `rm-${rm.id}` : `${ing.name}-${ing.unit}`;
+      Object.entries(item.selectedModifiers).forEach(([groupId, options]) => {
+        const opts = Array.isArray(options) ? options : (options ? [options] : []);
+        opts.forEach(option => {
+          const modifierRecipe = recipes.find(r => r.modifierGroupId === groupId && r.modifierOption === option);
+          if (modifierRecipe) {
+            modifierRecipe.ingredients.forEach(ing => {
+              const rm = ing.rawMaterialId ? rawMaterials.find(r => r.id === ing.rawMaterialId) : null;
+              const displayUnit = rm ? rm.unit : ing.unit;
+              const key = rm ? `rm-${rm.id}` : `${ing.name}-${ing.unit}`;
 
-            if (!materialTotals[key]) {
-              materialTotals[key] = { quantity: 0, unit: displayUnit, cost: 0, isRawMaterial: !!rm };
-            }
+              if (!materialTotals[key]) {
+                materialTotals[key] = { quantity: 0, unit: displayUnit, cost: 0, isRawMaterial: !!rm };
+              }
 
-            const totalIngQty = ing.quantity * item.quantity;
-            const factor = rm ? (CONVERSIONS[ing.unit]?.[rm.unit] || 1) : 1;
+              const totalIngQty = ing.quantity * item.quantity;
+              const factor = rm ? (CONVERSIONS[ing.unit]?.[rm.unit] || 1) : 1;
 
-            materialTotals[key].quantity += totalIngQty * factor;
-            materialTotals[key].cost += getDynamicCostValue(ing, totalIngQty);
-          });
-        }
+              materialTotals[key].quantity += totalIngQty * factor;
+              materialTotals[key].cost += getDynamicCostValue(ing, totalIngQty);
+            });
+          }
+        });
       });
     });
   });

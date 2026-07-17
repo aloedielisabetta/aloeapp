@@ -48,11 +48,14 @@ const Profits: React.FC = () => {
           itemMaterialCost += product.costPerItem;
         }
 
-        Object.entries(item.selectedModifiers).forEach(([gid, opt]) => {
-          const modRecipe = recipes.find(r => r.modifierGroupId === gid && r.modifierOption === opt);
-          if (modRecipe) {
-            itemMaterialCost += modRecipe.ingredients.reduce((s, ing) => s + getIngredientDynamicCost(ing), 0);
-          }
+        Object.entries(item.selectedModifiers).forEach(([gid, options]) => {
+          const opts = Array.isArray(options) ? options : (options ? [options] : []);
+          opts.forEach(opt => {
+            const modRecipe = recipes.find(r => r.modifierGroupId === gid && r.modifierOption === opt);
+            if (modRecipe) {
+              itemMaterialCost += modRecipe.ingredients.reduce((s, ing) => s + getIngredientDynamicCost(ing), 0);
+            }
+          });
         });
 
         totalMaterialsCost += itemMaterialCost * item.quantity;

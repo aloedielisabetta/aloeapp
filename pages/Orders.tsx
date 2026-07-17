@@ -107,7 +107,7 @@ const Orders: React.FC = () => {
 
     const cleanedItems = orderData.items.map(item => {
       const filteredModifiers = Object.fromEntries(
-        Object.entries(item.selectedModifiers).filter(([_, val]) => val !== '')
+        Object.entries(item.selectedModifiers).filter(([_, val]) => val.length > 0)
       );
       return { ...item, selectedModifiers: filteredModifiers };
     });
@@ -165,9 +165,9 @@ const Orders: React.FC = () => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
-    const initialModifiers: Record<string, string> = {};
+    const initialModifiers: Record<string, string[]> = {};
     product.modifierGroupIds.forEach(mgId => {
-      initialModifiers[mgId] = '';
+      initialModifiers[mgId] = [];
     });
 
     setOrderData({
@@ -189,11 +189,15 @@ const Orders: React.FC = () => {
     setOrderData({ ...orderData, items: newItems });
   };
 
-  const updateItemModifier = (itemIndex: number, groupId: string, option: string) => {
+  const toggleItemModifier = (itemIndex: number, groupId: string, option: string) => {
     const newItems = [...orderData.items];
+    const current = newItems[itemIndex].selectedModifiers[groupId] || [];
+    const updated = current.includes(option)
+      ? current.filter(o => o !== option)
+      : [...current, option];
     newItems[itemIndex].selectedModifiers = {
       ...newItems[itemIndex].selectedModifiers,
-      [groupId]: option
+      [groupId]: updated
     };
     setOrderData({ ...orderData, items: newItems });
   };
@@ -383,16 +387,18 @@ const Orders: React.FC = () => {
                       <div className="flex flex-wrap gap-2 max-w-md">
                         {(order.items || []).map((item, idx) => {
                           const product = products.find(p => p.id === item.productId);
-                          const activeModifiers = Object.entries(item.selectedModifiers).filter(([_, val]) => val !== '');
+                          const activeModifiers = Object.entries(item.selectedModifiers).filter(([_, val]) => val.length > 0);
 
                           return (
                             <div key={idx} className="bg-white text-slate-700 border border-slate-100 p-2.5 rounded-2xl text-[10px] shadow-sm flex flex-col gap-1">
                               <div><span className="font-black text-green-700 mr-2">{item.quantity}x</span><span className="font-black text-slate-800">{product?.name || 'Prodotto'}</span></div>
                               {activeModifiers.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
-                                  {activeModifiers.map(([mgId, opt]) => {
+                                  {activeModifiers.map(([mgId, opts]) => {
                                     const mg = modifierGroups.find(g => g.id === mgId);
-                                    return <span key={mgId} className="bg-emerald-50 px-1.5 py-0.5 rounded-md text-[8px] font-black text-emerald-600 uppercase border border-emerald-100">{mg?.name}: {opt}</span>;
+                                    return (opts as string[]).map(opt => (
+                                      <span key={`${mgId}-${opt}`} className="bg-emerald-50 px-1.5 py-0.5 rounded-md text-[8px] font-black text-emerald-600 uppercase border border-emerald-100">{mg?.name}: {opt}</span>
+                                    ));
                                   })}
                                 </div>
                               )}
@@ -548,17 +554,25 @@ const Orders: React.FC = () => {
                                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em] ml-1 flex items-center gap-1.5">
                                     <Sparkles size={10} className="text-emerald-500" /> {mg.name} (Opzionale)
                                   </label>
-                                  <select
-                                    className={`w-full p-3 border rounded-2xl text-[10px] font-black outline-none transition-all ${item.selectedModifiers[mgId]
-                                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                                      : 'bg-white border-slate-200 text-slate-400'
-                                      }`}
-                                    value={item.selectedModifiers[mgId] || ''}
-                                    onChange={e => updateItemModifier(idx, mgId, e.target.value)}
-                                  >
-                                    <option value="">Standard / Nessuna</option>
-                                    {mg.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                  </select>
+                                  <div className="flex flex-wrap gap-1.5 mt-1">
+                                    {mg.options.map(opt => {
+                                      const selected = (item.selectedModifiers[mgId] || []).includes(opt);
+                                      return (
+                                        <button
+                                          key={opt}
+                                          type="button"
+                                          onClick={() => toggleItemModifier(idx, mgId, opt)}
+                                          className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wide transition-all border ${
+                                            selected
+                                              ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
+                                              : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
+                                          }`}
+                                        >
+                                          {opt}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               );
                             })}
