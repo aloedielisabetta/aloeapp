@@ -286,7 +286,7 @@ const Patients: React.FC = () => {
               onClick={() => setSelectedSalespersonId('Tutti')}
               className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${selectedSalespersonId === 'Tutti' ? 'bg-orange-600 text-white shadow-lg' : 'text-orange-400 hover:text-orange-600'}`}
             >
-              Tutti Collaboratori
+              Tutti Pazienti
             </button>
             {salespersons.map(s => (
               <button
