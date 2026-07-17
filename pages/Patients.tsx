@@ -160,7 +160,12 @@ const Patients: React.FC = () => {
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=Promemoria+automatico+fine+cura+Aloe+di+Elisabetta.`;
   };
 
-  const filtered = patients.filter(p => {
+  // For collaborators, only show their own patients
+  const visiblePatients = isAdmin
+    ? patients
+    : patients.filter(p => p.salespersonId === currentUser?.salespersonId);
+
+  const filtered = visiblePatients.filter(p => {
     const matchesSearch = `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase());
 
     // Robust city matching: handles both city names and IDs stored in the patient record
@@ -283,7 +288,7 @@ const Patients: React.FC = () => {
                     <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
                     <span className="flex items-center gap-1.5 text-slate-600">
                       <User size={10} className="text-orange-500" />
-                      {salespersons.find(s => s.id === patient.salespersonId)?.name || 'Nessun Titolare'}
+                      {salespersons.find(s => s.id === patient.salespersonId)?.name || 'Elisabetta'}
                     </span>
                   </p>
                 </div>
@@ -612,7 +617,7 @@ const Patients: React.FC = () => {
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1">Titolare (Collaboratore)</label>
                       <select className="w-full p-4 bg-white border border-orange-100 rounded-2xl font-black text-slate-700 outline-none appearance-none" value={formData.salespersonId} onChange={e => setFormData({ ...formData, salespersonId: e.target.value })}>
-                        <option value="">Nessun Titolare (Admin)</option>
+                        <option value="">Elisabetta</option>
                         {salespersons.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                     </div>
