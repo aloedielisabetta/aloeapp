@@ -34,7 +34,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       { to: '/cambusa', icon: <Package size={20} />, label: 'Cambusa/Materie Prime' },
       { to: '/variants', icon: <Settings2 size={20} />, label: 'Gestisci varianti' },
       { to: '/general-costs', icon: <Receipt size={20} />, label: 'Costi Generali' },
-      { to: '/materials', icon: <Database size={20} />, label: 'Materiali' },
+      { to: '/materials', icon: <Database size={20} />, label: 'Ordini per produzione' },
       { to: '/profits', icon: <TrendingUp size={20} />, label: 'Profitti' },
       { to: '/reports', icon: <FileText size={20} />, label: 'Report' },
       { to: '/users', icon: <UserPlus size={20} />, label: 'Accesso Collaboratori' },
