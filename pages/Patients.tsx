@@ -660,9 +660,21 @@ const Patients: React.FC = () => {
                   )}
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 flex gap-4">
-                  <button type="button" onClick={closePatientModal} className="flex-1 py-4 font-black text-[10px] text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Annulla</button>
-                  <button type="submit" className="flex-[2] bg-green-600 text-white py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-green-700 shadow-xl shadow-green-100 transition-all active:scale-95">
+                <div className="pt-6 border-t border-slate-100 flex flex-wrap gap-4">
+                  <button type="button" onClick={closePatientModal} className="flex-1 min-w-[100px] py-4 font-black text-[10px] text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Annulla</button>
+                  
+                  {isAdmin && editingPatient && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadProtocol({ ...editingPatient, ...formData } as Patient)}
+                      className="flex-1 min-w-[150px] bg-emerald-600 text-white py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      {isGenerating === editingPatient.id ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+                      Scarica Scheda
+                    </button>
+                  )}
+
+                  <button type="submit" className="flex-[2] min-w-[180px] bg-green-600 text-white py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-green-700 shadow-xl shadow-green-100 transition-all active:scale-95">
                     {editingPatient ? 'Aggiorna Paziente' : 'Finalizza Registrazione'}
                   </button>
                 </div>
