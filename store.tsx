@@ -320,14 +320,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addOrder = async (o: Omit<Order, 'id' | 'workspaceId'>) => {
     if (!currentWorkspace) return;
-    const newO = { ...o, id: crypto.randomUUID(), workspaceId: currentWorkspace.id };
+    const { hasDiscount, ...orderForDb } = o as any;
+    const newO = { ...orderForDb, id: crypto.randomUUID(), workspaceId: currentWorkspace.id };
     const { error } = await supabase.from('orders').insert(toSnake(newO));
     if (error) throw error;
-    setOrders(prev => [newO as Order, ...prev]);
+    setOrders(prev => [{ ...newO, hasDiscount: !!hasDiscount } as Order, ...prev]);
   };
 
   const updateOrder = async (o: Order) => {
-    const { error } = await supabase.from('orders').update(toSnake(o)).eq('id', o.id);
+    const { hasDiscount, ...orderForDb } = o as any;
+    const { error } = await supabase.from('orders').update(toSnake(orderForDb)).eq('id', o.id);
     if (error) throw error;
     setOrders(prev => prev.map(item => item.id === o.id ? o : item));
   };

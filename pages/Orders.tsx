@@ -120,7 +120,7 @@ const Orders: React.FC = () => {
           items: cleanedItems.filter(item => item.quantity > 0),
           isExternal: isAdmin ? isExternal : true,
           isShipping: orderData.isShipping,
-          isFree: orderData.isFree,
+          isFree: orderData.hasDiscount ? false : orderData.isFree,
           hasDiscount: orderData.hasDiscount,
           commission: (isAdmin ? isExternal : true) ? orderData.commission : 0,
           salespersonId: isAdmin ? (isExternal ? orderData.salespersonId : undefined) : currentUser?.salespersonId,
@@ -132,7 +132,7 @@ const Orders: React.FC = () => {
           date: new Date().toISOString(),
           isExternal: isAdmin ? isExternal : true,
           isShipping: orderData.isShipping,
-          isFree: orderData.isFree,
+          isFree: orderData.hasDiscount ? false : orderData.isFree,
           hasDiscount: orderData.hasDiscount,
           commission: (isAdmin ? isExternal : true) ? orderData.commission : 0,
           salespersonId: isAdmin ? (isExternal ? orderData.salespersonId : undefined) : currentUser?.salespersonId,
@@ -141,8 +141,9 @@ const Orders: React.FC = () => {
       }
       setShowAdd(false);
       resetAddForm();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Errore salvataggio ordine:", error);
+      setUiError(`Errore salvataggio: ${error?.message || 'Riprova'}`);
     }
   };
 
