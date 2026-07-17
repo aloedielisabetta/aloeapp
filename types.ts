@@ -120,6 +120,7 @@ export interface Order {
   date: string;
   isExternal: boolean;
   isShipping?: boolean;
+  isDelivery?: boolean;
   isFree?: boolean;
   hasDiscount?: boolean;
   commission: number;

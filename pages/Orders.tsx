@@ -36,6 +36,7 @@ const Orders: React.FC = () => {
     commission: number;
     salespersonId: string;
     isShipping: boolean;
+    isDelivery: boolean;
     isFree: boolean;
     hasDiscount: boolean;
   }>({
@@ -44,6 +45,7 @@ const Orders: React.FC = () => {
     commission: 0,
     salespersonId: isAdmin ? '' : (currentUser?.salespersonId || ''),
     isShipping: false,
+    isDelivery: false,
     isFree: false,
     hasDiscount: false
   });
@@ -81,6 +83,7 @@ const Orders: React.FC = () => {
       commission: order.commission,
       salespersonId: order.salespersonId || '',
       isShipping: !!order.isShipping,
+      isDelivery: !!order.isDelivery,
       isFree: !!order.isFree,
       hasDiscount: !!order.hasDiscount
     });
@@ -120,6 +123,7 @@ const Orders: React.FC = () => {
           items: cleanedItems.filter(item => item.quantity > 0),
           isExternal: isAdmin ? isExternal : true,
           isShipping: orderData.isShipping,
+          isDelivery: orderData.isDelivery,
           isFree: orderData.hasDiscount ? false : orderData.isFree,
           hasDiscount: orderData.hasDiscount,
           commission: (isAdmin ? isExternal : true) ? orderData.commission : 0,
@@ -132,6 +136,7 @@ const Orders: React.FC = () => {
           date: new Date().toISOString(),
           isExternal: isAdmin ? isExternal : true,
           isShipping: orderData.isShipping,
+          isDelivery: orderData.isDelivery,
           isFree: orderData.hasDiscount ? false : orderData.isFree,
           hasDiscount: orderData.hasDiscount,
           commission: (isAdmin ? isExternal : true) ? orderData.commission : 0,
@@ -154,6 +159,7 @@ const Orders: React.FC = () => {
       commission: 0,
       salespersonId: isAdmin ? '' : (currentUser?.salespersonId || ''),
       isShipping: false,
+      isDelivery: false,
       isFree: false,
       hasDiscount: false
     });
@@ -368,6 +374,11 @@ const Orders: React.FC = () => {
                             {order.isShipping && (
                               <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-blue-100 flex items-center gap-1">
                                 <Truck size={8} /> Spedizione
+                              </span>
+                            )}
+                            {order.isDelivery && (
+                              <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-indigo-100 flex items-center gap-1">
+                                <MapPin size={8} /> Consegna
                               </span>
                             )}
                             {order.isFree && (
@@ -616,13 +627,20 @@ const Orders: React.FC = () => {
               )}
 
               {/* Opzioni */}
-              <div className="grid grid-cols-3 gap-4">
-                <button onClick={() => setOrderData({ ...orderData, isShipping: !orderData.isShipping })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.isShipping ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+              <div className="grid grid-cols-2 gap-4">
+                <button onClick={() => setOrderData({ ...orderData, isShipping: !orderData.isShipping, isDelivery: false })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.isShipping ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-100 text-slate-400'}`}>
                   <div className="flex items-center gap-3">
                     <Truck size={20} className={orderData.isShipping ? "text-blue-600" : "text-slate-200"} />
                     <span className="text-[10px] font-black uppercase tracking-widest">Spedizione</span>
                   </div>
                   {orderData.isShipping && <Check size={16} />}
+                </button>
+                <button onClick={() => setOrderData({ ...orderData, isDelivery: !orderData.isDelivery, isShipping: false })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.isDelivery ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                  <div className="flex items-center gap-3">
+                    <MapPin size={20} className={orderData.isDelivery ? "text-indigo-600" : "text-slate-200"} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Consegna</span>
+                  </div>
+                  {orderData.isDelivery && <Check size={16} />}
                 </button>
                 <button onClick={() => setOrderData({ ...orderData, isFree: !orderData.isFree })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.isFree ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-slate-100 text-slate-400'}`}>
                   <div className="flex items-center gap-3">
