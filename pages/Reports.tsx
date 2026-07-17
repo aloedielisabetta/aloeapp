@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../store';
-import { FileText, UserCheck, DollarSign, ArrowUpRight, ArrowDownRight, Printer, Filter, Gift } from 'lucide-react';
+import { FileText, UserCheck, DollarSign, ArrowUpRight, ArrowDownRight, Printer, Filter, Gift, Sparkles } from 'lucide-react';
 
 const Reports: React.FC = () => {
   const { orders, products, patients, salespersons } = useApp();
@@ -156,6 +156,7 @@ const Reports: React.FC = () => {
                       <div className="flex flex-col">
                         <span>{salesperson?.name || 'Agente Sconosciuto'}</span>
                         {order.isFree && <span className="text-[9px] text-purple-600 font-black uppercase flex items-center gap-1"><Gift size={8} /> Omaggio</span>}
+                        {order.hasDiscount && <span className="text-[9px] text-amber-600 font-black uppercase flex items-center gap-1"><Sparkles size={8} /> -10%</span>}
                       </div>
                     </td>
                     <td className="px-8 py-4 text-sm text-slate-600">

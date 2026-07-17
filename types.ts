@@ -39,6 +39,8 @@ export interface WorkspaceUser {
   email?: string; // Notification Email
   userId?: string; // Linked Supabase Auth ID
   password?: string;
+  magicCode?: string;
+  inviteStatus?: 'pending' | 'active';
 }
 
 export interface ModifierGroup {
@@ -119,6 +121,7 @@ export interface Order {
   isExternal: boolean;
   isShipping?: boolean;
   isFree?: boolean;
+  hasDiscount?: boolean;
   commission: number;
   salespersonId?: string;
   status: 'In attesa' | 'Completato';
@@ -134,6 +137,7 @@ export interface Workspace {
   id: string;
   name: string;
   ownerEmail?: string; // Admin Notification Email
+  adminContactEmail?: string; // Email used for sending invites
   adminPassword?: string; // Deprecated
   ownerId?: string; // Linked Supabase Auth ID
 }

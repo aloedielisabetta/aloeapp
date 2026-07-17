@@ -37,13 +37,15 @@ const Orders: React.FC = () => {
     salespersonId: string;
     isShipping: boolean;
     isFree: boolean;
+    hasDiscount: boolean;
   }>({
     patientId: '',
     items: [],
     commission: 0,
     salespersonId: isAdmin ? '' : (currentUser?.salespersonId || ''),
     isShipping: false,
-    isFree: false
+    isFree: false,
+    hasDiscount: false
   });
 
   // Calcolo automatico provvigione basato sui prodotti selezionati
@@ -79,7 +81,8 @@ const Orders: React.FC = () => {
       commission: order.commission,
       salespersonId: order.salespersonId || '',
       isShipping: !!order.isShipping,
-      isFree: !!order.isFree
+      isFree: !!order.isFree,
+      hasDiscount: !!order.hasDiscount
     });
     const patient = patients.find(p => p.id === order.patientId);
     if (patient) setPatientSearch(`${patient.firstName} ${patient.lastName}`);
@@ -118,6 +121,7 @@ const Orders: React.FC = () => {
           isExternal: isAdmin ? isExternal : true,
           isShipping: orderData.isShipping,
           isFree: orderData.isFree,
+          hasDiscount: orderData.hasDiscount,
           commission: (isAdmin ? isExternal : true) ? orderData.commission : 0,
           salespersonId: isAdmin ? (isExternal ? orderData.salespersonId : undefined) : currentUser?.salespersonId,
         });
@@ -129,6 +133,7 @@ const Orders: React.FC = () => {
           isExternal: isAdmin ? isExternal : true,
           isShipping: orderData.isShipping,
           isFree: orderData.isFree,
+          hasDiscount: orderData.hasDiscount,
           commission: (isAdmin ? isExternal : true) ? orderData.commission : 0,
           salespersonId: isAdmin ? (isExternal ? orderData.salespersonId : undefined) : currentUser?.salespersonId,
           status: 'In attesa'
@@ -148,7 +153,8 @@ const Orders: React.FC = () => {
       commission: 0,
       salespersonId: isAdmin ? '' : (currentUser?.salespersonId || ''),
       isShipping: false,
-      isFree: false
+      isFree: false,
+      hasDiscount: false
     });
     setEditingOrder(null);
     setIsExternal(false);
@@ -362,6 +368,11 @@ const Orders: React.FC = () => {
                             {order.isFree && (
                               <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-purple-100 flex items-center gap-1">
                                 <Gift size={8} /> Omaggio
+                              </span>
+                            )}
+                            {order.hasDiscount && (
+                              <span className="bg-amber-50 text-amber-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-amber-100 flex items-center gap-1">
+                                <Sparkles size={8} /> -10%
                               </span>
                             )}
                           </div>
@@ -590,7 +601,7 @@ const Orders: React.FC = () => {
               )}
 
               {/* Opzioni */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <button onClick={() => setOrderData({ ...orderData, isShipping: !orderData.isShipping })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.isShipping ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-100 text-slate-400'}`}>
                   <div className="flex items-center gap-3">
                     <Truck size={20} className={orderData.isShipping ? "text-blue-600" : "text-slate-200"} />
@@ -604,6 +615,13 @@ const Orders: React.FC = () => {
                     <span className="text-[10px] font-black uppercase tracking-widest">Omaggio</span>
                   </div>
                   {orderData.isFree && <Check size={16} />}
+                </button>
+                <button onClick={() => setOrderData({ ...orderData, hasDiscount: !orderData.hasDiscount })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.hasDiscount ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                  <div className="flex items-center gap-3">
+                    <Sparkles size={20} className={orderData.hasDiscount ? "text-amber-500" : "text-slate-200"} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">-10%</span>
+                  </div>
+                  {orderData.hasDiscount && <Check size={16} />}
                 </button>
               </div>
             </div>

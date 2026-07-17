@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../store';
-import { TrendingUp, UserCheck, ArrowUpRight, FileText, ShoppingBag, Gift } from 'lucide-react';
+import { TrendingUp, UserCheck, ArrowUpRight, FileText, ShoppingBag, Gift, Sparkles } from 'lucide-react';
 
 const MySales: React.FC = () => {
   const { orders, products, currentUser, patients } = useApp();
@@ -99,6 +99,7 @@ const MySales: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <p className="text-[10px] text-slate-400 font-bold uppercase">{patient?.city}</p>
                         {order.isFree && <span className="text-[9px] text-purple-600 font-black uppercase flex items-center gap-1"><Gift size={8} /> Omaggio</span>}
+                        {order.hasDiscount && <span className="text-[9px] text-amber-600 font-black uppercase flex items-center gap-1"><Sparkles size={8} /> -10%</span>}
                       </div>
                     </td>
                     <td className="px-8 py-4 text-right font-bold text-slate-700">
