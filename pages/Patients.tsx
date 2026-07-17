@@ -4,17 +4,20 @@ import { Patient, MedicalState, JournalEntry } from '../types';
 import {
   Plus, Search, ChevronRight, UserPlus, Trash2, History,
   X, Calendar, Tag, Layers, Edit2, FileText, Download,
-  Loader2, Activity, Scale, Clipboard, Save, MessageSquare, UploadCloud, Smartphone, User
+  Loader2, Activity, Scale, Clipboard, Save, MessageSquare, UploadCloud, Smartphone, User, ScrollText
 } from 'lucide-react';
 
 const Patients: React.FC = () => {
-  const { patients, addPatient, updatePatient, deletePatient, cities, currentUser, salespersons } = useApp();
+  const { patients, addPatient, updatePatient, deletePatient, cities, currentUser, salespersons, currentWorkspace, updateWorkspace } = useApp();
   const [showAdd, setShowAdd] = useState(false);
   const [showJournal, setShowJournal] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [search, setSearch] = useState('');
   const [selectedCity, setSelectedCity] = useState<string | 'Tutte'>('Tutte');
   const [selectedSalespersonId, setSelectedSalespersonId] = useState<string | 'Tutti'>('Tutti');
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [disclaimerText, setDisclaimerText] = useState('');
+  const [isSavingDisclaimer, setIsSavingDisclaimer] = useState(false);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
 
   const isAdmin = currentUser?.role === 'admin';
@@ -195,6 +198,19 @@ const Patients: React.FC = () => {
     return nameA.localeCompare(nameB);
   });
 
+  const handleSaveDisclaimer = async () => {
+    if (!currentWorkspace) return;
+    setIsSavingDisclaimer(true);
+    try {
+      await updateWorkspace({ ...currentWorkspace, disclaimer: disclaimerText });
+      setShowDisclaimer(false);
+    } catch (err: any) {
+      alert(`Errore nel salvataggio: ${err.message}`);
+    } finally {
+      setIsSavingDisclaimer(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -202,22 +218,35 @@ const Patients: React.FC = () => {
           <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Gestione Pazienti <span className="text-xs bg-red-500 text-white px-2 py-1 rounded ml-2">v2.0</span></h2>
           <p className="text-slate-500 font-medium">Onboarding, protocolli e monitoraggio mensile.</p>
         </div>
-        <button
-          onClick={() => {
-            setFormData({
-              firstName: '', lastName: '', phone: '', address: '',
-              city: [...cities].sort((a, b) => a.name.localeCompare(b.name))[0]?.name || '',
-              medicalCondition: '',
-              aloeTweak: '', testResults: '',
-              dosageMorningWhole: '1', dosageMorningFraction: '½',
-              dosageEveningWhole: '1', dosageEveningFraction: '½'
-            });
-            setShowAdd(true);
-          }}
-          className="bg-green-600 text-white px-8 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all shadow-xl shadow-green-100 font-black text-xs uppercase tracking-widest active:scale-95"
-        >
-          <UserPlus size={18} /> Registra Paziente
-        </button>
+        <div className="flex items-center gap-3">
+          {isAdmin && (
+            <button
+              onClick={() => {
+                setDisclaimerText(currentWorkspace?.disclaimer || '');
+                setShowDisclaimer(true);
+              }}
+              className="bg-slate-100 text-slate-600 px-6 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-slate-200 transition-all font-black text-xs uppercase tracking-widest active:scale-95 border border-slate-200"
+            >
+              <ScrollText size={16} /> Disclaimer
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setFormData({
+                firstName: '', lastName: '', phone: '', address: '',
+                city: [...cities].sort((a, b) => a.name.localeCompare(b.name))[0]?.name || '',
+                medicalCondition: '',
+                aloeTweak: '', testResults: '',
+                dosageMorningWhole: '1', dosageMorningFraction: '½',
+                dosageEveningWhole: '1', dosageEveningFraction: '½'
+              });
+              setShowAdd(true);
+            }}
+            className="bg-green-600 text-white px-8 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all shadow-xl shadow-green-100 font-black text-xs uppercase tracking-widest active:scale-95"
+          >
+            <UserPlus size={18} /> Registra Paziente
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
@@ -545,6 +574,13 @@ const Patients: React.FC = () => {
             Questo serve a verificare la risposta del tuo organismo. Come insegnava Padre Romano Zago, se in quella settimana di pausa ti senti in forze, il beneficio è consolidato.
             Se invece i sintomi tendono a ripresentarsi, è segno che è necessario continuare la cura per il periodo che abbiamo stabilito insieme.
           </p>
+
+          {currentWorkspace?.disclaimer && (
+            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+              <p style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#64748b', marginBottom: '8px' }}>Disclaimer</p>
+              <p style={{ fontSize: '11px', color: '#475569', lineHeight: '1.7', whiteSpace: 'pre-wrap', textAlign: 'justify' }}>{currentWorkspace.disclaimer}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -631,6 +667,52 @@ const Patients: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DISCLAIMER MODAL */}
+      {showDisclaimer && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl flex flex-col border border-white/20">
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-slate-700 text-white rounded-2xl shadow-lg">
+                  <ScrollText size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Disclaimer PDF</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Viene stampato in fondo alla scheda paziente</p>
+                </div>
+              </div>
+              <button onClick={() => setShowDisclaimer(false)} className="p-3 hover:bg-white rounded-2xl text-slate-400 transition-all border border-slate-100"><X size={24} /></button>
+            </div>
+            <div className="p-8 space-y-6">
+              <textarea
+                rows={10}
+                className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[2rem] font-medium text-slate-700 outline-none focus:ring-4 focus:ring-slate-500/10 transition-all resize-none text-sm leading-relaxed"
+                placeholder="Scrivi qui il testo del disclaimer che apparirà in fondo al PDF del paziente..."
+                value={disclaimerText}
+                onChange={e => setDisclaimerText(e.target.value)}
+              />
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowDisclaimer(false)}
+                  className="flex-1 py-4 font-black text-[10px] text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors"
+                >
+                  Annulla
+                </button>
+                <button
+                  onClick={handleSaveDisclaimer}
+                  disabled={isSavingDisclaimer}
+                  className="flex-[2] bg-slate-800 text-white py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 shadow-xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSavingDisclaimer ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  Salva Disclaimer
+                </button>
+              </div>
             </div>
           </div>
         </div>

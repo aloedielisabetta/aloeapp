@@ -141,6 +141,7 @@ export interface Workspace {
   adminContactEmail?: string; // Email used for sending invites
   adminPassword?: string; // Deprecated
   ownerId?: string; // Linked Supabase Auth ID
+  disclaimer?: string; // Disclaimer text shown at the bottom of patient PDFs
 }
 
 export interface AppData {
