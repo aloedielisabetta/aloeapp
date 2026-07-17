@@ -186,6 +186,7 @@ const Production: React.FC = () => {
                 <thead>
                   <tr style={{ backgroundColor: '#f1f5f9' }}>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Paziente</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Prodotto</th>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '40px' }}>Qtà</th>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 1</th>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 2</th>
@@ -202,6 +203,7 @@ const Production: React.FC = () => {
                     return (
                       <tr key={idx}>
                         <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.patientName}</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>{prod.name}</td>
                         <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '11px', fontWeight: '900' }}>{item.quantity}</td>
                         <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', color: '#444', fontWeight: 'bold' }}>{variants[0] || ''}</td>
                         <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', color: '#444', fontWeight: 'bold' }}>{variants[1] || ''}</td>
