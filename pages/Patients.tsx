@@ -60,7 +60,8 @@ const Patients: React.FC = () => {
     dosageInitial: "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
     dosageEarlyDays: "1 cucchiaio a colazione",
     dosageMidDays: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
-    dosageLateDays: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+    dosageLateDays: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo",
+    showMaintenance: true
   });
 
   const handleOpenEdit = (patient: Patient) => {
@@ -70,7 +71,8 @@ const Patients: React.FC = () => {
       dosageInitial: patient.dosageInitial || "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
       dosageEarlyDays: patient.dosageEarlyDays || "1 cucchiaio a colazione",
       dosageMidDays: patient.dosageMidDays || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
-      dosageLateDays: patient.dosageLateDays || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+      dosageLateDays: patient.dosageLateDays || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo",
+      showMaintenance: patient.showMaintenance ?? true
     });
     setShowAdd(true);
   };
@@ -89,7 +91,8 @@ const Patients: React.FC = () => {
       dosageInitial: "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
       dosageEarlyDays: "1 cucchiaio a colazione",
       dosageMidDays: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
-      dosageLateDays: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+      dosageLateDays: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo",
+      showMaintenance: true
     });
   };
 
@@ -153,7 +156,8 @@ const Patients: React.FC = () => {
       dosageInitial: patient.dosageInitial || "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
       dosageEarlyDays: patient.dosageEarlyDays || "1 cucchiaio a colazione",
       dosageMidDays: patient.dosageMidDays || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
-      dosageLateDays: patient.dosageLateDays || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+      dosageLateDays: patient.dosageLateDays || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo",
+      showMaintenance: patient.showMaintenance ?? true
     });
 
     setTimeout(async () => {
@@ -573,11 +577,13 @@ const Patients: React.FC = () => {
                 <td className="border border-black p-4 align-top text-sm relative">
                   <div className="mb-4 whitespace-pre-wrap">{activeProtocolPatient?.aloeTweak}</div>
 
-                  <div className="bg-green-400 p-2 font-bold text-xs border border-green-600 text-center mt-auto w-full absolute bottom-4 left-0 right-0 max-w-[90%] mx-auto">
-                    ALLA FINE DELLA CURA INIZIALE,PER MANTENERE IL BENESSERE
-                    RAGGIUNTO E SEMPRE ALTE LE DIFESE IMMUNITARIE,CONSIGLIO 2
-                    BARATTOLI IN PRIMAVERA E 2 BARATTOLI IN AUTUNNO.
-                  </div>
+                  {activeProtocolPatient?.showMaintenance !== false && (
+                    <div className="bg-green-400 p-2 font-bold text-xs border border-green-600 text-center mt-auto w-full absolute bottom-4 left-0 right-0 max-w-[90%] mx-auto">
+                      ALLA FINE DELLA CURA INIZIALE,PER MANTENERE IL BENESSERE
+                      RAGGIUNTO E SEMPRE ALTE LE DIFESE IMMUNITARIE,CONSIGLIO 2
+                      BARATTOLI IN PRIMAVERA E 2 BARATTOLI IN AUTUNNO.
+                    </div>
+                  )}
                 </td>
               </tr>
               <tr>
@@ -738,6 +744,39 @@ const Patients: React.FC = () => {
                       </select>
                     </div>
                   )}
+                </div>
+
+                <div className="space-y-3 bg-green-50/50 p-6 rounded-3xl border border-green-100 mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <label className="text-[11px] font-black text-green-700 uppercase tracking-widest leading-relaxed">
+                      Mostrare il testo nel PDF?<br/>
+                      <span className="text-green-600/70 text-[9px] normal-case tracking-normal">Mantenere il benessere raggiunto 2 barattoli primavera, 2 barattoli autunno</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, showMaintenance: true })}
+                        className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                          formData.showMaintenance !== false
+                            ? 'bg-green-500 text-white shadow-md shadow-green-200 scale-105'
+                            : 'bg-white text-green-400 border border-green-100 hover:bg-green-50'
+                        }`}
+                      >
+                        SI
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, showMaintenance: false })}
+                        className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                          formData.showMaintenance === false
+                            ? 'bg-slate-400 text-white shadow-md shadow-slate-200 scale-105'
+                            : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
+                        }`}
+                      >
+                        NO
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-6 border-t border-slate-100 flex flex-wrap gap-4">

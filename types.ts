@@ -33,6 +33,7 @@ export interface Patient {
   dosageEarlyDays?: string;
   dosageMidDays?: string;
   dosageLateDays?: string;
+  showMaintenance?: boolean;
 }
 
 export interface WorkspaceUser {
