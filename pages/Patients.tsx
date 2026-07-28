@@ -4,7 +4,7 @@ import { Patient, MedicalState, JournalEntry } from '../types';
 import {
   Plus, Search, ChevronRight, UserPlus, Trash2, History,
   X, Calendar, Tag, Layers, Edit2, FileText, Download,
-  Loader2, Activity, Scale, Clipboard, Save, MessageSquare, UploadCloud, Smartphone, User, ScrollText
+  Loader2, Activity, Scale, Clipboard, Save, MessageSquare, UploadCloud, Smartphone, User, ScrollText, Check
 } from 'lucide-react';
 
 const Patients: React.FC = () => {
@@ -18,6 +18,7 @@ const Patients: React.FC = () => {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [disclaimerText, setDisclaimerText] = useState('');
   const [isSavingDisclaimer, setIsSavingDisclaimer] = useState(false);
+  const [showSomministrazione, setShowSomministrazione] = useState(false);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
 
   const isAdmin = currentUser?.role === 'admin';
@@ -38,12 +39,22 @@ const Patients: React.FC = () => {
     city: '', medicalCondition: '',
     aloeTweak: '', testResults: '',
     dosageMorningWhole: '1', dosageMorningFraction: '½',
-    dosageEveningWhole: '1', dosageEveningFraction: '½'
+    dosageEveningWhole: '1', dosageEveningFraction: '½',
+    dosageInitial: "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
+    dosage3Days: "1 cucchiaio a colazione",
+    dosage4To6Days: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
+    dosage7Days: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
   });
 
   const handleOpenEdit = (patient: Patient) => {
     setEditingPatient(patient);
-    setFormData(patient);
+    setFormData({
+      ...patient,
+      dosageInitial: patient.dosageInitial || "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
+      dosage3Days: patient.dosage3Days || "1 cucchiaio a colazione",
+      dosage4To6Days: patient.dosage4To6Days || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
+      dosage7Days: patient.dosage7Days || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+    });
     setShowAdd(true);
   };
 
@@ -57,7 +68,11 @@ const Patients: React.FC = () => {
       aloeTweak: '', testResults: '',
       dosageMorningWhole: '1', dosageMorningFraction: '½',
       dosageEveningWhole: '1', dosageEveningFraction: '½',
-      salespersonId: currentUser?.role === 'collaborator' ? currentUser.salespersonId : ''
+      salespersonId: currentUser?.role === 'collaborator' ? currentUser.salespersonId : '',
+      dosageInitial: "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
+      dosage3Days: "1 cucchiaio a colazione",
+      dosage4To6Days: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
+      dosage7Days: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
     });
   };
 
@@ -116,7 +131,13 @@ const Patients: React.FC = () => {
 
   const handleDownloadProtocol = async (patient: Patient) => {
     setIsGenerating(patient.id);
-    setActiveProtocolPatient(patient);
+    setActiveProtocolPatient({
+      ...patient,
+      dosageInitial: patient.dosageInitial || "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
+      dosage3Days: patient.dosage3Days || "1 cucchiaio a colazione",
+      dosage4To6Days: patient.dosage4To6Days || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
+      dosage7Days: patient.dosage7Days || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+    });
 
     setTimeout(async () => {
       if (!protocolRef.current) return;
@@ -542,28 +563,19 @@ const Patients: React.FC = () => {
             <tbody>
               <tr>
                 <td className="border border-black p-3 font-bold bg-slate-50 w-1/3">Assunzione iniziale:</td>
-                <td className="border border-black p-3">assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa</td>
+                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageInitial}</td>
               </tr>
               <tr>
                 <td className="border border-black p-3 font-bold bg-slate-50">Per 3 giorni:</td>
-                <td className="border border-black p-3">1 cucchiaio a colazione</td>
+                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosage3Days}</td>
               </tr>
               <tr>
-                <td className="border border-black p-3 font-bold bg-slate-50">Dal 4° giorno al 6° giorno:</td>
-                <td className="border border-black p-3">1 cucchiaio a colazione, 1 cucchiaio a cena (o prima di coricarsi)</td>
+                <td className="border border-black p-3 font-bold bg-slate-50">Dal 4° al 6° giorno:</td>
+                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosage4To6Days}</td>
               </tr>
               <tr>
                 <td className="border border-black p-3 font-bold bg-slate-50">Dal 7° giorno:</td>
-                <td className="border border-black p-3">
-                  {activeProtocolPatient?.dosageMorningWhole !== '0' && activeProtocolPatient?.dosageMorningWhole}
-                  {activeProtocolPatient?.dosageMorningWhole !== '0' && activeProtocolPatient?.dosageMorningFraction !== '0' && ' e '}
-                  {activeProtocolPatient?.dosageMorningFraction !== '0' && activeProtocolPatient?.dosageMorningFraction}
-                  {' '}cucchiaio{(activeProtocolPatient?.dosageMorningWhole && parseInt(activeProtocolPatient.dosageMorningWhole) > 1) ? 'i' : ''} a colazione,{' '}
-                  {activeProtocolPatient?.dosageEveningWhole !== '0' && activeProtocolPatient?.dosageEveningWhole}
-                  {activeProtocolPatient?.dosageEveningWhole !== '0' && activeProtocolPatient?.dosageEveningFraction !== '0' && ' e '}
-                  {activeProtocolPatient?.dosageEveningFraction !== '0' && activeProtocolPatient?.dosageEveningFraction}
-                  {' '}cucchiaio{(activeProtocolPatient?.dosageEveningWhole && parseInt(activeProtocolPatient.dosageEveningWhole) > 1) ? 'i' : ''} a cena (o prima di coricarsi). Continuare con queste assunzioni fino al termine del barattolo
-                </td>
+                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosage7Days}</td>
               </tr>
             </tbody>
           </table>
@@ -633,6 +645,37 @@ const Patients: React.FC = () => {
                     <Clipboard size={12} /> Indicazioni Protocollo Aloe (Base)
                   </label>
                   <textarea rows={4} className="w-full p-5 bg-white border border-emerald-100 rounded-[2rem] font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/5 transition-all shadow-inner" value={formData.aloeTweak} onChange={e => setFormData({ ...formData, aloeTweak: e.target.value })} placeholder="Dettaglia la cura e frequenza di assunzione consigliata..." />
+                </div>
+
+                <div className="space-y-3 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Somministrazione e Dosaggi</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowSomministrazione(true)}
+                      className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-100 flex items-center gap-1.5 shrink-0"
+                    >
+                      <Layers size={12} /> Personalizza Somministrazione
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100/80">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">1. Assunzione Iniziale</p>
+                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosageInitial}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100/80">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">2. Per 3 Giorni</p>
+                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosage3Days}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100/80">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">3. Dal 4° al 6° Giorno</p>
+                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosage4To6Days}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100/80">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">4. Dal 7° Giorno</p>
+                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosage7Days}</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -723,6 +766,78 @@ const Patients: React.FC = () => {
                 >
                   {isSavingDisclaimer ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                   Salva Disclaimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SOMMINISTRAZIONE MODAL */}
+      {showSomministrazione && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
+            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg">
+                  <Layers size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Somministrazione</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Configura le fasi di dosaggio dell'Aloe</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowSomministrazione(false)} className="p-3 hover:bg-white rounded-2xl text-slate-400 transition-all border border-slate-100"><X size={24} /></button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">1. Assunzione Iniziale</label>
+                <textarea
+                  rows={2}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
+                  value={formData.dosageInitial}
+                  onChange={e => setFormData({ ...formData, dosageInitial: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">2. Per 3 Giorni</label>
+                <textarea
+                  rows={2}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
+                  value={formData.dosage3Days}
+                  onChange={e => setFormData({ ...formData, dosage3Days: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">3. Dal 4° al 6° Giorno</label>
+                <textarea
+                  rows={2}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
+                  value={formData.dosage4To6Days}
+                  onChange={e => setFormData({ ...formData, dosage4To6Days: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">4. Dal 7° Giorno</label>
+                <textarea
+                  rows={4}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
+                  value={formData.dosage7Days}
+                  onChange={e => setFormData({ ...formData, dosage7Days: e.target.value })}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowSomministrazione(false)}
+                  className="w-full bg-emerald-600 text-white py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Check size={16} /> Conferma Somministrazione
                 </button>
               </div>
             </div>
