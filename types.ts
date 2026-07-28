@@ -151,6 +151,7 @@ export interface Workspace {
   disclaimer?: string; // Disclaimer text shown at the bottom of patient PDFs
   ownerName?: string;
   ownerPhone?: string;
+  ownerAvailability?: string;
 }
 
 export interface AppData {

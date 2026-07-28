@@ -32,6 +32,7 @@ const Profile: React.FC = () => {
     const [adminEmail, setAdminEmail] = useState(currentWorkspace?.ownerEmail || '');
     const [adminName, setAdminName] = useState(currentWorkspace?.ownerName || '');
     const [adminPhone, setAdminPhone] = useState(currentWorkspace?.ownerPhone || '');
+    const [adminAvailability, setAdminAvailability] = useState(currentWorkspace?.ownerAvailability || '');
     const [isSavingAdmin, setIsSavingAdmin] = useState(false);
     const [adminSuccess, setAdminSuccess] = useState(false);
 
@@ -60,6 +61,7 @@ const Profile: React.FC = () => {
             setAdminEmail(currentWorkspace.ownerEmail || '');
             setAdminName(currentWorkspace.ownerName || '');
             setAdminPhone(currentWorkspace.ownerPhone || '');
+            setAdminAvailability(currentWorkspace.ownerAvailability || '');
         }
     }, [currentWorkspace]);
 
@@ -100,7 +102,8 @@ const Profile: React.FC = () => {
                 ...currentWorkspace,
                 ownerEmail: adminEmail.trim(),
                 ownerName: adminName.trim(),
-                ownerPhone: adminPhone.trim()
+                ownerPhone: adminPhone.trim(),
+                ownerAvailability: adminAvailability.trim()
             });
             setAdminSuccess(true);
             setTimeout(() => setAdminSuccess(false), 3000);
@@ -254,6 +257,13 @@ const Profile: React.FC = () => {
                                     Configura le tue informazioni di contatto e l'email master per i promemoria di fine cura dei pazienti.
                                 </p>
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowAvailability(true)}
+                                className="bg-blue-600/30 text-blue-400 border border-blue-500/30 px-6 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-blue-600/50 transition-all font-black text-xs uppercase tracking-widest active:scale-95 shadow-sm shrink-0"
+                            >
+                                <Clock size={16} /> Disponibilità
+                            </button>
                         </div>
 
                         <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -423,12 +433,12 @@ const Profile: React.FC = () => {
             )}
 
             {/* Disponibilità Modal */}
-            {!isAdmin && showAvailability && (
+            {showAvailability && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-xl flex flex-col border border-white/20">
                         <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 shrink-0">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg">
+                                <div className={isAdmin ? "p-3 bg-blue-600 text-white rounded-2xl shadow-lg" : "p-3 bg-emerald-600 text-white rounded-2xl shadow-lg"}>
                                     <Clock size={24} />
                                 </div>
                                 <div>
@@ -441,10 +451,13 @@ const Profile: React.FC = () => {
                         <div className="p-8 space-y-6">
                             <textarea
                                 rows={8}
-                                className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[2rem] font-medium text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm leading-relaxed"
+                                className={isAdmin 
+                                    ? "w-full p-5 bg-slate-50 border border-slate-100 rounded-[2rem] font-medium text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/10 transition-all resize-none text-sm leading-relaxed"
+                                    : "w-full p-5 bg-slate-50 border border-slate-100 rounded-[2rem] font-medium text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm leading-relaxed"
+                                }
                                 placeholder="Scrivi qui la tua disponibilità (es: Lun-Ven 9:00 - 18:00, Sabato mattina)..."
-                                value={localAvailability}
-                                onChange={e => setLocalAvailability(e.target.value)}
+                                value={isAdmin ? adminAvailability : localAvailability}
+                                onChange={e => isAdmin ? setAdminAvailability(e.target.value) : setLocalAvailability(e.target.value)}
                             />
                             <div className="flex gap-4">
                                 <button
@@ -456,23 +469,42 @@ const Profile: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        if (!userRecord) return;
-                                        setIsSavingLocal(true);
-                                        try {
-                                            await updateWorkspaceUser({
-                                                ...userRecord,
-                                                availability: localAvailability.trim()
-                                            });
-                                            setShowAvailability(false);
-                                        } catch (err: any) {
-                                            alert(`Errore: ${err.message}`);
-                                        } finally {
-                                            setIsSavingLocal(false);
+                                        if (isAdmin) {
+                                            if (!currentWorkspace) return;
+                                            setIsSavingAdmin(true);
+                                            try {
+                                                await updateWorkspace({
+                                                    ...currentWorkspace,
+                                                    ownerAvailability: adminAvailability.trim()
+                                                });
+                                                setShowAvailability(false);
+                                            } catch (err: any) {
+                                                alert(`Errore: ${err.message}`);
+                                            } finally {
+                                                setIsSavingAdmin(false);
+                                            }
+                                        } else {
+                                            if (!userRecord) return;
+                                            setIsSavingLocal(true);
+                                            try {
+                                                await updateWorkspaceUser({
+                                                    ...userRecord,
+                                                    availability: localAvailability.trim()
+                                                });
+                                                setShowAvailability(false);
+                                            } catch (err: any) {
+                                                alert(`Errore: ${err.message}`);
+                                            } finally {
+                                                setIsSavingLocal(false);
+                                            }
                                         }
                                     }}
-                                    className="flex-[2] bg-emerald-600 text-white py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    className={isAdmin
+                                        ? "flex-[2] bg-blue-600 text-white py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                        : "flex-[2] bg-emerald-600 text-white py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 shadow-xl shadow-emerald-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    }
                                 >
-                                    {isSavingLocal ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                                    {(isSavingLocal || isSavingAdmin) ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                                     Salva Disponibilità
                                 </button>
                             </div>

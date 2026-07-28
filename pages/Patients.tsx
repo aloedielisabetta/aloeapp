@@ -519,7 +519,7 @@ const Patients: React.FC = () => {
 
             const availability = salespersonId
               ? (assocUser?.availability || 'contattabile via telefono o messaggio')
-              : (currentWorkspace?.disclaimer ? 'contattabile via telefono o messaggio' : 'contattabile via telefono o messaggio: Dal Lunedi al Venerdi 17.00-20.00');
+              : (currentWorkspace?.ownerAvailability || 'contattabile via telefono o messaggio');
 
             return (
               <div className="mb-6">
