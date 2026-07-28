@@ -30,9 +30,9 @@ export interface Patient {
   salespersonId?: string; // Tagging who it belongs to
   journal?: JournalEntry[]; // Keep for future tracking
   dosageInitial?: string;
-  dosage3Days?: string;
-  dosage4To6Days?: string;
-  dosage7Days?: string;
+  dosageEarlyDays?: string;
+  dosageMidDays?: string;
+  dosageLateDays?: string;
 }
 
 export interface WorkspaceUser {

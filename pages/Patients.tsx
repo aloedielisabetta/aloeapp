@@ -20,18 +20,17 @@ const Patients: React.FC = () => {
   const [isSavingDisclaimer, setIsSavingDisclaimer] = useState(false);
 
   const DEFAULT_DOSAGE_INITIAL = "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.";
-  const DEFAULT_DOSAGE_3DAYS = "1 cucchiaio a colazione";
-  const DEFAULT_DOSAGE_4TO6 = "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)";
-  const DEFAULT_DOSAGE_7DAYS = "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo";
+  const DEFAULT_DOSAGE_EARLY = "1 cucchiaio a colazione";
+  const DEFAULT_DOSAGE_MID = "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)";
+  const DEFAULT_DOSAGE_LATE = "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo";
 
   const openSomministrazione = () => {
-    // Seed defaults for any field that is empty/undefined so user always sees prefilled text
     setFormData(prev => ({
       ...prev,
       dosageInitial: prev.dosageInitial || DEFAULT_DOSAGE_INITIAL,
-      dosage3Days: prev.dosage3Days || DEFAULT_DOSAGE_3DAYS,
-      dosage4To6Days: prev.dosage4To6Days || DEFAULT_DOSAGE_4TO6,
-      dosage7Days: prev.dosage7Days || DEFAULT_DOSAGE_7DAYS,
+      dosageEarlyDays: prev.dosageEarlyDays || DEFAULT_DOSAGE_EARLY,
+      dosageMidDays: prev.dosageMidDays || DEFAULT_DOSAGE_MID,
+      dosageLateDays: prev.dosageLateDays || DEFAULT_DOSAGE_LATE,
     }));
     setShowSomministrazione(true);
   };
@@ -59,9 +58,9 @@ const Patients: React.FC = () => {
     dosageMorningWhole: '1', dosageMorningFraction: '½',
     dosageEveningWhole: '1', dosageEveningFraction: '½',
     dosageInitial: "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
-    dosage3Days: "1 cucchiaio a colazione",
-    dosage4To6Days: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
-    dosage7Days: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+    dosageEarlyDays: "1 cucchiaio a colazione",
+    dosageMidDays: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
+    dosageLateDays: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
   });
 
   const handleOpenEdit = (patient: Patient) => {
@@ -69,9 +68,9 @@ const Patients: React.FC = () => {
     setFormData({
       ...patient,
       dosageInitial: patient.dosageInitial || "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
-      dosage3Days: patient.dosage3Days || "1 cucchiaio a colazione",
-      dosage4To6Days: patient.dosage4To6Days || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
-      dosage7Days: patient.dosage7Days || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+      dosageEarlyDays: patient.dosageEarlyDays || "1 cucchiaio a colazione",
+      dosageMidDays: patient.dosageMidDays || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
+      dosageLateDays: patient.dosageLateDays || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
     });
     setShowAdd(true);
   };
@@ -88,9 +87,9 @@ const Patients: React.FC = () => {
       dosageEveningWhole: '1', dosageEveningFraction: '½',
       salespersonId: currentUser?.role === 'collaborator' ? currentUser.salespersonId : '',
       dosageInitial: "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
-      dosage3Days: "1 cucchiaio a colazione",
-      dosage4To6Days: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
-      dosage7Days: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+      dosageEarlyDays: "1 cucchiaio a colazione",
+      dosageMidDays: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
+      dosageLateDays: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
     });
   };
 
@@ -152,9 +151,9 @@ const Patients: React.FC = () => {
     setActiveProtocolPatient({
       ...patient,
       dosageInitial: patient.dosageInitial || "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.",
-      dosage3Days: patient.dosage3Days || "1 cucchiaio a colazione",
-      dosage4To6Days: patient.dosage4To6Days || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
-      dosage7Days: patient.dosage7Days || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
+      dosageEarlyDays: patient.dosageEarlyDays || "1 cucchiaio a colazione",
+      dosageMidDays: patient.dosageMidDays || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
+      dosageLateDays: patient.dosageLateDays || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo"
     });
 
     setTimeout(async () => {
@@ -605,15 +604,15 @@ const Patients: React.FC = () => {
               </tr>
               <tr>
                 <td className="border border-black p-3 font-bold bg-slate-50">Per 3 giorni:</td>
-                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosage3Days}</td>
+                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageEarlyDays}</td>
               </tr>
               <tr>
                 <td className="border border-black p-3 font-bold bg-slate-50">Dal 4° al 6° giorno:</td>
-                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosage4To6Days}</td>
+                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageMidDays}</td>
               </tr>
               <tr>
                 <td className="border border-black p-3 font-bold bg-slate-50">Dal 7° giorno:</td>
-                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosage7Days}</td>
+                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageLateDays}</td>
               </tr>
             </tbody>
           </table>
@@ -703,15 +702,15 @@ const Patients: React.FC = () => {
                     </div>
                     <div className="bg-white p-4 rounded-2xl border border-slate-100/80">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">2. Per 3 Giorni</p>
-                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosage3Days}</p>
+                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosageEarlyDays}</p>
                     </div>
                     <div className="bg-white p-4 rounded-2xl border border-slate-100/80">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">3. Dal 4° al 6° Giorno</p>
-                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosage4To6Days}</p>
+                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosageMidDays}</p>
                     </div>
                     <div className="bg-white p-4 rounded-2xl border border-slate-100/80">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">4. Dal 7° Giorno</p>
-                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosage7Days}</p>
+                      <p className="text-[11px] font-medium text-slate-600 line-clamp-2">{formData.dosageLateDays}</p>
                     </div>
                   </div>
                 </div>
@@ -844,8 +843,8 @@ const Patients: React.FC = () => {
                 <textarea
                   rows={2}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
-                  value={formData.dosage3Days || DEFAULT_DOSAGE_3DAYS}
-                  onChange={e => setFormData({ ...formData, dosage3Days: e.target.value })}
+                  value={formData.dosageEarlyDays || DEFAULT_DOSAGE_EARLY}
+                  onChange={e => setFormData({ ...formData, dosageEarlyDays: e.target.value })}
                 />
               </div>
 
@@ -854,8 +853,8 @@ const Patients: React.FC = () => {
                 <textarea
                   rows={2}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
-                  value={formData.dosage4To6Days || DEFAULT_DOSAGE_4TO6}
-                  onChange={e => setFormData({ ...formData, dosage4To6Days: e.target.value })}
+                  value={formData.dosageMidDays || DEFAULT_DOSAGE_MID}
+                  onChange={e => setFormData({ ...formData, dosageMidDays: e.target.value })}
                 />
               </div>
 
@@ -864,8 +863,8 @@ const Patients: React.FC = () => {
                 <textarea
                   rows={4}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
-                  value={formData.dosage7Days || DEFAULT_DOSAGE_7DAYS}
-                  onChange={e => setFormData({ ...formData, dosage7Days: e.target.value })}
+                  value={formData.dosageLateDays || DEFAULT_DOSAGE_LATE}
+                  onChange={e => setFormData({ ...formData, dosageLateDays: e.target.value })}
                 />
               </div>
 
