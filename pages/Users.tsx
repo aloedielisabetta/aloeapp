@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
 import { WorkspaceUser } from '../types';
-import { UserPlus, User, Key, Shield, Trash2, Users, Volume2, AlertCircle, ArrowRight } from 'lucide-react';
+import { UserPlus, User, Key, Shield, Trash2, Users, Volume2, AlertCircle, ArrowRight, Sparkles, Copy, Mail, Eye, Smartphone } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const UsersPage: React.FC = () => {
@@ -11,6 +11,7 @@ const UsersPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
   const [existingUser, setExistingUser] = useState<WorkspaceUser | null>(null);
 
   React.useEffect(() => {
@@ -21,23 +22,27 @@ const UsersPage: React.FC = () => {
         setUsername(found.username);
         setPassword(found.password || '');
         setEmail(found.email || '');
+        setPhone(found.phone || '');
       } else {
         setExistingUser(null);
         setUsername('');
         setPassword('');
         setEmail('');
+        setPhone('');
       }
     } else {
       setExistingUser(null);
       setUsername('');
       setPassword('');
+      setEmail('');
+      setPhone('');
     }
   }, [selectedSalespersonId, workspaceUsers]);
 
 
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSalespersonId || !username || !password || !currentWorkspace) return;
+    if (!selectedSalespersonId || !username || !currentWorkspace) return;
 
     try {
       if (existingUser) {
@@ -51,56 +56,34 @@ const UsersPage: React.FC = () => {
           ...existingUser,
           username: username,
           email: email.trim(),
-          password: password
+          password: password,
+          phone: phone.trim()
         });
 
         alert(`Profilo di ${username} aggiornato con successo.`);
       } else {
-        // CREATE NEW USER
+        // CREATE NEW USER with MAGIC LINK workflow
         const usernameExists = workspaceUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
         if (usernameExists) {
           alert("Questo username è già in uso. Scegline un altro.");
           return;
         }
 
-        const tempClient = createClient(
-          import.meta.env.VITE_SUPABASE_URL,
-          import.meta.env.VITE_SUPABASE_ANON_KEY,
-          {
-            auth: {
-              persistSession: false,
-              autoRefreshToken: false,
-              detectSessionInUrl: false
-            }
-          }
-        );
-
-        const authEmail = username.includes('@') ? username : `${username.toLowerCase().replace(/\s+/g, '')}@aloe.system`;
-
-        const { data: authData, error: authError } = await tempClient.auth.signUp({
-          email: authEmail,
-          password: password,
-        });
-
-        if (authError) throw authError;
-        if (!authData.user) throw new Error("No user returned from Auth");
-
         await addWorkspaceUser({
           salespersonId: selectedSalespersonId,
           username: username,
           email: email.trim(),
-          userId: authData.user.id,
-          password: password,
+          phone: phone.trim()
         });
 
-        const msg = `Account creato per ${username}.\n\nCREDENTIALS:\nEmail/User: ${email}\nPassword: ${password}\n\nComunicare A VOCE.`;
-        alert(msg);
+        alert(`Invito creato per ${username}. Comunica l'ID Collaboratore e il Magic Code.`);
       }
 
       setSelectedSalespersonId('');
       setUsername('');
       setPassword('');
       setEmail('');
+      setPhone('');
     } catch (err: any) {
       console.error(err);
       alert(`Errore salvataggio utente: ${err.message}`);
@@ -156,7 +139,7 @@ const UsersPage: React.FC = () => {
             <div className="space-y-3">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email per Notifiche (GCal)</label>
               <div className="relative">
-                <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                 <input
                   className="w-full pl-14 pr-5 py-5 bg-white border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono"
                   placeholder="email@gmail.com"
@@ -164,6 +147,20 @@ const UsersPage: React.FC = () => {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Numero di Telefono</label>
+              <div className="relative">
+                <Smartphone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                <input
+                  className="w-full pl-14 pr-5 py-5 bg-white border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                  placeholder="e.g. +39 333 1234567"
+                  type="tel"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
                 />
               </div>
             </div>
@@ -182,19 +179,31 @@ const UsersPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">3. Password (Segreta)</label>
-                <div className="relative">
-                  <Key className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                  <input
-                    className="w-full pl-14 pr-5 py-5 bg-white border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                  />
+              {!existingUser && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">3. Avviso</label>
+                  <div className="p-5 bg-blue-50 border border-blue-100 rounded-3xl flex items-start gap-4">
+                    <Sparkles className="text-blue-600 shrink-0" size={20} />
+                    <p className="text-[10px] font-bold text-blue-700 leading-relaxed uppercase">
+                      Verrà generato un Magic Code. Il collaboratore lo userà per impostare la sua password.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
+              {existingUser && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">3. Password (Segreta)</label>
+                  <div className="relative">
+                    <Key className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                    <input
+                      className="w-full pl-14 pr-5 py-5 bg-white border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {existingUser && (
@@ -222,11 +231,11 @@ const UsersPage: React.FC = () => {
 
             <button
               type="submit"
-              disabled={!selectedSalespersonId || !username || !password}
+              disabled={!selectedSalespersonId || !username}
               className={`w-full py-5 rounded-3xl font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center justify-center ${existingUser ? 'bg-amber-600 text-white shadow-amber-100 hover:bg-amber-700' : 'bg-slate-900 text-white shadow-slate-100 hover:bg-slate-800'
                 }`}
             >
-              {existingUser ? 'Salva Modifiche Profilo' : 'Abilita Accesso Reale'} <ArrowRight size={18} className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
+              {existingUser ? 'Salva Modifiche Profilo' : 'Genera Magic Link'} <ArrowRight size={18} className="inline-block ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
         </div>
@@ -242,21 +251,69 @@ const UsersPage: React.FC = () => {
                   onClick={() => setSelectedSalespersonId(user.salespersonId)}
                   className={`p-8 bg-white border rounded-[2.5rem] shadow-sm flex items-center justify-between group hover:border-emerald-200 transition-all hover:shadow-md cursor-pointer ${selectedSalespersonId === user.salespersonId ? 'border-emerald-500 bg-emerald-50/10' : 'border-slate-100'}`}
                 >
-                  <div className="flex items-center gap-5">
+                  <div className="flex items-center gap-5 flex-1">
                     <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-all shadow-inner">
-                      <Shield size={24} />
+                      {user.inviteStatus === 'pending' ? <Sparkles size={24} /> : <Shield size={24} />}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-black text-slate-800 uppercase text-xs tracking-[0.1em]">{user.username}</p>
                       <div className="flex items-center gap-1.5 mt-1">
                         <Users size={10} className="text-slate-300" />
                         <p className="text-[10px] text-slate-400 font-bold uppercase">Agente: <span className="text-slate-900">{salesperson?.name || 'Sconosciuto'}</span></p>
                       </div>
+                      {user.phone && (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Smartphone size={10} className="text-slate-300" />
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Tel: <span className="text-slate-900">{user.phone}</span></p>
+                        </div>
+                      )}
+
+                      {/* Magic Link / Password View */}
+                      <div className="mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between gap-2">
+                        <div className="overflow-hidden">
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                            {user.inviteStatus === 'pending' ? 'Magic Code (Invia al Collaboratore)' : 'Password Attuale'}
+                          </p>
+                          <p className="text-[10px] font-mono font-bold text-slate-600 truncate">
+                            {user.inviteStatus === 'pending' ? user.magicCode : (user.password || '••••••••')}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          {user.inviteStatus === 'pending' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const text = `Ciao! Ecco il tuo accesso ad Aloe.\nCollaborator ID: ${user.username}\nMagic Code: ${user.magicCode}\nAccedi qui: ${window.location.origin}${window.location.pathname}#/setup-password`;
+                                navigator.clipboard.writeText(text);
+                                alert("Invito copiato!");
+                              }}
+                              className="p-2 hover:bg-white rounded-xl text-slate-400 hover:text-emerald-500 transition-all"
+                              title="Copia Invito"
+                            >
+                              <Copy size={14} />
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const text = user.inviteStatus === 'pending' ? user.magicCode : user.password;
+                              if (text) navigator.clipboard.writeText(text);
+                            }}
+                            className="p-2 hover:bg-white rounded-xl text-slate-400 hover:text-blue-500 transition-all"
+                            title="Copia Dato"
+                          >
+                            <User size={14} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <button
-                    onClick={() => deleteUser(user.id)}
-                    className="p-3 text-slate-200 hover:text-red-500 transition-colors bg-slate-50 hover:bg-red-50 rounded-2xl"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteUser(user.id);
+                    }}
+                    className="p-3 text-slate-200 hover:text-red-500 transition-colors bg-slate-50 hover:bg-red-50 rounded-2xl ml-4"
                   >
                     <Trash2 size={20} />
                   </button>
