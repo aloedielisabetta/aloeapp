@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const Patients: React.FC = () => {
-  const { patients, addPatient, updatePatient, deletePatient, cities, currentUser, salespersons, currentWorkspace, updateWorkspace } = useApp();
+  const { patients, addPatient, updatePatient, deletePatient, cities, currentUser, salespersons, currentWorkspace, updateWorkspace, workspaceUsers } = useApp();
   const [showAdd, setShowAdd] = useState(false);
   const [showJournal, setShowJournal] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
@@ -504,10 +504,30 @@ const Patients: React.FC = () => {
 
       <div className="hidden">
         <div ref={protocolRef} className="bg-white" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', boxSizing: 'border-box', fontFamily: 'Arial, sans-serif' }}>
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-red-600 mb-1">Elisabetta 3620871005</h1>
-            <p className="text-sm text-red-500 font-medium">contattabile via telefono o messaggio: Dal Lunedi al Venerdi 17.00-20.00</p>
-          </div>
+          {(() => {
+            const salespersonId = activeProtocolPatient?.salespersonId;
+            const assocUser = workspaceUsers.find(u => u.salespersonId === salespersonId);
+            const salesperson = salespersons.find(s => s.id === salespersonId);
+
+            const name = salespersonId
+              ? (assocUser?.name || assocUser?.username || salesperson?.name || 'Collaboratore')
+              : (currentWorkspace?.ownerName || 'Elisabetta');
+
+            const phone = salespersonId
+              ? (assocUser?.phone || '')
+              : (currentWorkspace?.ownerPhone || '3620871005');
+
+            const availability = salespersonId
+              ? (assocUser?.availability || 'contattabile via telefono o messaggio')
+              : (currentWorkspace?.disclaimer ? 'contattabile via telefono o messaggio' : 'contattabile via telefono o messaggio: Dal Lunedi al Venerdi 17.00-20.00');
+
+            return (
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-red-600 mb-1">{name} {phone ? `- ${phone}` : ''}</h1>
+                <p className="text-sm text-red-500 font-medium">{availability}</p>
+              </div>
+            );
+          })()}
 
           <div className="absolute top-10 right-10">
             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center border-2 border-emerald-500">
