@@ -18,6 +18,24 @@ const Patients: React.FC = () => {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [disclaimerText, setDisclaimerText] = useState('');
   const [isSavingDisclaimer, setIsSavingDisclaimer] = useState(false);
+
+  const DEFAULT_DOSAGE_INITIAL = "Assumere l'aloe sempre almeno mezz'ora prima dei pasti principali in luce soffusa.";
+  const DEFAULT_DOSAGE_3DAYS = "1 cucchiaio a colazione";
+  const DEFAULT_DOSAGE_4TO6 = "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)";
+  const DEFAULT_DOSAGE_7DAYS = "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo";
+
+  const openSomministrazione = () => {
+    // Seed defaults for any field that is empty/undefined so user always sees prefilled text
+    setFormData(prev => ({
+      ...prev,
+      dosageInitial: prev.dosageInitial || DEFAULT_DOSAGE_INITIAL,
+      dosage3Days: prev.dosage3Days || DEFAULT_DOSAGE_3DAYS,
+      dosage4To6Days: prev.dosage4To6Days || DEFAULT_DOSAGE_4TO6,
+      dosage7Days: prev.dosage7Days || DEFAULT_DOSAGE_7DAYS,
+    }));
+    setShowSomministrazione(true);
+  };
+
   const [showSomministrazione, setShowSomministrazione] = useState(false);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
 
@@ -672,7 +690,7 @@ const Patients: React.FC = () => {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Somministrazione e Dosaggi</label>
                     <button
                       type="button"
-                      onClick={() => setShowSomministrazione(true)}
+                      onClick={openSomministrazione}
                       className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 hover:bg-emerald-700 transition-colors shadow-sm shadow-emerald-100 flex items-center gap-1.5 shrink-0"
                     >
                       <Layers size={12} /> Personalizza Somministrazione
@@ -816,7 +834,7 @@ const Patients: React.FC = () => {
                 <textarea
                   rows={2}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
-                  value={formData.dosageInitial}
+                  value={formData.dosageInitial || DEFAULT_DOSAGE_INITIAL}
                   onChange={e => setFormData({ ...formData, dosageInitial: e.target.value })}
                 />
               </div>
@@ -826,7 +844,7 @@ const Patients: React.FC = () => {
                 <textarea
                   rows={2}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
-                  value={formData.dosage3Days}
+                  value={formData.dosage3Days || DEFAULT_DOSAGE_3DAYS}
                   onChange={e => setFormData({ ...formData, dosage3Days: e.target.value })}
                 />
               </div>
@@ -836,7 +854,7 @@ const Patients: React.FC = () => {
                 <textarea
                   rows={2}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
-                  value={formData.dosage4To6Days}
+                  value={formData.dosage4To6Days || DEFAULT_DOSAGE_4TO6}
                   onChange={e => setFormData({ ...formData, dosage4To6Days: e.target.value })}
                 />
               </div>
@@ -846,7 +864,7 @@ const Patients: React.FC = () => {
                 <textarea
                   rows={4}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all resize-none text-sm"
-                  value={formData.dosage7Days}
+                  value={formData.dosage7Days || DEFAULT_DOSAGE_7DAYS}
                   onChange={e => setFormData({ ...formData, dosage7Days: e.target.value })}
                 />
               </div>
