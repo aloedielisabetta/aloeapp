@@ -151,7 +151,7 @@ const Products: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {products.map(product => {
+        {[...products].sort((a, b) => a.name.localeCompare(b.name)).map(product => {
           const totalCostInternal = product.costPerItem + product.labourCost;
           const totalCostExternal = totalCostInternal + (product.externalCommission || 0);
 
