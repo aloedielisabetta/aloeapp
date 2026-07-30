@@ -365,46 +365,50 @@ const Patients: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 bg-slate-50/50 p-1.5 rounded-2xl border border-slate-50 w-full sm:w-auto justify-around sm:justify-end shadow-inner">
+              <div className="grid grid-cols-2 gap-1 bg-slate-50/80 p-1.5 rounded-2xl border border-slate-100 shrink-0 shadow-inner">
+                {/* Top Row: Download & Edit */}
                 <button
                   onClick={() => handleDownloadProtocol(patient)}
-                  className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-xl transition-all"
+                  className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-white hover:shadow-sm rounded-xl transition-all flex items-center justify-center"
                   title="Scarica Scheda Tecnica"
                 >
-                  {isGenerating === patient.id ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
-                </button>
-                <button
-                  onClick={() => setShowJournal(patient)}
-                  className="p-3 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm rounded-xl transition-all"
-                  title="Diario Salute"
-                >
-                  <Activity size={18} />
+                  {isGenerating === patient.id ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
                 </button>
                 <button
                   onClick={() => handleOpenEdit(patient)}
-                  className="p-3 text-slate-400 hover:text-slate-900 hover:bg-white hover:shadow-sm rounded-xl transition-all"
+                  className="p-2.5 text-slate-400 hover:text-slate-900 hover:bg-white hover:shadow-sm rounded-xl transition-all flex items-center justify-center"
                   title="Modifica"
                 >
-                  <Edit2 size={18} />
+                  <Edit2 size={16} />
                 </button>
+
+                {/* Bottom Row: Diario & Delete (or Calendar) */}
+                <button
+                  onClick={() => setShowJournal(patient)}
+                  className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm rounded-xl transition-all flex items-center justify-center"
+                  title="Diario Salute"
+                >
+                  <Activity size={16} />
+                </button>
+                <button
+                  onClick={() => removePatient(patient.id)}
+                  className="p-2.5 text-red-400 hover:text-red-600 hover:bg-white hover:shadow-sm rounded-xl transition-all flex items-center justify-center"
+                  title="Elimina Paziente"
+                >
+                  <Trash2 size={16} />
+                </button>
+
                 {patient.treatmentDuration && (
                   <a
                     href={generateCalendarLink(patient) || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 text-emerald-500 hover:bg-white hover:shadow-sm rounded-xl transition-all text-center"
+                    className="col-span-2 p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all text-center flex items-center justify-center gap-1 text-[10px] font-black uppercase tracking-wider"
                     title="Aggiungi Promemoria Fine Cura a Google Calendar"
                   >
-                    <Calendar size={18} />
+                    <Calendar size={12} /> Google Calendar
                   </a>
                 )}
-                <button
-                  onClick={() => removePatient(patient.id)}
-                  className="p-3 text-red-400 hover:text-red-600 hover:bg-white hover:shadow-sm rounded-xl transition-all"
-                  title="Elimina Paziente"
-                >
-                  <Trash2 size={18} />
-                </button>
               </div>
             </div>
 
