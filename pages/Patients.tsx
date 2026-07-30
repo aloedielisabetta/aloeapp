@@ -788,6 +788,20 @@ const Patients: React.FC = () => {
 
                 <div className="pt-6 border-t border-slate-100 flex flex-wrap gap-4">
                   <button type="button" onClick={closePatientModal} className="flex-1 min-w-[100px] py-4 font-black text-[10px] text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Annulla</button>
+
+                  {editingPatient && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removePatient(editingPatient.id);
+                        closePatientModal();
+                      }}
+                      className="px-5 py-4 bg-red-50 text-red-600 border border-red-100 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+                      title="Elimina Paziente"
+                    >
+                      <Trash2 size={14} /> Elimina
+                    </button>
+                  )}
                   
                   {isAdmin && editingPatient && (
                     <button
