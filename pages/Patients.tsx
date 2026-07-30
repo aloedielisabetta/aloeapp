@@ -398,6 +398,13 @@ const Patients: React.FC = () => {
                     <Calendar size={18} />
                   </a>
                 )}
+                <button
+                  onClick={() => removePatient(patient.id)}
+                  className="p-3 text-red-400 hover:text-red-600 hover:bg-white hover:shadow-sm rounded-xl transition-all"
+                  title="Elimina Paziente"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             </div>
 
