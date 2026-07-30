@@ -642,7 +642,7 @@ const Patients: React.FC = () => {
           </p>
 
           {currentWorkspace?.disclaimer && (
-            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ pageBreakBefore: 'always', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
               <p style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#64748b', marginBottom: '8px' }}>Disclaimer</p>
               <p style={{ fontSize: '11px', color: '#475569', lineHeight: '1.7', whiteSpace: 'pre-wrap', textAlign: 'justify' }}>{currentWorkspace.disclaimer}</p>
             </div>
