@@ -273,7 +273,7 @@ const Patients: React.FC = () => {
               }}
               className="bg-slate-100 text-slate-600 px-6 py-3.5 rounded-2xl flex items-center gap-2 hover:bg-slate-200 transition-all font-black text-xs uppercase tracking-widest active:scale-95 border border-slate-200"
             >
-              <ScrollText size={16} /> Disclaimer
+              <ScrollText size={16} /> Privacy
             </button>
           )}
           <button
@@ -655,7 +655,7 @@ const Patients: React.FC = () => {
 
           {currentWorkspace?.disclaimer && (
             <div style={{ pageBreakBefore: 'always', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
-              <p style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#64748b', marginBottom: '8px' }}>Disclaimer</p>
+              <p style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#64748b', marginBottom: '8px' }}>Privacy</p>
               <p style={{ fontSize: '11px', color: '#475569', lineHeight: '1.7', whiteSpace: 'pre-wrap', textAlign: 'justify' }}>{currentWorkspace.disclaimer}</p>
             </div>
           )}
@@ -805,7 +805,7 @@ const Patients: React.FC = () => {
                 <div className="space-y-3 bg-pink-50 p-6 rounded-3xl border border-pink-100 mt-4">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <label className="text-[11px] font-black text-pink-700 uppercase tracking-widest leading-relaxed">
-                      Mostrare il testo nel PDF Gruppo Whatsapp?<br/>
+                      Mostrare il testo nel PDF?<br/>
                       <span className="text-pink-600/70 text-[9px] normal-case tracking-normal">Rispettando la vostra privacy vi aggiungero' al gruppo Whatapp 'Aloe di Elisabetta' per ricordarvi i richiami primaverili e autunnali.</span>
                     </label>
                     <div className="flex gap-2">
@@ -874,30 +874,36 @@ const Patients: React.FC = () => {
       )}
 
       {/* DISCLAIMER MODAL */}
+      {/* PRIVACY MODAL */}
       {showDisclaimer && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl flex flex-col border border-white/20">
+          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-white/20">
             <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50 shrink-0">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-slate-700 text-white rounded-2xl shadow-lg">
+                <div className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg">
                   <ScrollText size={24} />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Disclaimer PDF</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Viene stampato in fondo alla scheda paziente</p>
+                  <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Informativa Privacy PDF</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Configura il testo dell'informativa privacy</p>
                 </div>
               </div>
               <button onClick={() => setShowDisclaimer(false)} className="p-3 hover:bg-white rounded-2xl text-slate-400 transition-all border border-slate-100"><X size={24} /></button>
             </div>
-            <div className="p-8 space-y-6">
-              <textarea
-                rows={10}
-                className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[2rem] font-medium text-slate-700 outline-none focus:ring-4 focus:ring-slate-500/10 transition-all resize-none text-sm leading-relaxed"
-                placeholder="Scrivi qui il testo del disclaimer che apparirà in fondo al PDF del paziente..."
-                value={disclaimerText}
-                onChange={e => setDisclaimerText(e.target.value)}
-              />
-              <div className="flex gap-4">
+
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Testo dell'Informativa</label>
+                <textarea
+                  rows={10}
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-slate-500/10 transition-all text-sm"
+                  placeholder="Scrivi qui il testo dell'informativa privacy che apparirà in fondo al PDF del paziente..."
+                  value={disclaimerText}
+                  onChange={e => setDisclaimerText(e.target.value)}
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex gap-4">
                 <button
                   type="button"
                   onClick={() => setShowDisclaimer(false)}
@@ -906,12 +912,13 @@ const Patients: React.FC = () => {
                   Annulla
                 </button>
                 <button
+                  type="button"
                   onClick={handleSaveDisclaimer}
                   disabled={isSavingDisclaimer}
-                  className="flex-[2] bg-slate-800 text-white py-5 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest hover:bg-slate-900 shadow-xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-[2] bg-slate-900 text-white py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] shadow-lg shadow-slate-100 hover:bg-slate-850 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isSavingDisclaimer ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                  Salva Disclaimer
+                  Salva Privacy
                 </button>
               </div>
             </div>
