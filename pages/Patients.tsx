@@ -61,7 +61,8 @@ const Patients: React.FC = () => {
     dosageEarlyDays: "1 cucchiaio a colazione",
     dosageMidDays: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
     dosageLateDays: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo",
-    showMaintenance: true
+    showMaintenance: true,
+    showWhatsappText: true
   });
 
   const handleOpenEdit = (patient: Patient) => {
@@ -72,7 +73,8 @@ const Patients: React.FC = () => {
       dosageEarlyDays: patient.dosageEarlyDays || "1 cucchiaio a colazione",
       dosageMidDays: patient.dosageMidDays || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
       dosageLateDays: patient.dosageLateDays || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo",
-      showMaintenance: patient.showMaintenance ?? true
+      showMaintenance: patient.showMaintenance ?? true,
+      showWhatsappText: patient.showWhatsappText ?? true
     });
     setShowAdd(true);
   };
@@ -92,7 +94,8 @@ const Patients: React.FC = () => {
       dosageEarlyDays: "1 cucchiaio a colazione",
       dosageMidDays: "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
       dosageLateDays: "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo",
-      showMaintenance: true
+      showMaintenance: true,
+      showWhatsappText: true
     });
   };
 
@@ -157,7 +160,8 @@ const Patients: React.FC = () => {
       dosageEarlyDays: patient.dosageEarlyDays || "1 cucchiaio a colazione",
       dosageMidDays: patient.dosageMidDays || "1 cucchiaio a colazione e 1 cucchiaio a cena ( o prima di coricarsi)",
       dosageLateDays: patient.dosageLateDays || "1 e 1/2 cucchiaio a colazione, 1 e 1/2 cucchiaio a cena ( o prima di coricarsi). Continuare con questa assunzione fino al termine del barattolo",
-      showMaintenance: patient.showMaintenance ?? true
+      showMaintenance: patient.showMaintenance ?? true,
+      showWhatsappText: patient.showWhatsappText ?? true
     });
 
     setTimeout(async () => {
@@ -588,13 +592,21 @@ const Patients: React.FC = () => {
                 <td className="border border-black p-4 align-top text-sm relative">
                   <div className="mb-4 whitespace-pre-wrap">{activeProtocolPatient?.aloeTweak}</div>
 
-                  {activeProtocolPatient?.showMaintenance !== false && (
-                    <div className="bg-green-400 p-2 font-bold text-xs border border-green-600 text-center mt-auto w-full absolute bottom-4 left-0 right-0 max-w-[90%] mx-auto">
-                      ALLA FINE DELLA CURA INIZIALE,PER MANTENERE IL BENESSERE
-                      RAGGIUNTO E SEMPRE ALTE LE DIFESE IMMUNITARIE,CONSIGLIO 2
-                      BARATTOLI IN PRIMAVERA E 2 BARATTOLI IN AUTUNNO.
-                    </div>
-                  )}
+                  <div className="w-full absolute bottom-4 left-0 right-0 max-w-[90%] mx-auto flex flex-col gap-2">
+                    {activeProtocolPatient?.showMaintenance !== false && (
+                      <div className="bg-green-400 p-2 font-bold text-xs border border-green-600 text-center w-full">
+                        ALLA FINE DELLA CURA INIZIALE,PER MANTENERE IL BENESSERE
+                        RAGGIUNTO E SEMPRE ALTE LE DIFESE IMMUNITARIE,CONSIGLIO 2
+                        BARATTOLI IN PRIMAVERA E 2 BARATTOLI IN AUTUNNO.
+                      </div>
+                    )}
+
+                    {activeProtocolPatient?.showWhatsappText !== false && (
+                      <div className="bg-pink-100 p-2 font-bold text-xs border border-pink-300 text-pink-700 text-center w-full">
+                        Rispettando la vostra privacy vi aggiungero' al gruppo Whatapp 'Aloe di Elisabetta' per ricordarvi i richiami primaverili e autunnali.
+                      </div>
+                    )}
+                  </div>
                 </td>
               </tr>
               <tr>
@@ -780,6 +792,39 @@ const Patients: React.FC = () => {
                         onClick={() => setFormData({ ...formData, showMaintenance: false })}
                         className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
                           formData.showMaintenance === false
+                            ? 'bg-slate-400 text-white shadow-md shadow-slate-200 scale-105'
+                            : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
+                        }`}
+                      >
+                        NO
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 bg-pink-50 p-6 rounded-3xl border border-pink-100 mt-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <label className="text-[11px] font-black text-pink-700 uppercase tracking-widest leading-relaxed">
+                      Mostrare il testo nel PDF Gruppo Whatsapp?<br/>
+                      <span className="text-pink-600/70 text-[9px] normal-case tracking-normal">Rispettando la vostra privacy vi aggiungero' al gruppo Whatapp 'Aloe di Elisabetta' per ricordarvi i richiami primaverili e autunnali.</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, showWhatsappText: true })}
+                        className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                          formData.showWhatsappText !== false
+                            ? 'bg-pink-500 text-white shadow-md shadow-pink-200 scale-105'
+                            : 'bg-white text-pink-400 border border-pink-100 hover:bg-pink-50'
+                        }`}
+                      >
+                        SI
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, showWhatsappText: false })}
+                        className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                          formData.showWhatsappText === false
                             ? 'bg-slate-400 text-white shadow-md shadow-slate-200 scale-105'
                             : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
                         }`}

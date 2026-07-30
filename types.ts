@@ -34,6 +34,7 @@ export interface Patient {
   dosageMidDays?: string;
   dosageLateDays?: string;
   showMaintenance?: boolean;
+  showWhatsappText?: boolean;
 }
 
 export interface WorkspaceUser {
