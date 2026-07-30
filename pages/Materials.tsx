@@ -1,10 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../store';
-import { Database, AlertCircle, Coins } from 'lucide-react';
+import { Database, AlertCircle, Coins, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 const Materials: React.FC = () => {
   const { orders, recipes, rawMaterials } = useApp();
+  const [viewDate, setViewDate] = useState(new Date());
+
+  const changeMonth = (offset: number) => {
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1));
+  };
 
   const getDynamicCostPerUnit = (ing: any) => {
     if (ing.rawMaterialId) {
@@ -52,9 +57,15 @@ const Materials: React.FC = () => {
     return quantity * ing.costPerUnit;
   };
 
+  const selectedMonthOrders = orders.filter(order => {
+    const orderDate = order.date ? new Date(order.date) : null;
+    if (!orderDate) return false;
+    return orderDate.getMonth() === viewDate.getMonth() && orderDate.getFullYear() === viewDate.getFullYear();
+  });
+
   const materialTotals: Record<string, { quantity: number; unit: string; cost: number; isRawMaterial: boolean }> = {};
 
-  orders.filter(o => o.status !== 'Completato').forEach(order => {
+  selectedMonthOrders.forEach(order => {
     order.items.forEach(item => {
       // 1. Ingredienti dalla ricetta base del prodotto
       const productRecipe = recipes.find(r => r.productId === item.productId);
@@ -70,8 +81,8 @@ const Materials: React.FC = () => {
 
           // Total quantity in current ingredient's unit
           const totalIngQty = ing.quantity * item.quantity;
-          // Convert to RM unit if linked
-          const factor = rm ? (CONVERSIONS[ing.unit]?.[rm.unit] || 1) : 1;
+          // Convert to RM unit if linked using robust helper
+          const factor = rm ? getConversionFactor(ing.unit, rm.unit) : 1;
 
           materialTotals[key].quantity += totalIngQty * factor;
           materialTotals[key].cost += getDynamicCostValue(ing, totalIngQty);
@@ -94,7 +105,7 @@ const Materials: React.FC = () => {
               }
 
               const totalIngQty = ing.quantity * item.quantity;
-              const factor = rm ? (CONVERSIONS[ing.unit]?.[rm.unit] || 1) : 1;
+              const factor = rm ? getConversionFactor(ing.unit, rm.unit) : 1;
 
               materialTotals[key].quantity += totalIngQty * factor;
               materialTotals[key].cost += getDynamicCostValue(ing, totalIngQty);
@@ -127,6 +138,21 @@ const Materials: React.FC = () => {
         </div>
       </div>
 
+      <div className="bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-center gap-4">
+        <button onClick={() => changeMonth(-1)} className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-400">
+          <ChevronLeft size={20} />
+        </button>
+        <div className="flex items-center gap-3 px-6 py-2 bg-slate-900 text-white rounded-2xl shadow-lg">
+          <Calendar size={18} className="text-emerald-400" />
+          <span className="text-sm font-black uppercase tracking-widest min-w-[140px] text-center">
+            {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+          </span>
+        </div>
+        <button onClick={() => changeMonth(1)} className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-400">
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {materialList.map((m, i) => (
           <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:border-green-200 hover:shadow-md transition-all group">
@@ -135,7 +161,7 @@ const Materials: React.FC = () => {
                 {m.isRawMaterial ? <Coins size={24} /> : <Database size={24} />}
               </div>
               <div className="text-right">
-                <p className="text-2xl font-black text-slate-800">{m.quantity.toFixed(1)} <span className="text-xs text-slate-400 uppercase tracking-widest">{m.unit}</span></p>
+                <p className="text-2xl font-black text-slate-800">{m.quantity < 10 && m.quantity % 1 !== 0 ? m.quantity.toFixed(2) : m.quantity.toFixed(1)} <span className="text-xs text-slate-400 uppercase tracking-widest">{m.unit}</span></p>
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Qtà Totale Richiesta</p>
               </div>
             </div>
@@ -154,8 +180,8 @@ const Materials: React.FC = () => {
         {materialList.length === 0 && (
           <div className="col-span-full py-32 flex flex-col items-center justify-center bg-white border border-dashed border-slate-200 rounded-[3rem] text-slate-300">
             <AlertCircle size={64} className="mb-4 opacity-10" />
-            <p className="text-xs font-black uppercase tracking-[0.2em]">Nessun ordine attivo trovato</p>
-            <p className="text-[10px] font-medium mt-2">Aggiungi ordini e ricette per generare l'inventario.</p>
+            <p className="text-xs font-black uppercase tracking-[0.2em]">Nessun ordine trovato per questo mese</p>
+            <p className="text-[10px] font-medium mt-2">Usa le frecce per cambiare mese o aggiungi nuovi ordini.</p>
           </div>
         )}
       </div>
