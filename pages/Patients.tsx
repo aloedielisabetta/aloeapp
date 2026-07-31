@@ -588,25 +588,27 @@ const Patients: React.FC = () => {
                 </tr>
               )}
               <tr>
-                <td className="border border-black p-1.5 font-bold align-top text-xs h-72 w-[125px]">Cura</td>
-                <td className="border border-black p-2.5 align-top text-xs relative">
-                  <div className="mb-4 whitespace-pre-wrap">{activeProtocolPatient?.aloeTweak}</div>
+                <td className="border border-black p-1.5 font-bold align-top text-xs w-[125px]">Cura</td>
+                <td className="border border-black p-2.5 align-top text-xs">
+                  <div className="whitespace-pre-wrap">{activeProtocolPatient?.aloeTweak}</div>
 
-                  <div className="w-[98%] absolute bottom-2 left-0 right-0 mx-auto flex flex-col gap-1">
-                    {activeProtocolPatient?.showMaintenance !== false && (
-                      <div className="bg-green-400 p-1 font-bold text-[10px] leading-tight border border-green-600 text-center w-full">
-                        ALLA FINE DELLA CURA INIZIALE,PER MANTENERE IL BENESSERE
-                        RAGGIUNTO E SEMPRE ALTE LE DIFESE IMMUNITARIE,CONSIGLIO 2
-                        BARATTOLI IN PRIMAVERA E 2 BARATTOLI IN AUTUNNO.
-                      </div>
-                    )}
+                  {(activeProtocolPatient?.showMaintenance !== false || activeProtocolPatient?.showWhatsappText !== false) && (
+                    <div className="w-full mt-4 flex flex-col gap-1.5">
+                      {activeProtocolPatient?.showMaintenance !== false && (
+                        <div className="bg-green-400 p-1.5 font-bold text-[10px] leading-tight border border-green-600 text-center w-full">
+                          ALLA FINE DELLA CURA INIZIALE,PER MANTENERE IL BENESSERE
+                          RAGGIUNTO E SEMPRE ALTE LE DIFESE IMMUNITARIE,CONSIGLIO 2
+                          BARATTOLI IN PRIMAVERA E 2 BARATTOLI IN AUTUNNO.
+                        </div>
+                      )}
 
-                    {activeProtocolPatient?.showWhatsappText !== false && (
-                      <div className="bg-pink-100 p-1 font-bold text-[10px] leading-tight border border-pink-300 text-pink-700 text-center w-full">
-                        Rispettando la vostra privacy vi aggiungero' al gruppo Whatapp 'Aloe di Elisabetta' per ricordarvi i richiami primaverili e autunnali.
-                      </div>
-                    )}
-                  </div>
+                      {activeProtocolPatient?.showWhatsappText !== false && (
+                        <div className="bg-pink-100 p-1.5 font-bold text-[10px] leading-tight border border-pink-300 text-pink-700 text-center w-full">
+                          Rispettando la vostra privacy vi aggiungero' al gruppo Whatapp 'Aloe di Elisabetta' per ricordarvi i richiami primaverili e autunnali.
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
               <tr>
