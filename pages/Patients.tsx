@@ -539,7 +539,7 @@ const Patients: React.FC = () => {
       )}
 
       <div className="hidden">
-        <div ref={protocolRef} className="bg-white" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', boxSizing: 'border-box', fontFamily: 'Arial, sans-serif' }}>
+        <div ref={protocolRef} className="bg-white relative" style={{ width: '210mm', minHeight: '297mm', padding: '8mm 12mm', boxSizing: 'border-box', fontFamily: 'Arial, sans-serif' }}>
           {(() => {
             const salespersonId = activeProtocolPatient?.salespersonId;
             const assocUser = workspaceUsers.find(u => u.salespersonId === salespersonId);
@@ -558,43 +558,43 @@ const Patients: React.FC = () => {
               : (currentWorkspace?.ownerAvailability || 'contattabile via telefono o messaggio');
 
             return (
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-red-600 mb-1">{name} {phone ? `- ${phone}` : ''}</h1>
-                <p className="text-sm text-red-500 font-medium">{availability}</p>
+              <div className="mb-3 pr-16">
+                <h1 className="text-xl font-bold text-red-600 mb-0.5">{name} {phone ? `- ${phone}` : ''}</h1>
+                <p className="text-xs text-red-500 font-medium">{availability}</p>
               </div>
             );
           })()}
 
-          <div className="absolute top-10 right-10">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center border-2 border-emerald-500">
-              <span className="text-2xl">🌱</span>
+          <div className="absolute top-5 right-6">
+            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center border-2 border-emerald-500">
+              <span className="text-xl">🌱</span>
             </div>
           </div>
 
-          <table className="w-full border-collapse border border-black mb-8">
+          <table className="w-full border-collapse border border-black mb-4">
             <tbody>
               <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm">Nome & telefono</td>
-                <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.firstName} {activeProtocolPatient?.lastName} - {activeProtocolPatient?.phone}</td>
+                <td className="border border-black p-1.5 font-bold align-top text-xs w-[125px]">Nome & telefono</td>
+                <td className="border border-black p-1.5 align-top text-xs">{activeProtocolPatient?.firstName} {activeProtocolPatient?.lastName} - {activeProtocolPatient?.phone}</td>
               </tr>
               <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm">Patologia</td>
-                <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.medicalCondition}</td>
+                <td className="border border-black p-1.5 font-bold align-top text-xs w-[125px]">Patologia</td>
+                <td className="border border-black p-1.5 align-top text-xs">{activeProtocolPatient?.medicalCondition}</td>
               </tr>
               {activeProtocolPatient?.treatmentDuration && (
                 <tr>
-                  <td className="border border-black p-2 font-bold align-top text-sm">Durata Cura</td>
-                  <td className="border border-black p-2 align-top text-sm font-bold text-red-600">{activeProtocolPatient?.treatmentDuration}</td>
+                  <td className="border border-black p-1.5 font-bold align-top text-xs w-[125px]">Durata Cura</td>
+                  <td className="border border-black p-1.5 align-top text-xs font-bold text-red-600">{activeProtocolPatient?.treatmentDuration}</td>
                 </tr>
               )}
               <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm h-64">Cura</td>
-                <td className="border border-black p-4 align-top text-sm relative">
+                <td className="border border-black p-1.5 font-bold align-top text-xs h-72 w-[125px]">Cura</td>
+                <td className="border border-black p-2.5 align-top text-xs relative">
                   <div className="mb-4 whitespace-pre-wrap">{activeProtocolPatient?.aloeTweak}</div>
 
-                  <div className="w-full absolute bottom-4 left-0 right-0 max-w-[90%] mx-auto flex flex-col gap-2">
+                  <div className="w-[98%] absolute bottom-2 left-0 right-0 mx-auto flex flex-col gap-1">
                     {activeProtocolPatient?.showMaintenance !== false && (
-                      <div className="bg-green-400 p-2 font-bold text-xs border border-green-600 text-center w-full">
+                      <div className="bg-green-400 p-1 font-bold text-[10px] leading-tight border border-green-600 text-center w-full">
                         ALLA FINE DELLA CURA INIZIALE,PER MANTENERE IL BENESSERE
                         RAGGIUNTO E SEMPRE ALTE LE DIFESE IMMUNITARIE,CONSIGLIO 2
                         BARATTOLI IN PRIMAVERA E 2 BARATTOLI IN AUTUNNO.
@@ -602,7 +602,7 @@ const Patients: React.FC = () => {
                     )}
 
                     {activeProtocolPatient?.showWhatsappText !== false && (
-                      <div className="bg-pink-100 p-2 font-bold text-xs border border-pink-300 text-pink-700 text-center w-full">
+                      <div className="bg-pink-100 p-1 font-bold text-[10px] leading-tight border border-pink-300 text-pink-700 text-center w-full">
                         Rispettando la vostra privacy vi aggiungero' al gruppo Whatapp 'Aloe di Elisabetta' per ricordarvi i richiami primaverili e autunnali.
                       </div>
                     )}
@@ -610,38 +610,38 @@ const Patients: React.FC = () => {
                 </td>
               </tr>
               <tr>
-                <td className="border border-black p-2 font-bold align-top text-sm">Controllo Esami</td>
-                <td className="border border-black p-2 align-top text-sm">{activeProtocolPatient?.testResults}</td>
+                <td className="border border-black p-1.5 font-bold align-top text-xs w-[125px]">Controllo Esami</td>
+                <td className="border border-black p-1.5 align-top text-xs">{activeProtocolPatient?.testResults}</td>
               </tr>
             </tbody>
           </table>
 
-          <div className="bg-orange-400 text-black font-bold p-2 text-center text-sm mb-2 uppercase">
+          <div className="bg-orange-400 text-black font-bold p-1.5 text-center text-xs mb-1.5 uppercase">
             Ricorda di ordinarmi l’Aloe entro il 26 per il mese successivo
           </div>
 
-          <div className="text-center font-bold text-md mb-6">
+          <div className="text-center font-bold text-sm mb-4">
             L’Aloe lo preparo sempre la prima settimana di ogni mese.
-            <p className="text-xs font-normal mt-1 text-slate-500">Il barattolo va sempre tenuto in frigo e sbattuto.</p>
+            <p className="text-[11px] font-normal mt-0.5 text-slate-500">Il barattolo va sempre tenuto in frigo e sbattuto.</p>
           </div>
 
-          <table className="w-full border-collapse border border-black text-sm mb-6">
+          <table className="w-full border-collapse border border-black text-xs mb-4">
             <tbody>
               <tr>
-                <td className="border border-black p-3 font-bold bg-slate-50 w-1/3">Assunzione iniziale:</td>
-                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageInitial}</td>
+                <td className="border border-black p-2 font-bold bg-slate-50 w-[125px]">Assunzione iniziale:</td>
+                <td className="border border-black p-2" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageInitial}</td>
               </tr>
               <tr>
-                <td className="border border-black p-3 font-bold bg-slate-50">Per 3 giorni:</td>
-                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageEarlyDays}</td>
+                <td className="border border-black p-2 font-bold bg-slate-50 w-[125px]">Per 3 giorni:</td>
+                <td className="border border-black p-2" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageEarlyDays}</td>
               </tr>
               <tr>
-                <td className="border border-black p-3 font-bold bg-slate-50">Dal 4° al 6° giorno:</td>
-                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageMidDays}</td>
+                <td className="border border-black p-2 font-bold bg-slate-50 w-[125px]">Dal 4° al 6° giorno:</td>
+                <td className="border border-black p-2" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageMidDays}</td>
               </tr>
               <tr>
-                <td className="border border-black p-3 font-bold bg-slate-50">Dal 7° giorno:</td>
-                <td className="border border-black p-3" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageLateDays}</td>
+                <td className="border border-black p-2 font-bold bg-slate-50 w-[125px]">Dal 7° giorno:</td>
+                <td className="border border-black p-2" style={{ whiteSpace: 'pre-wrap' }}>{activeProtocolPatient?.dosageLateDays}</td>
               </tr>
             </tbody>
           </table>
