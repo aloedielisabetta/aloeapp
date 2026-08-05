@@ -13,12 +13,27 @@ const Profits: React.FC = () => {
     'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
   ];
 
+  const getConversionFactor = (from?: string, to?: string) => {
+    if (!from || !to || from === to) return 1;
+    const f = from.toLowerCase().trim();
+    const t = to.toLowerCase().trim();
+    if ((f === 'g' || f === 'gr' || f === 'grammi') && (t === 'kg' || t === 'chili')) return 0.001;
+    if ((f === 'kg' || f === 'chili') && (t === 'g' || t === 'gr' || t === 'grammi')) return 1000;
+    if ((f === 'ml' || f === 'millilitri') && (t === 'l' || t === 'litri')) return 0.001;
+    if ((f === 'l' || f === 'litri') && (t === 'ml' || t === 'millilitri')) return 1000;
+    return 1;
+  };
+
   const getIngredientDynamicCost = (ing: any) => {
     if (ing.rawMaterialId) {
       const rm = rawMaterials.find(r => r.id === ing.rawMaterialId);
-      if (rm) return (rm.totalPrice / rm.totalQuantity) * ing.quantity;
+      if (rm && rm.totalQuantity > 0) {
+        const factor = getConversionFactor(ing.unit, rm.unit);
+        const costPerRmUnit = rm.totalPrice / rm.totalQuantity;
+        return (ing.quantity * factor) * costPerRmUnit;
+      }
     }
-    return ing.quantity * ing.costPerUnit;
+    return ing.quantity * (ing.costPerUnit || 0);
   };
 
   let grossRevenue = 0;
@@ -26,9 +41,11 @@ const Profits: React.FC = () => {
   let totalLabourCost = 0;
   let totalCommissions = 0;
 
-  // Filter orders for the selected month/year
+  // Filter orders for the selected month/year with safe date parsing
   const monthlyOrders = orders.filter(o => {
-    const d = new Date(o.date);
+    if (!o.date) return false;
+    const dateStr = o.date.includes('T') ? o.date : o.date + 'T12:00:00';
+    const d = new Date(dateStr);
     return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
   });
 
@@ -73,7 +90,8 @@ const Profits: React.FC = () => {
   const monthlyCosts = generalCosts.filter(c => {
     if (c.isRecurring !== false) return true;
     if (!c.date) return true;
-    const d = new Date(c.date);
+    const dateStr = c.date.includes('T') ? c.date : c.date + 'T12:00:00';
+    const d = new Date(dateStr);
     return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
   });
 
