@@ -13,29 +13,6 @@ const Profits: React.FC = () => {
     'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
   ];
 
-  // Unit conversion helper
-  const getConversionFactor = (from?: string, to?: string) => {
-    if (!from || !to || from === to) return 1;
-    const f = from.toLowerCase().trim();
-    const t = to.toLowerCase().trim();
-    if ((f === 'g' || f === 'gr' || f === 'grammi') && (t === 'kg' || t === 'chili')) return 0.001;
-    if ((f === 'kg' || f === 'chili') && (t === 'g' || t === 'gr' || t === 'grammi')) return 1000;
-    if ((f === 'ml' || f === 'millilitri') && (t === 'l' || t === 'litri')) return 0.001;
-    if ((f === 'l' || f === 'litri') && (t === 'ml' || t === 'millilitri')) return 1000;
-    return 1;
-  };
-
-  // Cost of a single ingredient based on raw material price
-  const getIngredientCost = (ing: any) => {
-    if (ing.rawMaterialId) {
-      const rm = rawMaterials.find(r => r.id === ing.rawMaterialId);
-      if (rm && rm.totalQuantity > 0) {
-        const factor = getConversionFactor(ing.unit, rm.unit);
-        return (ing.quantity * factor) * (rm.totalPrice / rm.totalQuantity);
-      }
-    }
-    return ing.quantity * (ing.costPerUnit || 0);
-  };
 
   // Safe date parsing that avoids UTC timezone off-by-one errors
   const parseDate = (dateStr: string) => {
@@ -61,7 +38,7 @@ const Profits: React.FC = () => {
     }
   });
 
-  // ── 2. COSTI PRODUZIONE: recipe material cost + labour for monthly orders ──
+  // ── 2. COSTI PRODUZIONE: material cost + labour for monthly orders ──
   let totalMaterialsCost = 0;
   let totalLabourCost = 0;
 
@@ -70,27 +47,9 @@ const Profits: React.FC = () => {
       const product = products.find(p => p.id === item.productId);
       if (!product) return;
 
-      // Material cost from recipe, fall back to product.costPerItem
-      let itemMaterialCost = 0;
-      const baseRecipe = recipes.find(r => r.productId === item.productId);
-      if (baseRecipe) {
-        itemMaterialCost += baseRecipe.ingredients.reduce((s: number, ing: any) => s + getIngredientCost(ing), 0);
-      } else {
-        itemMaterialCost += product.costPerItem || 0;
-      }
-
-      // Add modifier variant recipe costs
-      Object.entries(item.selectedModifiers).forEach(([gid, options]) => {
-        const opts = Array.isArray(options) ? options : (options ? [options] : []);
-        opts.forEach((opt: string) => {
-          const modRecipe = recipes.find((r: any) => r.modifierGroupId === gid && r.modifierOption === opt);
-          if (modRecipe) {
-            itemMaterialCost += modRecipe.ingredients.reduce((s: number, ing: any) => s + getIngredientCost(ing), 0);
-          }
-        });
-      });
-
-      totalMaterialsCost += itemMaterialCost * item.quantity;
+      // Simply multiply the product's saved material cost by the ordered quantity
+      totalMaterialsCost += (product.costPerItem || 0) * item.quantity;
+      // Multiply the product's saved labour cost by the ordered quantity
       totalLabourCost += (product.labourCost || 0) * item.quantity;
     });
   });
