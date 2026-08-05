@@ -5,7 +5,7 @@ import { Order, OrderItem } from '../types';
 import {
   Plus, ShoppingBag, ExternalLink, Calendar, Search,
   Trash2, Layers, ChevronLeft, ChevronRight, Info,
-  Truck, Gift, FilterX, RefreshCw, Database, AlertCircle, User, Loader2, XCircle, Check, X, ChevronDown, Sparkles, Briefcase, Edit2
+  Truck, Gift, FilterX, RefreshCw, Database, AlertCircle, User, Loader2, XCircle, Check, X, ChevronDown, Sparkles, Briefcase, Edit2, MapPin
 } from 'lucide-react';
 
 const Orders: React.FC = () => {
