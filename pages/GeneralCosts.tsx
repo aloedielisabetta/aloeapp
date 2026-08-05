@@ -30,7 +30,7 @@ const GeneralCosts: React.FC = () => {
       name: form.name,
       amount: form.amount || 0,
       category: form.category || 'Altro',
-      isRecurring: showModal === 'recurring'
+      isRecurring: form.isRecurring !== undefined ? form.isRecurring : true
     });
 
     setForm({ name: '', amount: 0, category: 'Altro' });
@@ -43,8 +43,8 @@ const GeneralCosts: React.FC = () => {
     }
   };
 
-  const recurringCosts = generalCosts.filter(c => c.isRecurring);
-  const singleCosts = generalCosts.filter(c => !c.isRecurring);
+  const recurringCosts = generalCosts.filter(c => c.isRecurring !== false);
+  const singleCosts = generalCosts.filter(c => c.isRecurring === false);
 
   const totalMonthlyLoad = generalCosts.reduce((sum, c) => sum + c.amount, 0);
 

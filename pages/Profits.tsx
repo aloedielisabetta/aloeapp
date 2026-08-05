@@ -69,9 +69,10 @@ const Profits: React.FC = () => {
     });
   });
 
-  // General Costs: Include ALL recurring + One-time costs of the selected month
+  // General Costs: Include ALL recurring & fixed monthly costs + One-time costs of the selected month
   const monthlyCosts = generalCosts.filter(c => {
-    if (c.isRecurring) return true;
+    if (c.isRecurring !== false) return true;
+    if (!c.date) return true;
     const d = new Date(c.date);
     return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
   });
