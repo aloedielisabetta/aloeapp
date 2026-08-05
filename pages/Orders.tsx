@@ -531,7 +531,7 @@ const Orders: React.FC = () => {
                   <div className="flex gap-2">
                     <select className="p-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none shadow-lg active:scale-95" onChange={e => { if (e.target.value) addItem(e.target.value); e.target.value = ''; }}>
                       <option value="">+ Aggiungi Prodotto</option>
-                      {products.map(p => <option key={p.id} value={p.id}>{p.name} - €{p.price}</option>)}
+                      {[...products].sort((a, b) => a.name.localeCompare(b.name)).map(p => <option key={p.id} value={p.id}>{p.name} - €{p.price}</option>)}
                     </select>
                   </div>
                 </div>
