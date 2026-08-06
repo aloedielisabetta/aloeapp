@@ -33,11 +33,16 @@ const GeneralCosts: React.FC = () => {
     e.preventDefault();
     if (!form.name || !form.amount) return;
 
+    const isRecurring = showModal === 'recurring';
+    // If it's a single expense, tie it to the currently viewed month so it doesn't get assigned to 'today' if we're viewing a past month
+    const expenseDate = new Date(selectedYear, selectedMonth, 15, 12, 0, 0).toISOString();
+
     await addGeneralCost({
       name: form.name,
       amount: form.amount || 0,
       category: form.category || 'Altro',
-      isRecurring: form.isRecurring !== undefined ? form.isRecurring : true
+      isRecurring,
+      date: expenseDate
     });
 
     setForm({ name: '', amount: 0, category: 'Altro' });

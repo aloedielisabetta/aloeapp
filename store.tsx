@@ -37,7 +37,7 @@ interface AppContextType extends AppData {
   updateSalesperson: (s: Salesperson) => Promise<void>;
   deleteSalesperson: (id: string) => Promise<void>;
 
-  addGeneralCost: (c: Omit<GeneralCost, 'id' | 'workspaceId' | 'date'>) => Promise<void>;
+  addGeneralCost: (c: Omit<GeneralCost, 'id' | 'workspaceId'>) => Promise<void>;
   deleteGeneralCost: (id: string) => Promise<void>;
 
   addWorkspaceUser: (u: Omit<WorkspaceUser, 'id' | 'workspaceId'> & { password?: string }) => Promise<void>;
@@ -395,9 +395,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWorkspaceUsers(prev => prev.filter(u => u.salespersonId !== id));
   };
 
-  const addGeneralCost = async (c: Omit<GeneralCost, 'id' | 'workspaceId' | 'date'>) => {
+  const addGeneralCost = async (c: Omit<GeneralCost, 'id' | 'workspaceId'>) => {
     if (!currentWorkspace) return;
-    const newC = { ...c, id: crypto.randomUUID(), workspaceId: currentWorkspace.id, date: new Date().toISOString() };
+    const newC = { ...c, id: crypto.randomUUID(), workspaceId: currentWorkspace.id, date: c.date || new Date().toISOString() };
     const { error } = await supabase.from('general_costs').insert(toSnake(newC));
     if (error) throw error;
     setGeneralCosts(prev => [...prev, newC as GeneralCost]);
