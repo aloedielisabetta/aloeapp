@@ -11,6 +11,13 @@ const GeneralCosts: React.FC = () => {
   const [form, setForm] = useState<Partial<GeneralCost>>({
     name: '', amount: 0, category: 'Altro'
   });
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const months = [
+    'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+    'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+  ];
 
   const categories = [
     { name: 'Affitto', icon: <Home size={14} /> },
@@ -44,9 +51,20 @@ const GeneralCosts: React.FC = () => {
   };
 
   const recurringCosts = generalCosts.filter(c => c.isRecurring !== false);
-  const singleCosts = generalCosts.filter(c => c.isRecurring === false);
 
-  const totalMonthlyLoad = generalCosts.reduce((sum, c) => sum + c.amount, 0);
+  const parseDate = (dateStr: string) => {
+    if (!dateStr) return null;
+    const s = dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00';
+    return new Date(s);
+  };
+
+  const singleCosts = generalCosts.filter(c => {
+    if (c.isRecurring !== false) return false;
+    const d = parseDate(c.date);
+    return d && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+  });
+
+  const totalMonthlyLoad = recurringCosts.reduce((sum, c) => sum + c.amount, 0) + singleCosts.reduce((sum, c) => sum + c.amount, 0);
 
   return (
     <div className="space-y-8">
@@ -55,11 +73,30 @@ const GeneralCosts: React.FC = () => {
           <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Costi Generali Aziendali</h2>
           <p className="text-slate-500 font-medium">Gestione spese fisse e ricorrenti del tuo business.</p>
         </div>
-        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+        
+        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
+          <div className="flex gap-2 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm self-start md:self-auto">
+            <select
+              value={selectedMonth}
+              onChange={e => setSelectedMonth(parseInt(e.target.value))}
+              className="bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase tracking-widest p-2 outline-none focus:ring-2 focus:ring-blue-500/20"
+            >
+              {months.map((m, i) => <option key={m} value={i}>{m}</option>)}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={e => setSelectedYear(parseInt(e.target.value))}
+              className="bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase tracking-widest p-2 outline-none focus:ring-2 focus:ring-blue-500/20"
+            >
+              {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+
           <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex-1 md:min-w-[200px]">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">Carico Mensile Totale</p>
             <p className="text-3xl font-black text-amber-600">€{totalMonthlyLoad.toFixed(2)}</p>
           </div>
+          
           <div className="flex gap-2">
             <button
               onClick={() => { setForm({ name: '', amount: 0, category: 'Altro' }); setShowModal('single'); }}
