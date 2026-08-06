@@ -56,9 +56,13 @@ const Profits: React.FC = () => {
 
   const totalProductionCost = totalMaterialsCost + totalLabourCost;
 
-  // ── 3. SPESE RICORRENTI: only recurring expenses from Costi Generali ──
-  const recurringExpenses = generalCosts.filter(c => c.isRecurring === true);
-  const totalRecurringExpenses = recurringExpenses.reduce((sum, c) => sum + c.amount, 0);
+  // ── 3. SPESE AZIENDALI: recurring expenses + single expenses for the selected month ──
+  const monthlyExpenses = generalCosts.filter(c => {
+    if (c.isRecurring !== false) return true;
+    const d = parseDate(c.date);
+    return d && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+  });
+  const totalMonthlyExpenses = monthlyExpenses.reduce((sum, c) => sum + c.amount, 0);
 
   // ── 4. COLLABORATORI PROVVIGIONE: commission per order salesperson this month ──
   // For each order this month that has a salespersonId, sum commission field or
@@ -99,7 +103,7 @@ const Profits: React.FC = () => {
   const collaboratorEntries = Object.values(collaboratorBreakdown);
 
   // ── 5. GUADAGNO NETTO ──
-  const netProfit = grossRevenue - totalProductionCost - totalRecurringExpenses - totalCollaboratorCommissions;
+  const netProfit = grossRevenue - totalProductionCost - totalMonthlyExpenses - totalCollaboratorCommissions;
   const netGP = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
 
   return (
@@ -152,12 +156,12 @@ const Profits: React.FC = () => {
           </div>
         </div>
 
-        {/* Spese Ricorrenti */}
+        {/* Spese Mensili */}
         <div className="bg-amber-50 p-6 rounded-[2.5rem] border border-amber-100 shadow-sm">
-          <p className="text-amber-600 text-[10px] font-bold uppercase tracking-widest mb-1">Spese Ricorrenti</p>
-          <h3 className="text-3xl font-black text-amber-700">€{totalRecurringExpenses.toFixed(2)}</h3>
+          <p className="text-amber-600 text-[10px] font-bold uppercase tracking-widest mb-1">Spese: Ricorrenti + Mensili</p>
+          <h3 className="text-3xl font-black text-amber-700">€{totalMonthlyExpenses.toFixed(2)}</h3>
           <div className="mt-3 flex items-center gap-2 text-amber-600 text-xs font-bold">
-            <RefreshCw size={14} /> {recurringExpenses.length} voci fisse/mese
+            <RefreshCw size={14} /> {monthlyExpenses.length} voci totali
           </div>
         </div>
 
@@ -196,7 +200,7 @@ const Profits: React.FC = () => {
               {[
                 { label: 'Materie Prime (Ricette)', value: totalMaterialsCost, color: 'bg-green-500' },
                 { label: 'Manodopera Diretta', value: totalLabourCost, color: 'bg-blue-500' },
-                { label: 'Spese Ricorrenti', value: totalRecurringExpenses, color: 'bg-amber-500' },
+                { label: 'Spese: Ricorrenti + Mensili', value: totalMonthlyExpenses, color: 'bg-amber-500' },
                 { label: 'Provvigioni Collaboratori', value: totalCollaboratorCommissions, color: 'bg-purple-500' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="space-y-2">
@@ -213,30 +217,30 @@ const Profits: React.FC = () => {
           </div>
         </div>
 
-        {/* Dettaglio Spese Ricorrenti */}
+        {/* Dettaglio Spese */}
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-8 border-b border-slate-50 flex justify-between items-center">
             <h4 className="text-xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-2">
               <Receipt className="text-amber-500" />
-              Spese Ricorrenti
+              Spese Mese Attuale
             </h4>
           </div>
           <div className="p-8">
             <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 hide-scrollbar">
-              {recurringExpenses.map(cost => (
+              {monthlyExpenses.map(cost => (
                 <div key={cost.id} className="flex justify-between items-center p-4 rounded-2xl bg-amber-50 border border-amber-100">
                   <div>
                     <p className="font-black text-slate-700 text-xs uppercase tracking-tight flex items-center gap-2">
-                      {cost.name} <RefreshCw size={10} className="text-amber-600" />
+                      {cost.name} {cost.isRecurring !== false && <RefreshCw size={10} className="text-amber-600" />}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{cost.category} • Ogni Mese</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{cost.category} • {cost.isRecurring !== false ? 'Ogni Mese' : 'Una Tantum'}</p>
                   </div>
                   <p className="font-black text-slate-900">€{cost.amount.toFixed(2)}</p>
                 </div>
               ))}
-              {recurringExpenses.length === 0 && (
+              {monthlyExpenses.length === 0 && (
                 <div className="py-16 text-center text-slate-300 italic text-[10px] font-black uppercase tracking-widest">
-                  Nessuna spesa ricorrente<br/>
+                  Nessuna spesa nel mese<br/>
                   <span className="text-[9px] normal-case">Aggiungile in Costi Generali</span>
                 </div>
               )}
