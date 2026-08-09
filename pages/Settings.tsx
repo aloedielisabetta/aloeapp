@@ -1,14 +1,15 @@
-﻿
+
 import React, { useState } from 'react';
 import { useApp } from '../store';
 import {
-  MapPin, Plus, Trash2, Briefcase, Eye, EyeOff
+  MapPin, Plus, Trash2, Briefcase, Eye, EyeOff, Shield
 } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const {
     cities, addCity, deleteCity,
-    salespersons, addSalesperson, deleteSalesperson, updateSalesperson, workspaceUsers
+    salespersons, addSalesperson, deleteSalesperson, updateSalesperson, workspaceUsers,
+    currentWorkspace, updateWorkspace
   } = useApp();
 
   const [newCityName, setNewCityName] = useState('');
@@ -49,13 +50,31 @@ const Settings: React.FC = () => {
           <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Crea Città e Collaboratori</h2>
           <p className="text-slate-500 font-medium">Gestione configurazione locale del workspace.</p>
         </div>
+        <div className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="bg-emerald-50 p-3 rounded-2xl text-emerald-600">
+            <Shield size={20} />
+          </div>
+          <div className="flex-1">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Email Amministratore (per inviti)</p>
+            <input
+              className="bg-transparent border-none p-0 text-sm font-bold text-slate-700 outline-none w-full"
+              placeholder="admin@aloe.system"
+              value={currentWorkspace?.adminContactEmail || ''}
+              onChange={async (e) => {
+                if (currentWorkspace) {
+                  await updateWorkspace({ ...currentWorkspace, adminContactEmail: e.target.value });
+                }
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* City Folders */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-6">
           <h3 className="font-black flex items-center gap-3 text-slate-700 uppercase tracking-widest text-xs">
-            <MapPin size={20} className="text-emerald-500" /> Cartelle Città
+            <MapPin size={20} className="text-emerald-500" /> Elenco Città
           </h3>
           <div className="flex gap-3">
             <input
@@ -68,20 +87,23 @@ const Settings: React.FC = () => {
           </div>
           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 hide-scrollbar">
             {cities.map(city => (
-              <div key={city.id} className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-50">
-                <span className="font-black text-slate-600 uppercase text-[10px] tracking-widest">{city.name}</span>
-                <button onClick={() => setPendingCityDelete(city.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={18} /></button>
+              <div key={city.id}>
+                {pendingCityDelete === city.id ? (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex justify-between items-center gap-3">
+                    <p className="text-[10px] font-black text-red-600 uppercase">Eliminare la città "{city.name}"?</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => confirmRemoveCity(city.id)} className="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Sì, elimina</button>
+                      <button onClick={() => setPendingCityDelete(null)} className="bg-slate-200 text-slate-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase">Annulla</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-50">
+                    <span className="font-black text-slate-600 uppercase text-[10px] tracking-widest">{city.name}</span>
+                    <button onClick={() => setPendingCityDelete(city.id)} className="p-3 text-slate-300 hover:text-red-500 transition-all"><Trash2 size={18} /></button>
+                  </div>
+                )}
               </div>
             ))}
-            {pendingCityDelete && (
-              <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-center space-y-3">
-                <p className="text-[10px] font-black text-red-600 uppercase">Eliminare questa cartella?</p>
-                <div className="flex gap-2 justify-center">
-                  <button onClick={() => confirmRemoveCity(pendingCityDelete)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">Sì</button>
-                  <button onClick={() => setPendingCityDelete(null)} className="bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-[10px] font-black uppercase">No</button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
