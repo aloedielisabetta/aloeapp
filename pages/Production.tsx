@@ -21,9 +21,15 @@ const Production: React.FC = () => {
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1));
   };
 
+  const parseDate = (dateStr: string) => {
+    if (!dateStr) return null;
+    const s = dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00';
+    return new Date(s);
+  };
+
   // 1. Filtriamo gli ordini per il mese e anno selezionati
   const selectedMonthOrders = orders.filter(order => {
-    const orderDate = order.date ? new Date(order.date) : null;
+    const orderDate = parseDate(order.date);
     if (!orderDate) return false;
     return orderDate.getMonth() === viewDate.getMonth() && orderDate.getFullYear() === viewDate.getFullYear();
   });

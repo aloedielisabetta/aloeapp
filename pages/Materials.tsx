@@ -57,8 +57,14 @@ const Materials: React.FC = () => {
     return quantity * ing.costPerUnit;
   };
 
+  const parseDate = (dateStr: string) => {
+    if (!dateStr) return null;
+    const s = dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00';
+    return new Date(s);
+  };
+
   const selectedMonthOrders = orders.filter(order => {
-    const orderDate = order.date ? new Date(order.date) : null;
+    const orderDate = parseDate(order.date);
     if (!orderDate) return false;
     return orderDate.getMonth() === viewDate.getMonth() && orderDate.getFullYear() === viewDate.getFullYear();
   });

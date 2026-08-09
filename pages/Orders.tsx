@@ -133,7 +133,7 @@ const Orders: React.FC = () => {
         await addOrder({
           patientId: orderData.patientId,
           items: cleanedItems.filter(item => item.quantity > 0),
-          date: new Date().toISOString(),
+          date: new Date(viewDate.getFullYear(), viewDate.getMonth(), 15, 12, 0, 0).toISOString(),
           isExternal: isAdmin ? isExternal : true,
           isShipping: orderData.isShipping,
           isDelivery: orderData.isDelivery,
@@ -209,8 +209,14 @@ const Orders: React.FC = () => {
     setOrderData({ ...orderData, items: newItems });
   };
 
+  const parseDate = (dateStr: string) => {
+    if (!dateStr) return null;
+    const s = dateStr.includes('T') ? dateStr : dateStr + 'T12:00:00';
+    return new Date(s);
+  };
+
   const filteredOrders = orders.filter(order => {
-    const orderDate = order.date ? new Date(order.date) : null;
+    const orderDate = parseDate(order.date);
     if (!orderDate) return false;
     const matchesMonth = orderDate.getMonth() === viewDate.getMonth() && orderDate.getFullYear() === viewDate.getFullYear();
     if (!matchesMonth) return false;
