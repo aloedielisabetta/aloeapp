@@ -108,7 +108,11 @@ const Production: React.FC = () => {
       
       const patientCityIdOrName = patient ? patient.city : 'Sconosciuta';
       const cityObj = cities.find(c => c.id === patientCityIdOrName);
-      const cityName = cityObj ? cityObj.name : patientCityIdOrName;
+      const rawCityName = cityObj ? cityObj.name : patientCityIdOrName;
+      // Normalize to Title Case for consistent grouping regardless of how city was entered
+      const cityName = rawCityName
+        ? rawCityName.trim().replace(/\b\w/g, c => c.toUpperCase())
+        : 'Sconosciuta';
 
       return {
         id: order.id,
@@ -132,6 +136,7 @@ const Production: React.FC = () => {
       };
     });
 
+  // Group by normalized city name (already Title Case, so grouping is consistent)
   const deliveryGroups = deliveryList.reduce((acc, order) => {
     const city = order.cityName || 'Altro';
     if (!acc[city]) acc[city] = [];
