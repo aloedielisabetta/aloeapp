@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const Production: React.FC = () => {
-  const { orders, products, patients, modifierGroups, salespersons } = useApp();
+  const { orders, products, patients, modifierGroups, salespersons, cities } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
   const [downloadType, setDownloadType] = useState<'production' | 'shipping' | 'delivery' | null>(null);
   const [viewDate, setViewDate] = useState(new Date());
@@ -106,10 +106,15 @@ const Production: React.FC = () => {
       const salesperson = salespersons.find(s => s.id === order.salespersonId);
       const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
       
+      const patientCityIdOrName = patient ? patient.city : 'Sconosciuta';
+      const cityObj = cities.find(c => c.id === patientCityIdOrName);
+      const cityName = cityObj ? cityObj.name : patientCityIdOrName;
+
       return {
         id: order.id,
         patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Sconosciuto',
-        address: patient ? `${patient.address}, ${patient.city}` : 'N/A',
+        address: patient ? `${patient.address}, ${cityName}` : 'N/A',
+        cityName,
         totalItems,
         salespersonName: order.isExternal ? (salesperson?.name || 'Esterno') : 'Interno',
         items: order.items.map(item => {
@@ -126,6 +131,13 @@ const Production: React.FC = () => {
         })
       };
     });
+
+  const deliveryGroups = deliveryList.reduce((acc, order) => {
+    const city = order.cityName || 'Altro';
+    if (!acc[city]) acc[city] = [];
+    acc[city].push(order);
+    return acc;
+  }, {} as Record<string, typeof deliveryList>);
 
   const handleDownload = async (type: 'production' | 'shipping' | 'delivery') => {
     const targetRef = type === 'production' ? productionRef : (type === 'shipping' ? shippingRef : deliveryRef);
@@ -317,54 +329,60 @@ const Production: React.FC = () => {
         </div>
         {/* Delivery PDF Template */}
         <div ref={deliveryRef} style={{ padding: '20px', fontFamily: 'Inter, sans-serif', color: '#000' }}>
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '5px' }}>Lista di Consegna Aloe</h1>
-            <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', textTransform: 'uppercase', letterSpacing: '2px' }}>
-              {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
-            </p>
-          </div>
+          {Object.entries(deliveryGroups).map(([city, orders], groupIdx) => (
+            <div key={city} style={{ pageBreakBefore: groupIdx === 0 ? 'auto' : 'always' }}>
+              <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                <h1 style={{ fontSize: '24px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '5px' }}>Lista di Consegna Aloe - {city}</h1>
+                <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                  {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+                </p>
+              </div>
 
-          {deliveryList.map((order, idx) => (
-            <div key={idx} style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
-               <div style={{ borderBottom: '3px solid #4f46e5', paddingBottom: '10px', marginBottom: '15px' }}>
-                  <div style={{ display: 'flex', justifycontent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <h2 style={{ fontSize: '18px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>{order.patientName}</h2>
-                      <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#444', marginTop: '3px' }}>{order.address}</p>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ fontSize: '14px', fontWeight: '900', margin: 0 }}>TOTALE ARTICOLI: {order.totalItems}</p>
-                      <p style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Agente: {order.salespersonName}</p>
-                    </div>
-                  </div>
-               </div>
-               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#f1f5f9' }}>
-                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Prodotto</th>
-                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '40px' }}>Qtà</th>
-                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 1</th>
-                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 2</th>
-                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 3</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {order.items.map((item: any, iIdx: number) => (
-                    <tr key={iIdx}>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.name}</td>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '10px', fontWeight: '900' }}>{item.quantity}</td>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[0] || ''}</td>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[1] || ''}</td>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[2] || ''}</td>
-                    </tr>
-                  ))}
-                </tbody>
-               </table>
+              {orders.map((order, idx) => (
+                <div key={idx} style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+                   <div style={{ borderBottom: '3px solid #4f46e5', paddingBottom: '10px', marginBottom: '15px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h2 style={{ fontSize: '18px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>{order.patientName}</h2>
+                          <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#444', marginTop: '3px' }}>{order.address}</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <p style={{ fontSize: '14px', fontWeight: '900', margin: 0 }}>TOTALE ARTICOLI: {order.totalItems}</p>
+                          <p style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Agente: {order.salespersonName}</p>
+                        </div>
+                      </div>
+                   </div>
+                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f1f5f9' }}>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Prodotto</th>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '40px' }}>Qtà</th>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 1</th>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 2</th>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 3</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {order.items.map((item: any, iIdx: number) => (
+                        <tr key={iIdx}>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.name}</td>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '10px', fontWeight: '900' }}>{item.quantity}</td>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[0] || ''}</td>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[1] || ''}</td>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[2] || ''}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                   </table>
+                </div>
+              ))}
+              {groupIdx === Object.entries(deliveryGroups).length - 1 && (
+                <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '10px', textAlign: 'right', fontSize: '9px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Generato da Aloe System • {new Date().toLocaleString('it-IT')}
+                </div>
+              )}
             </div>
           ))}
-          <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '10px', textAlign: 'right', fontSize: '9px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px' }}>
-            Generato da Aloe System • {new Date().toLocaleString('it-IT')}
-          </div>
         </div>
       </div>
 
