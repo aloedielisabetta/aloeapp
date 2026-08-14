@@ -36,58 +36,73 @@ const SetupPassword: React.FC = () => {
         setLoading(true);
 
         try {
-            // 1. Find the user in the database
-            const { data: userData, error: fetchError } = await supabase
-                .from('workspace_users')
-                .select('*')
-                .eq('username', username)
-                .eq('magic_code', magicCode.toUpperCase())
-                .maybeSingle();
+            const formattedUsername = username.trim().toLowerCase().replace(/\s+/g, '');
+            const authEmail = `${formattedUsername}@aloe.system`;
+            const cleanCode = magicCode.trim().toUpperCase();
 
-            if (fetchError || !userData) {
-                throw new Error('ID Collaboratore o Magic Code non validi');
-            }
-
-            if (userData.invite_status === 'active') {
-                throw new Error('Questo account è già stato attivato');
-            }
-
-            // 2. Create the Auth user
-            // We use a temporary client to avoid session conflicts
-            const tempClient = createClient(
-                import.meta.env.VITE_SUPABASE_URL,
-                import.meta.env.VITE_SUPABASE_ANON_KEY,
-                {
-                    auth: {
-                        persistSession: false,
-                        autoRefreshToken: false,
-                        detectSessionInUrl: false
-                    }
-                }
-            );
-
-            // Use a system email for the auth
-            const authEmail = `${username.toLowerCase().replace(/\s+/g, '')}@aloe.system`;
-
-            const { data: authData, error: authError } = await tempClient.auth.signUp({
+            // 1. Authenticate with Supabase Auth using magic code as password
+            let authUser: any = null;
+            const { data: signData, error: signErr } = await supabase.auth.signInWithPassword({
                 email: authEmail,
-                password: password,
+                password: cleanCode,
             });
 
-            if (authError) throw authError;
-            if (!authData.user) throw new Error("Errore creazione account di sistema");
+            if (!signErr && signData?.user) {
+                authUser = signData.user;
+            } else {
+                // Fallback for legacy invitations created before pre-signup
+                const tempClient = createClient(
+                    import.meta.env.VITE_SUPABASE_URL,
+                    import.meta.env.VITE_SUPABASE_ANON_KEY,
+                    {
+                        auth: {
+                            persistSession: false,
+                            autoRefreshToken: false,
+                            detectSessionInUrl: false
+                        }
+                    }
+                );
 
-            // 3. Update the database record
-            const { error: updateError } = await supabase
+                const { data: signUpData, error: signUpErr } = await tempClient.auth.signUp({
+                    email: authEmail,
+                    password: cleanCode,
+                });
+
+                if (signUpErr) {
+                    throw new Error('ID Collaboratore o Magic Code non validi');
+                }
+
+                // Now sign in with magic code
+                const { data: retryAuth, error: retryErr } = await supabase.auth.signInWithPassword({
+                    email: authEmail,
+                    password: cleanCode,
+                });
+
+                if (retryErr || !retryAuth?.user) {
+                    throw new Error('ID Collaboratore o Magic Code non validi');
+                }
+
+                authUser = retryAuth.user;
+            }
+
+            // 2. User is now authenticated! Update password in Supabase Auth
+            const { error: updatePassErr } = await supabase.auth.updateUser({
+                password: password
+            });
+
+            if (updatePassErr) throw updatePassErr;
+
+            // 3. Update database record in workspace_users
+            const { error: updateDbErr } = await supabase
                 .from('workspace_users')
                 .update({
-                    user_id: authData.user.id,
+                    user_id: authUser.id,
                     password: password,
                     invite_status: 'active'
                 })
-                .eq('id', userData.id);
+                .or(`user_id.eq.${authUser.id},username.ilike.${formattedUsername}`);
 
-            if (updateError) throw updateError;
+            if (updateDbErr) console.warn("DB record update warning:", updateDbErr);
 
             setSuccess(true);
             setTimeout(() => navigate('/login'), 3000);

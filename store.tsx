@@ -6,6 +6,7 @@ import {
   GeneralCost, Workspace, WorkspaceUser, UserRole, RawMaterial
 } from './types';
 import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
 
 interface AppContextType extends AppData {
   currentWorkspace: Workspace | null;
@@ -414,11 +415,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Generate a simple 6-character magic code
     const magicCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const formattedUsername = u.username.trim().toLowerCase().replace(/\s+/g, '');
+    const authEmail = `${formattedUsername}@aloe.system`;
+
+    // Pre-create Auth user with magicCode as initial temporary password using isolated temp client
+    const tempClient = createClient(
+      import.meta.env.VITE_SUPABASE_URL,
+      import.meta.env.VITE_SUPABASE_ANON_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      }
+    );
+
+    let userId = '';
+    const { data: authData } = await tempClient.auth.signUp({
+      email: authEmail,
+      password: magicCode,
+    });
+
+    if (authData?.user) {
+      userId = authData.user.id;
+    }
 
     const newU = {
       ...u,
       id: crypto.randomUUID(),
       workspaceId: currentWorkspace.id,
+      userId,
       magicCode,
       inviteStatus: 'pending'
     };
