@@ -5,7 +5,7 @@ import {
     User, Mail, ShieldCheck, Check, Loader2, Sparkles,
     Cloud, Database, FolderArchive, Zap, X, AlertTriangle,
     Settings2, Download, Archive, RefreshCcw, FileCode, Copy,
-    Smartphone, Clock
+    Smartphone, Clock, Key, Eye, EyeOff, Lock
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import JSZip from 'jszip';
@@ -24,6 +24,8 @@ const Profile: React.FC = () => {
     const [localName, setLocalName] = useState('');
     const [localPhone, setLocalPhone] = useState('');
     const [localAvailability, setLocalAvailability] = useState('');
+    const [localPassword, setLocalPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [showAvailability, setShowAvailability] = useState(false);
     const [isSavingLocal, setIsSavingLocal] = useState(false);
     const [localSuccess, setLocalSuccess] = useState(false);
@@ -53,6 +55,7 @@ const Profile: React.FC = () => {
             setLocalName(userRecord.name || '');
             setLocalPhone(userRecord.phone || '');
             setLocalAvailability(userRecord.availability || '');
+            setLocalPassword(userRecord.password || '');
         }
     }, [userRecord]);
 
@@ -69,22 +72,37 @@ const Profile: React.FC = () => {
         e.preventDefault();
         if (!userRecord) return;
 
+        if (localPassword && localPassword.length < 6) {
+            alert('La password deve essere di almeno 6 caratteri.');
+            return;
+        }
+
         setIsSavingLocal(true);
         setLocalSuccess(false);
 
         try {
+            // 1. Update password in Supabase Auth if provided
+            if (localPassword) {
+                const { error: authErr } = await supabase.auth.updateUser({
+                    password: localPassword
+                });
+                if (authErr) console.warn('Auth password update warning:', authErr);
+            }
+
+            // 2. Update workspace_users database profile
             await updateWorkspaceUser({
                 ...userRecord,
                 email: localEmail.trim(),
                 name: localName.trim(),
                 phone: localPhone.trim(),
-                availability: localAvailability.trim()
+                availability: localAvailability.trim(),
+                password: localPassword
             });
             setLocalSuccess(true);
             setTimeout(() => setLocalSuccess(false), 3000);
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert('Errore durante il salvataggio');
+            alert('Errore durante il salvataggio: ' + (err.message || err));
         } finally {
             setIsSavingLocal(false);
         }
@@ -402,23 +420,47 @@ const Profile: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Gmail per Promemoria Personali</label>
-                            <div className="relative">
-                                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
-                                <input
-                                    className="w-full pl-14 pr-5 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono"
-                                    placeholder="la_tua_email@gmail.com"
-                                    type="email"
-                                    value={localEmail}
-                                    onChange={e => setLocalEmail(e.target.value)}
-                                    required
-                                />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Gmail per Promemoria Personali</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                                    <input
+                                        className="w-full pl-14 pr-5 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono"
+                                        placeholder="la_tua_email@gmail.com"
+                                        type="email"
+                                        value={localEmail}
+                                        onChange={e => setLocalEmail(e.target.value)}
+                                        required
+                                    />
+                                </div>
                             </div>
-                            <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase ml-2">
-                                Questa email verrà usata per generare i link di Google Calendar quando imposti una fine cura per un paziente.
-                            </p>
+
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password Accesso (Visibile e Modificabile)</label>
+                                <div className="relative">
+                                    <Key className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+                                    <input
+                                        className="w-full pl-14 pr-14 py-5 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all font-mono"
+                                        placeholder="La tua password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={localPassword}
+                                        onChange={e => setLocalPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+
+                        <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase ml-2">
+                            Modificando la password o i dati del profilo, le modifiche verranno salvate in Supabase e saranno visibili nella pagina dell'amministratore.
+                        </p>
 
                         <button
                             type="submit"

@@ -128,6 +128,8 @@ export interface Order {
   items: OrderItem[];
   date: string;
   isExternal: boolean;
+  isHome?: boolean;
+  isLab?: boolean;
   isShipping?: boolean;
   isDelivery?: boolean;
   isFree?: boolean;

@@ -5,7 +5,7 @@ import { Order, OrderItem } from '../types';
 import {
   Plus, ShoppingBag, ExternalLink, Calendar, Search,
   Trash2, Layers, ChevronLeft, ChevronRight, Info,
-  Truck, Gift, FilterX, RefreshCw, Database, AlertCircle, User, Loader2, XCircle, Check, X, ChevronDown, Sparkles, Briefcase, Edit2, MapPin
+  Truck, Gift, FilterX, RefreshCw, Database, AlertCircle, User, Loader2, XCircle, Check, X, ChevronDown, Sparkles, Briefcase, Edit2, MapPin, Home, FlaskConical
 } from 'lucide-react';
 
 const Orders: React.FC = () => {
@@ -35,6 +35,8 @@ const Orders: React.FC = () => {
     items: OrderItem[];
     commission: number;
     salespersonId: string;
+    isHome: boolean;
+    isLab: boolean;
     isShipping: boolean;
     isDelivery: boolean;
     isFree: boolean;
@@ -44,6 +46,8 @@ const Orders: React.FC = () => {
     items: [],
     commission: 0,
     salespersonId: isAdmin ? '' : (currentUser?.salespersonId || ''),
+    isHome: false,
+    isLab: false,
     isShipping: false,
     isDelivery: false,
     isFree: false,
@@ -82,6 +86,8 @@ const Orders: React.FC = () => {
       items: order.items,
       commission: order.commission,
       salespersonId: order.salespersonId || '',
+      isHome: !!order.isHome,
+      isLab: !!order.isLab,
       isShipping: !!order.isShipping,
       isDelivery: !!order.isDelivery,
       isFree: !!order.isFree,
@@ -122,6 +128,8 @@ const Orders: React.FC = () => {
           patientId: orderData.patientId,
           items: cleanedItems.filter(item => item.quantity > 0),
           isExternal: isAdmin ? isExternal : true,
+          isHome: orderData.isHome,
+          isLab: orderData.isLab,
           isShipping: orderData.isShipping,
           isDelivery: orderData.isDelivery,
           isFree: orderData.hasDiscount ? false : orderData.isFree,
@@ -135,6 +143,8 @@ const Orders: React.FC = () => {
           items: cleanedItems.filter(item => item.quantity > 0),
           date: new Date(viewDate.getFullYear(), viewDate.getMonth(), 15, 12, 0, 0).toISOString(),
           isExternal: isAdmin ? isExternal : true,
+          isHome: orderData.isHome,
+          isLab: orderData.isLab,
           isShipping: orderData.isShipping,
           isDelivery: orderData.isDelivery,
           isFree: orderData.hasDiscount ? false : orderData.isFree,
@@ -158,6 +168,8 @@ const Orders: React.FC = () => {
       items: [],
       commission: 0,
       salespersonId: isAdmin ? '' : (currentUser?.salespersonId || ''),
+      isHome: false,
+      isLab: false,
       isShipping: false,
       isDelivery: false,
       isFree: false,
@@ -377,13 +389,23 @@ const Orders: React.FC = () => {
                                 <Sparkles size={8} /> Mio ordine
                               </span>
                             )}
+                            {order.isHome && (
+                              <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-green-100 flex items-center gap-1">
+                                <Home size={8} /> Casa
+                              </span>
+                            )}
+                            {order.isLab && (
+                              <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-orange-100 flex items-center gap-1">
+                                <FlaskConical size={8} /> Laboratorio
+                              </span>
+                            )}
                             {order.isShipping && (
                               <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-blue-100 flex items-center gap-1">
                                 <Truck size={8} /> Spedizione
                               </span>
                             )}
                             {order.isDelivery && (
-                              <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-indigo-100 flex items-center gap-1">
+                              <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border border-purple-100 flex items-center gap-1">
                                 <MapPin size={8} /> Consegna
                               </span>
                             )}
@@ -632,37 +654,66 @@ const Orders: React.FC = () => {
                 </div>
               )}
 
-              {/* Opzioni */}
-              <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => setOrderData({ ...orderData, isShipping: !orderData.isShipping, isDelivery: false })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.isShipping ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-100 text-slate-400'}`}>
-                  <div className="flex items-center gap-3">
-                    <Truck size={20} className={orderData.isShipping ? "text-blue-600" : "text-slate-200"} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Spedizione</span>
+              {/* Opzioni — Solo per Admin */}
+              {isAdmin && (
+                <>
+                  {/* Gruppo 1: Tipo consegna */}
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo Consegna</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button type="button" onClick={() => setOrderData({ ...orderData, isHome: !orderData.isHome, isLab: false, isShipping: false, isDelivery: false })} className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${orderData.isHome ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <div className="flex items-center gap-3">
+                          <Home size={18} className={orderData.isHome ? "text-green-600" : "text-slate-200"} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Casa</span>
+                        </div>
+                        {orderData.isHome && <Check size={14} />}
+                      </button>
+                      <button type="button" onClick={() => setOrderData({ ...orderData, isLab: !orderData.isLab, isHome: false, isShipping: false, isDelivery: false })} className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${orderData.isLab ? 'bg-orange-50 border-orange-200 text-orange-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <div className="flex items-center gap-3">
+                          <FlaskConical size={18} className={orderData.isLab ? "text-orange-600" : "text-slate-200"} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Laboratorio</span>
+                        </div>
+                        {orderData.isLab && <Check size={14} />}
+                      </button>
+                      <button type="button" onClick={() => setOrderData({ ...orderData, isShipping: !orderData.isShipping, isHome: false, isLab: false, isDelivery: false })} className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${orderData.isShipping ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <div className="flex items-center gap-3">
+                          <Truck size={18} className={orderData.isShipping ? "text-blue-600" : "text-slate-200"} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Spedizione</span>
+                        </div>
+                        {orderData.isShipping && <Check size={14} />}
+                      </button>
+                      <button type="button" onClick={() => setOrderData({ ...orderData, isDelivery: !orderData.isDelivery, isHome: false, isLab: false, isShipping: false })} className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${orderData.isDelivery ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <div className="flex items-center gap-3">
+                          <MapPin size={18} className={orderData.isDelivery ? "text-purple-600" : "text-slate-200"} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Consegna</span>
+                        </div>
+                        {orderData.isDelivery && <Check size={14} />}
+                      </button>
+                    </div>
                   </div>
-                  {orderData.isShipping && <Check size={16} />}
-                </button>
-                <button onClick={() => setOrderData({ ...orderData, isDelivery: !orderData.isDelivery, isShipping: false })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.isDelivery ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-slate-100 text-slate-400'}`}>
-                  <div className="flex items-center gap-3">
-                    <MapPin size={20} className={orderData.isDelivery ? "text-indigo-600" : "text-slate-200"} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Consegna</span>
+
+                  {/* Gruppo 2: Sconti e Omaggi */}
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Promozioni</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button type="button" onClick={() => setOrderData({ ...orderData, isFree: !orderData.isFree })} className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${orderData.isFree ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <div className="flex items-center gap-3">
+                          <Gift size={18} className={orderData.isFree ? "text-purple-600" : "text-slate-200"} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Omaggio</span>
+                        </div>
+                        {orderData.isFree && <Check size={14} />}
+                      </button>
+                      <button type="button" onClick={() => setOrderData({ ...orderData, hasDiscount: !orderData.hasDiscount })} className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${orderData.hasDiscount ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-slate-100 text-slate-400'}`}>
+                        <div className="flex items-center gap-3">
+                          <Sparkles size={18} className={orderData.hasDiscount ? "text-amber-500" : "text-slate-200"} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">-10%</span>
+                        </div>
+                        {orderData.hasDiscount && <Check size={14} />}
+                      </button>
+                    </div>
                   </div>
-                  {orderData.isDelivery && <Check size={16} />}
-                </button>
-                <button onClick={() => setOrderData({ ...orderData, isFree: !orderData.isFree })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.isFree ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-slate-100 text-slate-400'}`}>
-                  <div className="flex items-center gap-3">
-                    <Gift size={20} className={orderData.isFree ? "text-purple-600" : "text-slate-200"} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Omaggio</span>
-                  </div>
-                  {orderData.isFree && <Check size={16} />}
-                </button>
-                <button onClick={() => setOrderData({ ...orderData, hasDiscount: !orderData.hasDiscount })} className={`p-5 rounded-3xl border flex items-center justify-between transition-all group ${orderData.hasDiscount ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-white border-slate-100 text-slate-400'}`}>
-                  <div className="flex items-center gap-3">
-                    <Sparkles size={20} className={orderData.hasDiscount ? "text-amber-500" : "text-slate-200"} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">-10%</span>
-                  </div>
-                  {orderData.hasDiscount && <Check size={16} />}
-                </button>
-              </div>
+                </>
+              )}
             </div>
 
             <div className="p-8 border-t border-slate-100 shrink-0 flex gap-4 bg-slate-50/50">

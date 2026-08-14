@@ -5,12 +5,120 @@ import {
   Users, Package, ShoppingBag, TrendingUp,
   Settings, ClipboardList, Database, Thermometer,
   ChevronLeft, ChevronRight, FileText, UserPlus, LogOut, ShieldCheck, CloudLightning, Check, Share2, Receipt, User,
-  Settings2, Tag
+  Settings2, Tag, Lock, Sparkles, Loader2, Key
 } from 'lucide-react';
 import { useApp } from '../store';
+import { supabase } from '../supabase';
+
+const FirstTimePasswordModal: React.FC<{ userRecord: any }> = ({ userRecord }) => {
+  const { updateWorkspaceUser } = useApp();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (newPassword !== confirmPassword) {
+      setError('Le password non coincidono. Riscrivi la password per verificare.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('La password deve essere di almeno 6 caratteri.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Update Auth password
+      const { error: authErr } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      if (authErr) console.warn("Auth password update warning:", authErr);
+
+      // 2. Update workspace_users database profile
+      await updateWorkspaceUser({
+        ...userRecord,
+        password: newPassword,
+        inviteStatus: 'active'
+      });
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Si è verificato un errore');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-[100] p-6">
+      <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-md overflow-hidden border border-white/20 p-8 space-y-6">
+        <div className="text-center space-y-2">
+          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-100">
+            <Sparkles size={32} />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Primo Accesso</h2>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest leading-relaxed">
+            Sei entrato con il Magic Code. Scegli la tua password personale prima di proseguire.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Scegli Password</label>
+            <div className="relative">
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+              <input
+                required
+                type="password"
+                className="w-full pl-14 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Conferma Password (Scrivi 2 volte)</label>
+            <div className="relative">
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+              <input
+                required
+                type="password"
+                className="w-full pl-14 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 p-3 rounded-xl border border-red-100 text-center">
+              <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">{error}</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || !newPassword || !confirmPassword}
+            className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all shadow-xl flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {loading ? <Loader2 size={18} className="animate-spin" /> : 'Crea Password e Attiva Account'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser, setCurrentUser, currentWorkspace, isSyncing } = useApp();
+  const { currentUser, setCurrentUser, currentWorkspace, isSyncing, workspaceUsers } = useApp();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
 
@@ -20,6 +128,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const isAdmin = currentUser?.role === 'admin';
+  const userRecord = workspaceUsers.find(u => u.userId === currentUser?.id || u.id === currentUser?.id);
 
   const navItems = [
     { to: '/', icon: <Users size={20} />, label: 'Pazienti' },
@@ -51,6 +160,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
+      {!isAdmin && userRecord?.inviteStatus === 'pending' && (
+        <FirstTimePasswordModal userRecord={userRecord} />
+      )}
       <aside
         className={`${isCollapsed ? 'w-20' : 'w-64'
           } bg-white border-r border-slate-200 flex flex-col shrink-0 transition-all duration-300 ease-in-out relative`}

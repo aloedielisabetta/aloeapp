@@ -231,6 +231,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Sanitize orders: ensure items is always an array, and each item has selectedModifiers as string[]
       const sanitizedOrders = o.map((order: any) => ({
         ...order,
+        isHome: !!order.isHome,
+        isLab: !!order.isLab,
         isDelivery: !!order.isDelivery,
         isShipping: !!order.isShipping,
         items: (order.items || []).map((item: any) => ({

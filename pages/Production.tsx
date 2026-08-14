@@ -4,18 +4,21 @@ import { useApp } from '../store';
 import { 
   ClipboardList, User, Download, Layers, Truck, 
   MapPin, Droplets, Loader2, FileCheck, ChevronLeft, 
-  ChevronRight, Calendar, Search 
+  ChevronRight, Calendar, Search, Home, FlaskConical, Users
 } from 'lucide-react';
 
 const Production: React.FC = () => {
   const { orders, products, patients, modifierGroups, salespersons, cities } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [downloadType, setDownloadType] = useState<'production' | 'shipping' | 'delivery' | null>(null);
+  const [downloadType, setDownloadType] = useState<'production' | 'shipping' | 'delivery' | 'home' | 'lab' | 'collaborators' | null>(null);
   const [viewDate, setViewDate] = useState(new Date());
   
   const productionRef = useRef<HTMLDivElement>(null);
   const shippingRef = useRef<HTMLDivElement>(null);
   const deliveryRef = useRef<HTMLDivElement>(null);
+  const homeRef = useRef<HTMLDivElement>(null);
+  const labRef = useRef<HTMLDivElement>(null);
+  const collaboratorsRef = useRef<HTMLDivElement>(null);
 
   const changeMonth = (offset: number) => {
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1));
@@ -61,7 +64,11 @@ const Production: React.FC = () => {
           patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Sconosciuto',
           selectedModifiers: item.selectedModifiers,
           quantity: item.quantity,
-          salespersonName: order.isExternal ? (salesperson?.name || 'Esterno') : 'Interno'
+          salespersonName: order.isExternal ? (salesperson?.name || 'Esterno') : 'Interno',
+          isHome: !!order.isHome,
+          isLab: !!order.isLab,
+          isShipping: !!order.isShipping,
+          isDelivery: !!order.isDelivery
         });
       });
     });
@@ -144,8 +151,108 @@ const Production: React.FC = () => {
     return acc;
   }, {} as Record<string, typeof deliveryList>);
 
-  const handleDownload = async (type: 'production' | 'shipping' | 'delivery') => {
-    const targetRef = type === 'production' ? productionRef : (type === 'shipping' ? shippingRef : deliveryRef);
+  const homeList = selectedMonthOrders
+    .filter(o => o.isHome)
+    .map(order => {
+      const patient = patients.find(p => p.id === order.patientId);
+      const salesperson = salespersons.find(s => s.id === order.salespersonId);
+      const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+      
+      return {
+        id: order.id,
+        patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Sconosciuto',
+        address: patient ? `${patient.address}, ${patient.city}` : 'N/A',
+        totalItems,
+        salespersonName: order.isExternal ? (salesperson?.name || 'Esterno') : 'Interno',
+        items: order.items.map(item => {
+          const product = products.find(p => p.id === item.productId);
+          const variants = Object.values(item.selectedModifiers)
+            .flat()
+            .filter(v => v && v !== '');
+          
+          return {
+            name: product?.name || 'Sconosciuto',
+            quantity: item.quantity,
+            variants: variants
+          };
+        })
+      };
+    });
+
+  const labList = selectedMonthOrders
+    .filter(o => o.isLab)
+    .map(order => {
+      const patient = patients.find(p => p.id === order.patientId);
+      const salesperson = salespersons.find(s => s.id === order.salespersonId);
+      const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+      
+      return {
+        id: order.id,
+        patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Sconosciuto',
+        address: patient ? `${patient.address}, ${patient.city}` : 'N/A',
+        totalItems,
+        salespersonName: order.isExternal ? (salesperson?.name || 'Esterno') : 'Interno',
+        items: order.items.map(item => {
+          const product = products.find(p => p.id === item.productId);
+          const variants = Object.values(item.selectedModifiers)
+            .flat()
+            .filter(v => v && v !== '');
+          
+          return {
+            name: product?.name || 'Sconosciuto',
+            quantity: item.quantity,
+            variants: variants
+          };
+        })
+      };
+    });
+
+  const collaboratorList = selectedMonthOrders
+    .filter(o => o.isExternal || !!o.salespersonId)
+    .map(order => {
+      const patient = patients.find(p => p.id === order.patientId);
+      const salesperson = salespersons.find(s => s.id === order.salespersonId);
+      const collaboratorName = salesperson ? salesperson.name : 'Collaboratore Sconosciuto';
+      const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
+      
+      return {
+        id: order.id,
+        collaboratorName,
+        patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Sconosciuto',
+        address: patient ? `${patient.address}, ${patient.city}` : 'N/A',
+        totalItems,
+        salespersonName: collaboratorName,
+        items: order.items.map(item => {
+          const product = products.find(p => p.id === item.productId);
+          const variants = Object.values(item.selectedModifiers)
+            .flat()
+            .filter(v => v && v !== '');
+          
+          return {
+            name: product?.name || 'Sconosciuto',
+            quantity: item.quantity,
+            variants: variants
+          };
+        })
+      };
+    });
+
+  const collaboratorGroups = collaboratorList.reduce((acc, order) => {
+    const name = order.collaboratorName || 'Altro';
+    if (!acc[name]) acc[name] = [];
+    acc[name].push(order);
+    return acc;
+  }, {} as Record<string, typeof collaboratorList>);
+
+  const handleDownload = async (type: 'production' | 'shipping' | 'delivery' | 'home' | 'lab' | 'collaborators') => {
+    const targetRef = 
+      type === 'production' ? productionRef :
+      type === 'shipping' ? shippingRef :
+      type === 'delivery' ? deliveryRef :
+      type === 'home' ? homeRef :
+      type === 'lab' ? labRef :
+      collaboratorsRef;
+
     if (!targetRef.current) return;
 
     setIsGenerating(true);
@@ -182,30 +289,54 @@ const Production: React.FC = () => {
           <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Programma Produzione</h2>
           <p className="text-slate-500 font-medium">Visualizza e scarica i dati per la produzione mensile.</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+        <div className="flex flex-wrap gap-2 w-full xl:w-auto">
           <button 
             disabled={isGenerating}
             onClick={() => handleDownload('production')}
-            className="flex-1 bg-slate-900 text-white px-5 py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+            className="bg-slate-900 text-white px-4 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-md font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
           >
-            {isGenerating && downloadType === 'production' ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-            {isGenerating && downloadType === 'production' ? 'Generazione...' : 'Scarica Produzione'}
+            {isGenerating && downloadType === 'production' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+            {isGenerating && downloadType === 'production' ? 'Generazione...' : 'Produzione'}
+          </button>
+          <button 
+            disabled={isGenerating}
+            onClick={() => handleDownload('home')}
+            className="bg-green-600 text-white px-4 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-green-700 transition-all shadow-md font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+          >
+            {isGenerating && downloadType === 'home' ? <Loader2 size={16} className="animate-spin" /> : <Home size={16} />}
+            {isGenerating && downloadType === 'home' ? 'Generazione...' : 'Casa'}
+          </button>
+          <button 
+            disabled={isGenerating}
+            onClick={() => handleDownload('lab')}
+            className="bg-orange-600 text-white px-4 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-orange-700 transition-all shadow-md font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+          >
+            {isGenerating && downloadType === 'lab' ? <Loader2 size={16} className="animate-spin" /> : <FlaskConical size={16} />}
+            {isGenerating && downloadType === 'lab' ? 'Generazione...' : 'Laboratorio'}
           </button>
           <button 
             disabled={isGenerating}
             onClick={() => handleDownload('shipping')}
-            className="flex-1 bg-blue-600 text-white px-5 py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+            className="bg-blue-600 text-white px-4 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-md font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
           >
-            {isGenerating && downloadType === 'shipping' ? <Loader2 size={18} className="animate-spin" /> : <Truck size={18} />}
-            {isGenerating && downloadType === 'shipping' ? 'Generazione...' : 'Scarica Spedizioni'}
+            {isGenerating && downloadType === 'shipping' ? <Loader2 size={16} className="animate-spin" /> : <Truck size={16} />}
+            {isGenerating && downloadType === 'shipping' ? 'Generazione...' : 'Spedizioni'}
           </button>
           <button 
             disabled={isGenerating}
             onClick={() => handleDownload('delivery')}
-            className="flex-1 bg-indigo-600 text-white px-5 py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+            className="bg-purple-600 text-white px-4 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-purple-700 transition-all shadow-md font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
           >
-            {isGenerating && downloadType === 'delivery' ? <Loader2 size={18} className="animate-spin" /> : <MapPin size={18} />}
-            {isGenerating && downloadType === 'delivery' ? 'Generazione...' : 'Scarica Consegne'}
+            {isGenerating && downloadType === 'delivery' ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
+            {isGenerating && downloadType === 'delivery' ? 'Generazione...' : 'Consegne'}
+          </button>
+          <button 
+            disabled={isGenerating}
+            onClick={() => handleDownload('collaborators')}
+            className="bg-amber-600 text-white px-4 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-amber-700 transition-all shadow-md font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+          >
+            {isGenerating && downloadType === 'collaborators' ? <Loader2 size={16} className="animate-spin" /> : <Users size={16} />}
+            {isGenerating && downloadType === 'collaborators' ? 'Generazione...' : 'Ordini Collaboratori'}
           </button>
         </div>
       </div>
@@ -252,6 +383,7 @@ const Production: React.FC = () => {
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 2</th>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 3</th>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '100px' }}>Origine Ordine</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '40px' }}>Tipo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -259,6 +391,9 @@ const Production: React.FC = () => {
                     const variants = Object.values(item.selectedModifiers)
                       .flat()
                       .filter(v => v && v !== '');
+
+                    const tipoLabel = item.isHome ? 'C' : item.isLab ? 'L' : item.isShipping ? 'S' : item.isDelivery ? 'CNSG' : '';
+                    const tipoColor = item.isHome ? '#16a34a' : item.isLab ? '#ea580c' : item.isShipping ? '#2563eb' : item.isDelivery ? '#7c3aed' : '#94a3b8';
 
                     return (
                       <tr key={idx}>
@@ -269,11 +404,120 @@ const Production: React.FC = () => {
                         <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', color: '#444', fontWeight: 'bold' }}>{variants[1] || ''}</td>
                         <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', color: '#444', fontWeight: 'bold' }}>{variants[2] || ''}</td>
                         <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right', fontSize: '10px', fontWeight: 'bold', color: '#64748b' }}>{item.salespersonName}</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center' }}>
+                          {tipoLabel && (
+                            <span style={{ color: tipoColor, fontWeight: '900', fontSize: '13px', letterSpacing: '0.5px' }}>{tipoLabel}</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+            </div>
+          ))}
+          <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '10px', textAlign: 'right', fontSize: '9px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Generato da Aloe System • {new Date().toLocaleString('it-IT')}
+          </div>
+        </div>
+
+        {/* Home PDF Template */}
+        <div ref={homeRef} style={{ padding: '20px', fontFamily: 'Inter, sans-serif', color: '#000' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '5px' }}>Lista Ordini Casa Aloe</h1>
+            <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', textTransform: 'uppercase', letterSpacing: '2px' }}>
+              {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+
+          {homeList.map((order, idx) => (
+            <div key={idx} style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+               <div style={{ borderBottom: '3px solid #16a34a', paddingBottom: '10px', marginBottom: '15px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <h2 style={{ fontSize: '18px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>{order.patientName}</h2>
+                      <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#444', marginTop: '3px' }}>{order.address}</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '14px', fontWeight: '900', margin: 0 }}>TOTALE ARTICOLI: {order.totalItems}</p>
+                      <p style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Agente: {order.salespersonName}</p>
+                    </div>
+                  </div>
+               </div>
+               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f1f5f9' }}>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Prodotto</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '40px' }}>Qtà</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 1</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 2</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 3</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.items.map((item: any, iIdx: number) => (
+                    <tr key={iIdx}>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.name}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '10px', fontWeight: '900' }}>{item.quantity}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[0] || ''}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[1] || ''}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[2] || ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+               </table>
+            </div>
+          ))}
+          <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '10px', textAlign: 'right', fontSize: '9px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Generato da Aloe System • {new Date().toLocaleString('it-IT')}
+          </div>
+        </div>
+
+        {/* Lab PDF Template */}
+        <div ref={labRef} style={{ padding: '20px', fontFamily: 'Inter, sans-serif', color: '#000' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '5px' }}>Lista Ordini Laboratorio Aloe</h1>
+            <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', textTransform: 'uppercase', letterSpacing: '2px' }}>
+              {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+
+          {labList.map((order, idx) => (
+            <div key={idx} style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+               <div style={{ borderBottom: '3px solid #ea580c', paddingBottom: '10px', marginBottom: '15px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <h2 style={{ fontSize: '18px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>{order.patientName}</h2>
+                      <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#444', marginTop: '3px' }}>{order.address}</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '14px', fontWeight: '900', margin: 0 }}>TOTALE ARTICOLI: {order.totalItems}</p>
+                      <p style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Agente: {order.salespersonName}</p>
+                    </div>
+                  </div>
+               </div>
+               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f1f5f9' }}>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Prodotto</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '40px' }}>Qtà</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 1</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 2</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 3</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {order.items.map((item: any, iIdx: number) => (
+                    <tr key={iIdx}>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.name}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '10px', fontWeight: '900' }}>{item.quantity}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[0] || ''}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[1] || ''}</td>
+                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[2] || ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+               </table>
             </div>
           ))}
           <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '10px', textAlign: 'right', fontSize: '9px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -332,6 +576,7 @@ const Production: React.FC = () => {
             Generato da Aloe System • {new Date().toLocaleString('it-IT')}
           </div>
         </div>
+
         {/* Delivery PDF Template */}
         <div ref={deliveryRef} style={{ padding: '20px', fontFamily: 'Inter, sans-serif', color: '#000' }}>
           {Object.entries(deliveryGroups).map(([city, orders], groupIdx) => (
@@ -389,6 +634,64 @@ const Production: React.FC = () => {
             </div>
           ))}
         </div>
+
+        {/* Collaborators PDF Template */}
+        <div ref={collaboratorsRef} style={{ padding: '20px', fontFamily: 'Inter, sans-serif', color: '#000' }}>
+          {Object.entries(collaboratorGroups).map(([collaboratorName, orders], groupIdx) => (
+            <div key={collaboratorName} style={{ pageBreakBefore: groupIdx === 0 ? 'auto' : 'always' }}>
+              <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                <h1 style={{ fontSize: '24px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '5px' }}>Lista Ordini Collaboratore - {collaboratorName}</h1>
+                <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                  {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+
+              {orders.map((order, idx) => (
+                <div key={idx} style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+                   <div style={{ borderBottom: '3px solid #d97706', paddingBottom: '10px', marginBottom: '15px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h2 style={{ fontSize: '18px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>{order.patientName}</h2>
+                          <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#444', marginTop: '3px' }}>{order.address}</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <p style={{ fontSize: '14px', fontWeight: '900', margin: 0 }}>TOTALE ARTICOLI: {order.totalItems}</p>
+                          <p style={{ fontSize: '9px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' }}>Agente: {order.salespersonName}</p>
+                        </div>
+                      </div>
+                   </div>
+                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f1f5f9' }}>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Prodotto</th>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '40px' }}>Qtà</th>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 1</th>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 2</th>
+                        <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 3</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {order.items.map((item: any, iIdx: number) => (
+                        <tr key={iIdx}>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.name}</td>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '10px', fontWeight: '900' }}>{item.quantity}</td>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[0] || ''}</td>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[1] || ''}</td>
+                          <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '9px', color: '#444', fontWeight: 'bold' }}>{item.variants[2] || ''}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                   </table>
+                </div>
+              ))}
+              {groupIdx === Object.entries(collaboratorGroups).length - 1 && (
+                <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '10px', textAlign: 'right', fontSize: '9px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Generato da Aloe System • {new Date().toLocaleString('it-IT')}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -437,7 +740,13 @@ const Production: React.FC = () => {
                       </div>
 
                       <div className="flex justify-between items-center mt-2 pt-3 border-t border-slate-100">
-                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest">Qtà: {item.quantity}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-widest">Qtà: {item.quantity}</span>
+                          {item.isHome && <span className="text-[9px] font-black text-green-600 bg-green-50 border border-green-100 px-2 py-0.5 rounded-lg">C</span>}
+                          {item.isLab && <span className="text-[9px] font-black text-orange-600 bg-orange-50 border border-orange-100 px-2 py-0.5 rounded-lg">L</span>}
+                          {item.isShipping && <span className="text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-lg">S</span>}
+                          {item.isDelivery && <span className="text-[9px] font-black text-purple-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-lg">CNSG</span>}
+                        </div>
                         <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{item.salespersonName}</span>
                       </div>
                     </div>
