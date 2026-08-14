@@ -72,7 +72,19 @@ const toSnake = (obj: any): any => {
   if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
     return Object.keys(obj).reduce((acc, key) => {
       const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-      acc[snakeKey] = toSnake(obj[key]);
+      let val = obj[key];
+      // Convert empty strings for UUID columns to null so Postgres doesn't throw 'invalid input syntax for type uuid: ""'
+      if (val === '' && (
+        snakeKey === 'user_id' || 
+        snakeKey === 'salesperson_id' || 
+        snakeKey === 'patient_id' || 
+        snakeKey === 'workspace_id' || 
+        snakeKey === 'product_id' || 
+        snakeKey === 'id'
+      )) {
+        val = null;
+      }
+      acc[snakeKey] = toSnake(val);
       return acc;
     }, {} as any);
   }
@@ -433,21 +445,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     );
 
-    let userId = '';
-    const { data: authData } = await tempClient.auth.signUp({
-      email: authEmail,
-      password: magicCode,
-    });
+    let userId: string | null = null;
+    try {
+      const { data: authData } = await tempClient.auth.signUp({
+        email: authEmail,
+        password: magicCode,
+      });
 
-    if (authData?.user) {
-      userId = authData.user.id;
+      if (authData?.user?.id) {
+        userId = authData.user.id;
+      }
+    } catch (authErr) {
+      console.warn("Pre-create Auth user notice:", authErr);
     }
 
     const newU = {
       ...u,
       id: crypto.randomUUID(),
       workspaceId: currentWorkspace.id,
-      userId,
+      userId: userId || null,
+      salespersonId: u.salespersonId || null,
       magicCode,
       inviteStatus: 'pending'
     };
@@ -465,7 +482,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateWorkspaceUser = async (u: WorkspaceUser) => {
-    const { error } = await supabase.from('workspace_users').update(toSnake(u)).eq('id', u.id);
+    const updatedU = {
+      ...u,
+      userId: u.userId || null,
+      salespersonId: u.salespersonId || null
+    };
+    const { error } = await supabase.from('workspace_users').update(toSnake(updatedU)).eq('id', u.id);
     if (error) throw error;
     setWorkspaceUsers(prev => prev.map(item => item.id === u.id ? u : item));
     // If it's the current user, update the state as well
