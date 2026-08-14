@@ -32,16 +32,29 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
 
-    const baseUser = username.toLowerCase().replace(/\s+/g, '');
-    const domains = ['@gmail.com', '@aloe.system'];
+    const cleanUsername = username.trim();
+    const cleanPassword = password.trim();
+    const baseUser = cleanUsername.toLowerCase().replace(/\s+/g, '');
+    
+    // Passwords to attempt (exact, uppercase for magic code, and lowercase)
+    const candidatePasswords = Array.from(new Set([
+      cleanPassword,
+      cleanPassword.toUpperCase(),
+      cleanPassword.toLowerCase()
+    ])).filter(p => p.length > 0);
+
+    const candidateEmails = cleanUsername.includes('@')
+      ? [cleanUsername]
+      : [`${baseUser}@aloe.system`, `${baseUser}@gmail.com`];
+
     let success = false;
     let lastError = null;
 
-    if (!username.includes('@')) {
-      for (const dom of domains) {
+    for (const email of candidateEmails) {
+      for (const pwd of candidatePasswords) {
         const { error } = await supabase.auth.signInWithPassword({
-          email: `${baseUser}${dom}`,
-          password: password,
+          email,
+          password: pwd,
         });
         if (!error) {
           success = true;
@@ -49,13 +62,7 @@ const Login: React.FC = () => {
         }
         lastError = error;
       }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: username,
-        password: password,
-      });
-      if (!error) success = true;
-      lastError = error;
+      if (success) break;
     }
 
     if (success) {

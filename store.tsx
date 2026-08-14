@@ -446,17 +446,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
 
     let userId: string | null = null;
-    try {
-      const { data: authData } = await tempClient.auth.signUp({
-        email: authEmail,
-        password: magicCode,
-      });
+    const { data: authData, error: signUpError } = await tempClient.auth.signUp({
+      email: authEmail,
+      password: magicCode,
+    });
 
-      if (authData?.user?.id) {
-        userId = authData.user.id;
+    if (authData?.user?.id) {
+      userId = authData.user.id;
+    } else if (signUpError) {
+      console.log("Auth user already exists during signUp:", signUpError.message);
+      // If user already exists in Auth, attempt login with existing credentials to update password to new magicCode
+      const existingUserRecord = workspaceUsers.find(wu => wu.username.trim().toLowerCase() === formattedUsername);
+      const previousPwd = existingUserRecord?.magicCode || existingUserRecord?.password;
+      if (previousPwd) {
+        const { data: signInData } = await tempClient.auth.signInWithPassword({
+          email: authEmail,
+          password: previousPwd
+        });
+        if (signInData?.user) {
+          userId = signInData.user.id;
+          await tempClient.auth.updateUser({ password: magicCode });
+        }
       }
-    } catch (authErr) {
-      console.warn("Pre-create Auth user notice:", authErr);
     }
 
     const newU = {
