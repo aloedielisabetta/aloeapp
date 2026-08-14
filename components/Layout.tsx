@@ -11,7 +11,7 @@ import { useApp } from '../store';
 import { supabase } from '../supabase';
 
 const FirstTimePasswordModal: React.FC<{ userRecord: any }> = ({ userRecord }) => {
-  const { updateWorkspaceUser } = useApp();
+  const { updateWorkspaceUser, setWorkspaceUsers } = useApp();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,18 +34,31 @@ const FirstTimePasswordModal: React.FC<{ userRecord: any }> = ({ userRecord }) =
     setLoading(true);
 
     try {
-      // 1. Update Auth password
+      // 1. Update Auth password (works because we ARE the signed-in user)
       const { error: authErr } = await supabase.auth.updateUser({
         password: newPassword
       });
-      if (authErr) console.warn("Auth password update warning:", authErr);
+      if (authErr) throw authErr;
 
-      // 2. Update workspace_users database profile
-      await updateWorkspaceUser({
-        ...userRecord,
-        password: newPassword,
-        inviteStatus: 'active'
-      });
+      // 2. Try to update workspace_users DB record (requires RLS UPDATE policy)
+      const { error: dbErr } = await supabase
+        .from('workspace_users')
+        .update({ password: newPassword, invite_status: 'active' })
+        .eq('user_id', userRecord.userId || userRecord.user_id);
+
+      if (dbErr) {
+        // DB update may fail if RLS UPDATE policy not set - log but don't block user
+        console.warn('DB password update failed (RLS may need UPDATE policy):', dbErr.message);
+      }
+
+      // 3. Always update local state so the modal closes regardless of DB write success
+      setWorkspaceUsers((prev: any[]) =>
+        prev.map(u =>
+          u.id === userRecord.id
+            ? { ...u, password: newPassword, inviteStatus: 'active' }
+            : u
+        )
+      );
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Si è verificato un errore');
@@ -247,6 +260,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {children}
         </div>
       </main>
+
+      {!isAdmin && userRecord && (userRecord.inviteStatus === 'pending' || !userRecord.inviteStatus) && (
+        <FirstTimePasswordModal userRecord={userRecord} />
+      )}
     </div>
   );
 };

@@ -63,12 +63,6 @@ const UsersPage: React.FC = () => {
         alert(`Profilo di ${username} aggiornato con successo.`);
       } else {
         // CREATE NEW USER with MAGIC LINK workflow
-        const usernameExists = workspaceUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
-        if (usernameExists) {
-          alert("Questo username è già in uso. Scegline un altro.");
-          return;
-        }
-
         await addWorkspaceUser({
           salespersonId: selectedSalespersonId,
           username: username,

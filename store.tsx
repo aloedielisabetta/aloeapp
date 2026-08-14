@@ -44,6 +44,7 @@ interface AppContextType extends AppData {
   addWorkspaceUser: (u: Omit<WorkspaceUser, 'id' | 'workspaceId'> & { password?: string }) => Promise<void>;
   updateWorkspaceUser: (u: WorkspaceUser) => Promise<void>;
   deleteWorkspaceUser: (id: string) => Promise<void>;
+  setWorkspaceUsers: React.Dispatch<React.SetStateAction<WorkspaceUser[]>>;
 
   addModifierGroup: (g: Omit<ModifierGroup, 'id' | 'workspaceId'>) => Promise<void>;
   updateModifierGroup: (g: ModifierGroup) => Promise<void>;
@@ -455,35 +456,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       userId = authData.user.id;
     } else if (signUpError) {
       console.log("Auth user already exists during signUp:", signUpError.message);
-      // If user already exists in Auth, attempt login with existing credentials to update password to new magicCode
-      const existingUserRecord = workspaceUsers.find(wu => wu.username.trim().toLowerCase() === formattedUsername);
-      const previousPwd = existingUserRecord?.magicCode || existingUserRecord?.password;
-      if (previousPwd) {
-        const { data: signInData } = await tempClient.auth.signInWithPassword({
-          email: authEmail,
-          password: previousPwd
-        });
-        if (signInData?.user) {
-          userId = signInData.user.id;
-          await tempClient.auth.updateUser({ password: magicCode });
+      // 1. Try logging in with the newly generated magicCode (if account already has it)
+      let { data: signInData } = await tempClient.auth.signInWithPassword({
+        email: authEmail,
+        password: magicCode
+      });
+      
+      if (!signInData?.user) {
+        // 2. Try logging in with previous stored magicCode/password if known
+        const existingUserRecord = workspaceUsers.find(wu => wu.username.trim().toLowerCase() === formattedUsername);
+        const previousPwd = existingUserRecord?.magicCode || existingUserRecord?.password;
+        if (previousPwd) {
+          const res = await tempClient.auth.signInWithPassword({
+            email: authEmail,
+            password: previousPwd
+          });
+          signInData = res.data;
         }
+      }
+
+      if (signInData?.user) {
+        userId = signInData.user.id;
+        // Ensure Auth password matches the new magicCode
+        await tempClient.auth.updateUser({ password: magicCode });
       }
     }
 
-    const newU = {
-      ...u,
-      id: crypto.randomUUID(),
-      workspaceId: currentWorkspace.id,
-      userId: userId || null,
-      salespersonId: u.salespersonId || null,
-      magicCode,
-      inviteStatus: 'pending'
-    };
+    const existingIndex = workspaceUsers.findIndex(wu => wu.username.trim().toLowerCase() === formattedUsername);
 
-    const { error } = await supabase.from('workspace_users').insert(toSnake(newU));
-    if (error) throw error;
+    if (existingIndex >= 0) {
+      const existingUser = workspaceUsers[existingIndex];
+      const updatedU = {
+        ...existingUser,
+        ...u,
+        userId: userId || existingUser.userId || null,
+        salespersonId: u.salespersonId || existingUser.salespersonId || null,
+        magicCode,
+        password: magicCode,
+        inviteStatus: 'pending'
+      };
+      const { error } = await supabase.from('workspace_users').update(toSnake(updatedU)).eq('id', existingUser.id);
+      if (error) throw error;
+      setWorkspaceUsers(prev => prev.map((item, idx) => idx === existingIndex ? (updatedU as WorkspaceUser) : item));
+    } else {
+      const newU = {
+        ...u,
+        id: crypto.randomUUID(),
+        workspaceId: currentWorkspace.id,
+        userId: userId || null,
+        salespersonId: u.salespersonId || null,
+        magicCode,
+        inviteStatus: 'pending'
+      };
 
-    setWorkspaceUsers(prev => [...prev, newU as WorkspaceUser]);
+      const { error } = await supabase.from('workspace_users').insert(toSnake(newU));
+      if (error) throw error;
+
+      setWorkspaceUsers(prev => [...prev, newU as WorkspaceUser]);
+    }
   };
 
   const deleteWorkspaceUser = async (id: string) => {
@@ -588,7 +618,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       patients, products, orders, recipes, cities, modifierGroups, salespersons, generalCosts, workspaceUsers, rawMaterials,
       addPatient, updatePatient, deletePatient, addOrder, updateOrder, deleteOrder, addProduct, updateProduct, deleteProduct,
       addRecipe, updateRecipe, deleteRecipe, addCity, deleteCity, addSalesperson, updateSalesperson, deleteSalesperson, addGeneralCost, deleteGeneralCost,
-      addWorkspaceUser, updateWorkspaceUser, deleteWorkspaceUser, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
+      addWorkspaceUser, updateWorkspaceUser, deleteWorkspaceUser, setWorkspaceUsers, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
       createWorkspace, updateWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut, isLoadingProfile
     }}>
       {children}
