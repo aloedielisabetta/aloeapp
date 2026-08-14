@@ -35,6 +35,8 @@ const Profile: React.FC = () => {
     const [adminName, setAdminName] = useState(currentWorkspace?.ownerName || '');
     const [adminPhone, setAdminPhone] = useState(currentWorkspace?.ownerPhone || '');
     const [adminAvailability, setAdminAvailability] = useState(currentWorkspace?.ownerAvailability || '');
+    const [adminPassword, setAdminPassword] = useState('');
+    const [showAdminPassword, setShowAdminPassword] = useState(false);
     const [isSavingAdmin, setIsSavingAdmin] = useState(false);
     const [adminSuccess, setAdminSuccess] = useState(false);
 
@@ -56,6 +58,7 @@ const Profile: React.FC = () => {
             setLocalPhone(userRecord.phone || '');
             setLocalAvailability(userRecord.availability || '');
             setLocalPassword(userRecord.password || '');
+            setAdminPassword(userRecord.password || '');
         }
     }, [userRecord]);
 
@@ -112,10 +115,24 @@ const Profile: React.FC = () => {
         e.preventDefault();
         if (!currentWorkspace) return;
 
+        if (adminPassword && adminPassword.length < 6) {
+            alert('La password deve essere di almeno 6 caratteri.');
+            return;
+        }
+
         setIsSavingAdmin(true);
         setAdminSuccess(false);
 
         try {
+            // 1. Update password in Supabase Auth if provided
+            if (adminPassword) {
+                const { error: authErr } = await supabase.auth.updateUser({
+                    password: adminPassword
+                });
+                if (authErr) console.warn('Auth password update warning:', authErr);
+            }
+
+            // 2. Update workspace record
             await updateWorkspace({
                 ...currentWorkspace,
                 ownerEmail: adminEmail.trim(),
@@ -123,11 +140,23 @@ const Profile: React.FC = () => {
                 ownerPhone: adminPhone.trim(),
                 ownerAvailability: adminAvailability.trim()
             });
+
+            // 3. Update workspace_user record if present for Admin
+            if (userRecord) {
+                await updateWorkspaceUser({
+                    ...userRecord,
+                    email: adminEmail.trim(),
+                    name: adminName.trim(),
+                    phone: adminPhone.trim(),
+                    password: adminPassword
+                });
+            }
+
             setAdminSuccess(true);
             setTimeout(() => setAdminSuccess(false), 3000);
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            alert('Errore durante il salvataggio');
+            alert('Errore durante il salvataggio: ' + (err.message || err));
         } finally {
             setIsSavingAdmin(false);
         }
@@ -282,9 +311,7 @@ const Profile: React.FC = () => {
                             >
                                 <Clock size={16} /> Disponibilità
                             </button>
-                        </div>
-
-                        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        </div>                        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Titolare</label>
                                 <div className="relative">
@@ -314,7 +341,7 @@ const Profile: React.FC = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email per Notifiche (GCal)</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email per Notifiche (GCAL)</label>
                                 <div className="relative">
                                     <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                                     <input
@@ -325,6 +352,27 @@ const Profile: React.FC = () => {
                                         onChange={(e) => setAdminEmail(e.target.value)}
                                         required
                                     />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password Admin</label>
+                                <div className="relative">
+                                    <Key className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                                    <input
+                                        type={showAdminPassword ? "text" : "password"}
+                                        placeholder="Password Admin"
+                                        className="w-full bg-slate-800 border border-slate-700 pl-12 pr-12 py-4 rounded-2xl font-black text-sm text-white outline-none focus:ring-4 focus:ring-blue-500/20 transition-all placeholder:text-slate-600 font-mono"
+                                        value={adminPassword}
+                                        onChange={(e) => setAdminPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAdminPassword(!showAdminPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors p-1"
+                                    >
+                                        {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
