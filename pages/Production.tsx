@@ -10,10 +10,11 @@ import {
 const Production: React.FC = () => {
   const { orders, products, patients, modifierGroups, salespersons, cities } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [downloadType, setDownloadType] = useState<'production' | 'shipping' | 'delivery' | 'home' | 'lab' | 'collaborators' | null>(null);
+  const [downloadType, setDownloadType] = useState<'production' | 'grouped_production' | 'shipping' | 'delivery' | 'home' | 'lab' | 'collaborators' | null>(null);
   const [viewDate, setViewDate] = useState(new Date());
   
   const productionRef = useRef<HTMLDivElement>(null);
+  const groupedProductionRef = useRef<HTMLDivElement>(null);
   const shippingRef = useRef<HTMLDivElement>(null);
   const deliveryRef = useRef<HTMLDivElement>(null);
   const homeRef = useRef<HTMLDivElement>(null);
@@ -77,6 +78,61 @@ const Production: React.FC = () => {
   };
 
   const productionSummary = getProductionSummary();
+
+  const getGroupedProductionSummary = () => {
+    const summaryMap: Record<string, any> = {};
+
+    selectedMonthOrders.forEach(order => {
+      order.items.forEach(item => {
+        const product = products.find(p => p.id === item.productId);
+        if (!product) return;
+
+        if (!summaryMap[product.id]) {
+          summaryMap[product.id] = {
+            id: product.id,
+            name: product.name,
+            totalQty: 0,
+            groups: {}
+          };
+        }
+
+        summaryMap[product.id].totalQty += item.quantity;
+
+        // Get sorted variants to group identical configurations together
+        const variants = Object.values(item.selectedModifiers)
+          .flat()
+          .filter(v => v && v !== '');
+
+        const key = [...variants].sort().join('||');
+
+        if (!summaryMap[product.id].groups[key]) {
+          summaryMap[product.id].groups[key] = {
+            variants: variants,
+            quantity: 0
+          };
+        }
+        summaryMap[product.id].groups[key].quantity += item.quantity;
+      });
+    });
+
+    return Object.values(summaryMap).map((prod: any) => {
+      const list = Object.values(prod.groups).sort((a: any, b: any) => {
+        const aStr = a.variants.join(' ');
+        const bStr = b.variants.join(' ');
+        if (!aStr) return -1;
+        if (!bStr) return 1;
+        return aStr.localeCompare(bStr);
+      });
+      return {
+        id: prod.id,
+        name: prod.name,
+        totalQty: prod.totalQty,
+        list
+      };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const groupedProductionSummary = getGroupedProductionSummary();
 
   const shippingList = selectedMonthOrders
     .filter(o => o.isShipping)
@@ -244,9 +300,10 @@ const Production: React.FC = () => {
     return acc;
   }, {} as Record<string, typeof collaboratorList>);
 
-  const handleDownload = async (type: 'production' | 'shipping' | 'delivery' | 'home' | 'lab' | 'collaborators') => {
+  const handleDownload = async (type: 'production' | 'grouped_production' | 'shipping' | 'delivery' | 'home' | 'lab' | 'collaborators') => {
     const targetRef = 
       type === 'production' ? productionRef :
+      type === 'grouped_production' ? groupedProductionRef :
       type === 'shipping' ? shippingRef :
       type === 'delivery' ? deliveryRef :
       type === 'home' ? homeRef :
@@ -297,6 +354,14 @@ const Production: React.FC = () => {
           >
             {isGenerating && downloadType === 'production' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
             {isGenerating && downloadType === 'production' ? 'Generazione...' : 'Produzione'}
+          </button>
+          <button 
+            disabled={isGenerating}
+            onClick={() => handleDownload('grouped_production')}
+            className="bg-slate-700 text-white px-4 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-600 transition-all shadow-md font-black text-[10px] uppercase tracking-widest disabled:opacity-50"
+          >
+            {isGenerating && downloadType === 'grouped_production' ? <Loader2 size={16} className="animate-spin" /> : <Layers size={16} />}
+            {isGenerating && downloadType === 'grouped_production' ? 'Generazione...' : 'Produzione Raggruppata'}
           </button>
           <button 
             disabled={isGenerating}
@@ -358,6 +423,52 @@ const Production: React.FC = () => {
 
       {/* Hidden Templates for html2pdf */}
       <div className="hidden">
+        {/* Grouped Production PDF Template */}
+        <div ref={groupedProductionRef} style={{ padding: '20px', fontFamily: 'Inter, sans-serif', color: '#000' }}>
+          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '5px' }}>Lista di Produzione Raggruppata Aloe</h1>
+            <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', textTransform: 'uppercase', letterSpacing: '2px' }}>
+              {viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+
+          {groupedProductionSummary.map((prod) => (
+            <div key={prod.id} style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '3px solid #000', paddingBottom: '5px', marginBottom: '15px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>{prod.name}</h2>
+                <div style={{ fontSize: '20px', fontWeight: '900' }}>TOTALE PEZZI: {prod.totalQty}</div>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f1f5f9' }}>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Prodotto</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900', width: '60px' }}>Qtà</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 1</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 2</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left', fontSize: '9px', textTransform: 'uppercase', fontWeight: '900' }}>Variante 3</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {prod.list.map((item: any, idx: number) => {
+                    return (
+                      <tr key={idx}>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase' }}>{prod.name}</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'center', fontSize: '11px', fontWeight: '900' }}>{item.quantity}</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', color: '#444', fontWeight: 'bold' }}>{item.variants[0] || ''}</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', color: '#444', fontWeight: 'bold' }}>{item.variants[1] || ''}</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontSize: '10px', color: '#444', fontWeight: 'bold' }}>{item.variants[2] || ''}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ))}
+          <div style={{ marginTop: '50px', borderTop: '1px solid #eee', paddingTop: '10px', textAlign: 'right', fontSize: '9px', color: '#999', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Generato da Aloe System • {new Date().toLocaleString('it-IT')}
+          </div>
+        </div>
+
         {/* Production PDF Template */}
         <div ref={productionRef} style={{ padding: '20px', fontFamily: 'Inter, sans-serif', color: '#000' }}>
           <div style={{ textAlign: 'center', marginBottom: '30px' }}>
@@ -588,7 +699,7 @@ const Production: React.FC = () => {
                 </p>
               </div>
 
-              {orders.map((order, idx) => (
+              {(orders as any).map((order: any, idx: number) => (
                 <div key={idx} style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
                    <div style={{ borderBottom: '3px solid #4f46e5', paddingBottom: '10px', marginBottom: '15px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -646,7 +757,7 @@ const Production: React.FC = () => {
                 </p>
               </div>
 
-              {orders.map((order, idx) => (
+              {(orders as any).map((order: any, idx: number) => (
                 <div key={idx} style={{ marginBottom: '40px', pageBreakInside: 'avoid' }}>
                    <div style={{ borderBottom: '3px solid #d97706', paddingBottom: '10px', marginBottom: '15px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
