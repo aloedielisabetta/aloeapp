@@ -35,7 +35,7 @@ const Profile: React.FC = () => {
     const [adminName, setAdminName] = useState(currentWorkspace?.ownerName || '');
     const [adminPhone, setAdminPhone] = useState(currentWorkspace?.ownerPhone || '');
     const [adminAvailability, setAdminAvailability] = useState(currentWorkspace?.ownerAvailability || '');
-    const [adminPassword, setAdminPassword] = useState('');
+    const [adminPassword, setAdminPassword] = useState(currentWorkspace?.adminPassword || '');
     const [showAdminPassword, setShowAdminPassword] = useState(false);
     const [isSavingAdmin, setIsSavingAdmin] = useState(false);
     const [adminSuccess, setAdminSuccess] = useState(false);
@@ -68,6 +68,10 @@ const Profile: React.FC = () => {
             setAdminName(currentWorkspace.ownerName || '');
             setAdminPhone(currentWorkspace.ownerPhone || '');
             setAdminAvailability(currentWorkspace.ownerAvailability || '');
+            // Load stored admin password so it shows in the Password field
+            if (currentWorkspace.adminPassword) {
+                setAdminPassword(currentWorkspace.adminPassword);
+            }
         }
     }, [currentWorkspace]);
 
@@ -129,16 +133,17 @@ const Profile: React.FC = () => {
                 const { error: authErr } = await supabase.auth.updateUser({
                     password: adminPassword
                 });
-                if (authErr) console.warn('Auth password update warning:', authErr);
+                if (authErr) throw authErr;
             }
 
-            // 2. Update workspace record
+            // 2. Update workspace record - include adminPassword so it persists and shows on Profile reload
             await updateWorkspace({
                 ...currentWorkspace,
                 ownerEmail: adminEmail.trim(),
                 ownerName: adminName.trim(),
                 ownerPhone: adminPhone.trim(),
-                ownerAvailability: adminAvailability.trim()
+                ownerAvailability: adminAvailability.trim(),
+                adminPassword: adminPassword || currentWorkspace.adminPassword
             });
 
             // 3. Update workspace_user record if present for Admin
