@@ -140,6 +140,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[Auth Change] Event:", event, "Session present:", !!session);
       // TOKEN_REFRESHED fires every hour when switching tabs — we must NOT reload the profile
       // for these events as it causes the app to flash back to the loading/dashboard screen.
       if (event === 'TOKEN_REFRESHED') return;
