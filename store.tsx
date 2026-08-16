@@ -115,6 +115,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isSyncing, setIsSyncing] = useState(false);
   // Starts true — prevents ProtectedRoute from redirecting before we know who the user is
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  // Track which user ID we've already loaded — prevents tab-switch reloads caused by token refresh
+  const loadedUserIdRef = React.useRef<string | null>(null);
 
   // App Data Collections
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -137,11 +139,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // TOKEN_REFRESHED fires every hour when switching tabs — we must NOT reload the profile
+      // for these events as it causes the app to flash back to the loading/dashboard screen.
+      if (event === 'TOKEN_REFRESHED') return;
+
       setSession(session);
       if (!session) {
         setCurrentUser(null);
         setCurrentWorkspace(null);
+        loadedUserIdRef.current = null;
         setIsLoadingProfile(false);
       }
     });
@@ -154,6 +161,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const loadUserData = async () => {
       if (!session?.user) {
         setIsLoadingProfile(false);
+        return;
+      }
+
+      // If we already loaded data for this exact user, don't reload.
+      // This prevents tab-switching (which triggers onAuthStateChange) from
+      // resetting the app to the loading screen / dashboard.
+      if (loadedUserIdRef.current === session.user.id) {
         return;
       }
 
@@ -179,6 +193,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             id: session.user.id,
             name: session.user.email || 'Amministratore'
           });
+          loadedUserIdRef.current = session.user.id; // mark as loaded
           return;
         }
 
@@ -202,6 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             name: memberUser.username,
             salespersonId: memberUser.salesperson_id
           });
+          loadedUserIdRef.current = session.user.id; // mark as loaded
           return;
         }
 
