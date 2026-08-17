@@ -19,14 +19,12 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
 
-  // FORCE MANUAL LOGIN: If we land here and have a session, kill it (unless we are currently submitting).
-  // This solves "it logs in automatically" by ensuring the login page always means "Start Over".
+  // If user is already authenticated, redirect to main portal
   useEffect(() => {
     if (!isLoadingProfile && currentUser && !loading) {
-      console.log("Auto-logout enabled: Enforcing manual login.");
-      supabase.auth.signOut();
+      navigate('/');
     }
-  }, [currentUser, isLoadingProfile, loading]);
+  }, [currentUser, isLoadingProfile, loading, navigate]);
 
   const handleLogin = async () => {
     setLoading(true);

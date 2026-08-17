@@ -628,6 +628,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSession(null);
     setCurrentUser(null);
     setCurrentWorkspace(null);
+    loadedUserIdRef.current = null;
   };
 
   return (
