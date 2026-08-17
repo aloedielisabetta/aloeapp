@@ -41,9 +41,23 @@ const Login: React.FC = () => {
       cleanPassword.toLowerCase()
     ])).filter(p => p.length > 0);
 
-    const candidateEmails = cleanUsername.includes('@')
+    let candidateEmails = cleanUsername.includes('@')
       ? [cleanUsername]
       : [`${baseUser}@aloe.system`, `${baseUser}@gmail.com`];
+
+    // Pre-lookup collaborator by username to avoid unnecessary failed auth attempts
+    if (!cleanUsername.includes('@')) {
+      const { data: member } = await supabase
+        .from('workspace_users')
+        .select('username')
+        .ilike('username', cleanUsername)
+        .maybeSingle();
+
+      if (member?.username) {
+        const memberBase = member.username.toLowerCase().replace(/\s+/g, '');
+        candidateEmails = [`${memberBase}@aloe.system`];
+      }
+    }
 
     let success = false;
     let lastError = null;

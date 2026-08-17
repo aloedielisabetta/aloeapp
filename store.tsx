@@ -139,22 +139,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("[Auth Change] Event:", event, "Session present:", !!session);
-      // TOKEN_REFRESHED fires every hour when switching tabs — we must NOT reload the profile
       if (event === 'TOKEN_REFRESHED') return;
 
       if (session) {
         if (loadedUserIdRef.current !== session.user.id) {
           setIsLoadingProfile(true);
         }
+        setSession(session);
       } else {
+        // Double-check with getSession before clearing user state to ignore stale null session events
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession) {
+          console.log("[Auth Change] Stale null session event ignored; active session present.");
+          setSession(currentSession);
+          return;
+        }
+
         setCurrentUser(null);
         setCurrentWorkspace(null);
         loadedUserIdRef.current = null;
         setIsLoadingProfile(false);
+        setSession(null);
       }
-      setSession(session);
     });
 
     return () => subscription.unsubscribe();
