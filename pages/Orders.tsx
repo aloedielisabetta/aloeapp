@@ -10,7 +10,7 @@ import {
 
 const Orders: React.FC = () => {
   const {
-    orders, addOrder, updateOrder, deleteOrder, patients, products,
+    orders, addOrder, updateOrder, deleteOrder, patients, updatePatient, products,
     cities, modifierGroups, salespersons, currentUser,
     currentWorkspace, syncData, isSyncing
   } = useApp();
@@ -80,7 +80,7 @@ const Orders: React.FC = () => {
 
   const handleEdit = (order: Order) => {
     setEditingOrder(order);
-    setIsExternal(order.isExternal);
+    setIsExternal(!!order.isExternal || !!order.salespersonId);
     setOrderData({
       patientId: order.patientId,
       items: order.items,
@@ -121,36 +121,60 @@ const Orders: React.FC = () => {
       return { ...item, selectedModifiers: filteredModifiers };
     });
 
+    const selectedPatient = patients.find(p => p.id === orderData.patientId);
+
+    // Determine target salesperson ID
+    const targetSalespersonId = isAdmin
+      ? (orderData.salespersonId || selectedPatient?.salespersonId || undefined)
+      : currentUser?.salespersonId;
+
+    // Any order with a salesperson assigned to a collaborator is an external/collaborator order
+    const finalIsExternal = isAdmin
+      ? (isExternal || !!targetSalespersonId)
+      : true;
+
+    // Auto-assign patient to collaborator if patient had no salesperson assigned
+    if (isAdmin && targetSalespersonId && selectedPatient && (!selectedPatient.salespersonId || selectedPatient.salespersonId !== targetSalespersonId)) {
+      try {
+        await updatePatient({
+          ...selectedPatient,
+          salespersonId: targetSalespersonId
+        });
+      } catch (err) {
+        console.warn("Could not auto-assign patient to salesperson:", err);
+      }
+    }
+
     try {
       if (editingOrder) {
         await updateOrder({
           ...editingOrder,
           patientId: orderData.patientId,
           items: cleanedItems.filter(item => item.quantity > 0),
-          isExternal: isAdmin ? isExternal : true,
+          isExternal: finalIsExternal,
           isHome: orderData.isHome,
           isLab: orderData.isLab,
           isShipping: orderData.isShipping,
           isDelivery: orderData.isDelivery,
           isFree: orderData.hasDiscount ? false : orderData.isFree,
           hasDiscount: orderData.hasDiscount,
-          commission: (isAdmin ? isExternal : true) ? orderData.commission : 0,
-          salespersonId: isAdmin ? (isExternal ? orderData.salespersonId : undefined) : currentUser?.salespersonId,
+          commission: finalIsExternal ? orderData.commission : 0,
+          salespersonId: targetSalespersonId,
         });
       } else {
         await addOrder({
           patientId: orderData.patientId,
           items: cleanedItems.filter(item => item.quantity > 0),
           date: new Date(viewDate.getFullYear(), viewDate.getMonth(), 15, 12, 0, 0).toISOString(),
-          isExternal: isAdmin ? isExternal : true,
+          isExternal: finalIsExternal,
           isHome: orderData.isHome,
           isLab: orderData.isLab,
           isShipping: orderData.isShipping,
           isDelivery: orderData.isDelivery,
           isFree: orderData.hasDiscount ? false : orderData.isFree,
           hasDiscount: orderData.hasDiscount,
-          commission: (isAdmin ? isExternal : true) ? orderData.commission : 0,
-          salespersonId: isAdmin ? (isExternal ? orderData.salespersonId : undefined) : currentUser?.salespersonId,
+          commission: finalIsExternal ? orderData.commission : 0,
+          salespersonId: targetSalespersonId,
           status: 'In attesa'
         });
       }
@@ -532,7 +556,9 @@ const Orders: React.FC = () => {
                             key={p.id}
                             className="w-full text-left px-6 py-4 hover:bg-slate-50 flex flex-col transition-colors border-b border-slate-50 last:border-0"
                             onClick={() => {
-                              setOrderData({ ...orderData, patientId: p.id });
+                              const targetSpId = p.salespersonId || orderData.salespersonId;
+                              setOrderData({ ...orderData, patientId: p.id, salespersonId: targetSpId });
+                              if (p.salespersonId) setIsExternal(true);
                               setPatientSearch(`${p.firstName} ${p.lastName}`);
                               setShowPatientResults(false);
                             }}
@@ -637,7 +663,7 @@ const Orders: React.FC = () => {
                     <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1">Collaboratore Esterno</label>
                     <div className="relative">
                       <User className="absolute left-5 top-1/2 -translate-y-1/2 text-orange-300" size={20} />
-                      <select className="w-full pl-14 pr-5 py-5 bg-white border border-orange-100 rounded-3xl font-black text-slate-700 outline-none appearance-none focus:ring-4 focus:ring-orange-500/10" value={orderData.salespersonId} onChange={e => setOrderData({ ...orderData, salespersonId: e.target.value })} disabled={!isAdmin}>
+                      <select className="w-full pl-14 pr-5 py-5 bg-white border border-orange-100 rounded-3xl font-black text-slate-700 outline-none appearance-none focus:ring-4 focus:ring-orange-500/10" value={orderData.salespersonId} onChange={e => { const val = e.target.value; setOrderData({ ...orderData, salespersonId: val }); if (val) setIsExternal(true); }} disabled={!isAdmin}>
                         <option value="">Scegli Collaboratore...</option>
                         {salespersons.filter(s => !s.isHidden).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>

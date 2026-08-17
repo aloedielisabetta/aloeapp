@@ -13,7 +13,7 @@ const MySales: React.FC = () => {
     );
   }
 
-  const myOrders = orders.filter(o => o.isExternal && o.salespersonId === currentUser.salespersonId);
+  const myOrders = orders.filter(o => (o.isExternal || !!o.salespersonId) && o.salespersonId === currentUser.salespersonId);
 
   let totalSales = 0;
   let totalCommissions = 0;
