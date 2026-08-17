@@ -656,27 +656,38 @@ const Orders: React.FC = () => {
                 </div>
               </div>
 
-              {/* Sezione Esterna */}
-              {isExternal && (
+              {/* Sezione Collaboratore (Solo Admin) */}
+              {isAdmin && (
                 <div className="bg-orange-50/50 p-6 rounded-[2.5rem] border border-orange-100 space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1">Collaboratore Esterno</label>
+                    <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1">Assegna a Collaboratore</label>
                     <div className="relative">
                       <User className="absolute left-5 top-1/2 -translate-y-1/2 text-orange-300" size={20} />
-                      <select className="w-full pl-14 pr-5 py-5 bg-white border border-orange-100 rounded-3xl font-black text-slate-700 outline-none appearance-none focus:ring-4 focus:ring-orange-500/10" value={orderData.salespersonId} onChange={e => { const val = e.target.value; setOrderData({ ...orderData, salespersonId: val }); if (val) setIsExternal(true); }} disabled={!isAdmin}>
-                        <option value="">Scegli Collaboratore...</option>
+                      <select 
+                        className="w-full pl-14 pr-5 py-5 bg-white border border-orange-100 rounded-3xl font-black text-slate-700 outline-none appearance-none focus:ring-4 focus:ring-orange-500/10" 
+                        value={orderData.salespersonId} 
+                        onChange={e => { 
+                          const val = e.target.value; 
+                          setOrderData({ ...orderData, salespersonId: val }); 
+                          setIsExternal(!!val); 
+                        }} 
+                        disabled={!isAdmin}
+                      >
+                        <option value="">Nessun Collaboratore (Ordine Elisabetta)</option>
                         {salespersons.filter(s => !s.isHidden).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                       </select>
                       <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-orange-300 pointer-events-none" size={20} />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1 flex items-center gap-2">
-                      <Sparkles size={12} className="text-orange-400" /> Provvigione Totale (€)
-                    </label>
-                    <input type="number" step="0.01" className="w-full p-5 bg-white border border-orange-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-orange-500/10" value={orderData.commission || ''} onChange={e => setOrderData({ ...orderData, commission: parseFloat(e.target.value) || 0 })} />
-                    <p className="text-[9px] font-bold text-orange-400 uppercase tracking-widest ml-1">Valore calcolato automaticamente dai prezzi prodotto.</p>
-                  </div>
+                  {orderData.salespersonId && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <Sparkles size={12} className="text-orange-400" /> Provvigione Totale (€)
+                      </label>
+                      <input type="number" step="0.01" className="w-full p-5 bg-white border border-orange-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-orange-500/10" value={orderData.commission || ''} onChange={e => setOrderData({ ...orderData, commission: parseFloat(e.target.value) || 0 })} />
+                      <p className="text-[9px] font-bold text-orange-400 uppercase tracking-widest ml-1">Valore calcolato automaticamente dai prezzi prodotto.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
