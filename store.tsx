@@ -142,16 +142,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("[Auth Change] Event:", event, "Session present:", !!session);
       // TOKEN_REFRESHED fires every hour when switching tabs — we must NOT reload the profile
-      // for these events as it causes the app to flash back to the loading/dashboard screen.
       if (event === 'TOKEN_REFRESHED') return;
 
-      setSession(session);
-      if (!session) {
+      if (session) {
+        if (loadedUserIdRef.current !== session.user.id) {
+          setIsLoadingProfile(true);
+        }
+      } else {
         setCurrentUser(null);
         setCurrentWorkspace(null);
         loadedUserIdRef.current = null;
         setIsLoadingProfile(false);
       }
+      setSession(session);
     });
 
     return () => subscription.unsubscribe();
@@ -166,9 +169,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       // If we already loaded data for this exact user, don't reload.
-      // This prevents tab-switching (which triggers onAuthStateChange) from
-      // resetting the app to the loading screen / dashboard.
-      if (loadedUserIdRef.current === session.user.id) {
+      if (loadedUserIdRef.current === session.user.id && currentUser) {
+        setIsLoadingProfile(false);
         return;
       }
 

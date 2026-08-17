@@ -21,10 +21,10 @@ const Login: React.FC = () => {
 
   // If user is already authenticated, redirect to main portal
   useEffect(() => {
-    if (!isLoadingProfile && currentUser && !loading) {
+    if (!isLoadingProfile && currentUser) {
       navigate('/');
     }
-  }, [currentUser, isLoadingProfile, loading, navigate]);
+  }, [currentUser, isLoadingProfile, navigate]);
 
   const handleLogin = async () => {
     setLoading(true);
