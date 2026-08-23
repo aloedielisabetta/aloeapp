@@ -648,7 +648,7 @@ const Orders: React.FC = () => {
               <button onClick={() => { setShowAdd(false); resetAddForm(); }} className="p-3 bg-white hover:bg-slate-50 rounded-2xl text-slate-400 transition-all border border-slate-100"><X size={24} /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-8 hide-scrollbar">
+            <div className="flex-1 overflow-y-auto p-8 space-y-8 modal-scrollbar">
               {/* Paziente */}
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Seleziona Paziente</label>

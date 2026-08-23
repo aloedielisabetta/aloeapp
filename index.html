@@ -35,6 +35,31 @@
       scrollbar-width: none;
     }
 
+    .modal-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .modal-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 10px;
+      margin: 8px 0;
+    }
+
+    .modal-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+
+    .modal-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .modal-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+
     html,
     body {
       height: 100%;
