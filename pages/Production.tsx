@@ -181,6 +181,7 @@ const Production: React.FC = () => {
         id: order.id,
         patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Sconosciuto',
         address: patient ? `${patient.address}, ${cityName}` : 'N/A',
+        phone: patient ? patient.phone : '',
         cityName,
         totalItems,
         salespersonName: order.isExternal ? (salesperson?.name || 'Esterno') : 'Interno',
@@ -705,7 +706,9 @@ const Production: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                           <h2 style={{ fontSize: '18px', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>{order.patientName}</h2>
-                          <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#444', marginTop: '3px' }}>{order.address}</p>
+                          <p style={{ fontSize: '11px', fontWeight: 'bold', color: '#444', marginTop: '3px' }}>
+                            {order.address} {order.phone && `• Tel: ${order.phone}`}
+                          </p>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <p style={{ fontSize: '14px', fontWeight: '900', margin: 0 }}>TOTALE ARTICOLI: {order.totalItems}</p>
