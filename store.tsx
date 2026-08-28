@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import {
   AppData, Patient, Product, Order, Recipe,
   CityFolder, ModifierGroup, Salesperson,
-  GeneralCost, Workspace, WorkspaceUser, UserRole, RawMaterial
+  GeneralCost, Workspace, WorkspaceUser, UserRole, RawMaterial, LaborRecord
 } from './types';
 import { supabase } from './supabase';
 import { createClient } from '@supabase/supabase-js';
@@ -40,6 +40,9 @@ interface AppContextType extends AppData {
 
   addGeneralCost: (c: Omit<GeneralCost, 'id' | 'workspaceId'>) => Promise<void>;
   deleteGeneralCost: (id: string) => Promise<void>;
+
+  addLaborRecord: (r: Omit<LaborRecord, 'id' | 'workspaceId'>) => Promise<void>;
+  deleteLaborRecord: (id: string) => Promise<void>;
 
   addWorkspaceUser: (u: Omit<WorkspaceUser, 'id' | 'workspaceId'> & { password?: string }) => Promise<void>;
   updateWorkspaceUser: (u: WorkspaceUser) => Promise<void>;
@@ -133,6 +136,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [generalCosts, setGeneralCosts] = useState<GeneralCost[]>([]);
   const [workspaceUsers, setWorkspaceUsers] = useState<WorkspaceUser[]>([]);
   const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
+  const [laborRecords, setLaborRecords] = useState<LaborRecord[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -266,10 +270,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return (data || []).map(toCamel);
       };
 
-      const [p, pr, o, r, c, m, s, g, u, rm] = await Promise.all([
+      const [p, pr, o, r, c, m, s, g, u, rm, lr] = await Promise.all([
         fetchT('patients'), fetchT('products'), fetchT('orders'), fetchT('recipes'),
         fetchT('city_folders'), fetchT('modifier_groups'), fetchT('salespersons'),
-        fetchT('general_costs'), fetchT('workspace_users'), fetchT('raw_materials')
+        fetchT('general_costs'), fetchT('workspace_users'), fetchT('raw_materials'),
+        fetchT('labor_records')
       ]);
 
       // Sanitize orders: ensure items is always an array, and each item has selectedModifiers as string[]
@@ -316,6 +321,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPatients(sanitizedPatients); setProducts(sanitizedProducts); setOrders(sanitizedOrders);
       setRecipes(sanitizedRecipes); setCities(c);
       setModifierGroups(m); setSalespersons(s); setGeneralCosts(g); setWorkspaceUsers(u); setRawMaterials(rm);
+      setLaborRecords(lr || []);
       console.log("Sync completed successfully.");
     } catch (e) {
       console.error("Global sync exception:", e);
@@ -459,6 +465,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { error } = await supabase.from('general_costs').delete().eq('id', id);
     if (error) throw error;
     setGeneralCosts(prev => prev.filter(c => c.id !== id));
+  };
+
+  const addLaborRecord = async (r: Omit<LaborRecord, 'id' | 'workspaceId'>) => {
+    if (!currentWorkspace) return;
+    const newR = { ...r, id: crypto.randomUUID(), workspaceId: currentWorkspace.id, date: r.date || new Date().toISOString() };
+    const { error } = await supabase.from('labor_records').insert(toSnake(newR));
+    if (error) throw error;
+    setLaborRecords(prev => [...prev, newR as LaborRecord]);
+  };
+
+  const deleteLaborRecord = async (id: string) => {
+    const { error } = await supabase.from('labor_records').delete().eq('id', id);
+    if (error) throw error;
+    setLaborRecords(prev => prev.filter(r => r.id !== id));
   };
 
   const addWorkspaceUser = async (u: Omit<WorkspaceUser, 'id' | 'workspaceId'> & { password?: string }) => {
@@ -652,9 +672,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
-      patients, products, orders, recipes, cities, modifierGroups, salespersons, generalCosts, workspaceUsers, rawMaterials,
+      patients, products, orders, recipes, cities, modifierGroups, salespersons, generalCosts, workspaceUsers, rawMaterials, laborRecords,
       addPatient, updatePatient, deletePatient, addOrder, updateOrder, deleteOrder, addProduct, updateProduct, deleteProduct,
       addRecipe, updateRecipe, deleteRecipe, addCity, deleteCity, addSalesperson, updateSalesperson, deleteSalesperson, addGeneralCost, deleteGeneralCost,
+      addLaborRecord, deleteLaborRecord,
       addWorkspaceUser, updateWorkspaceUser, deleteWorkspaceUser, setWorkspaceUsers, addModifierGroup, updateModifierGroup, deleteModifierGroup, addRawMaterial, updateRawMaterial, deleteRawMaterial,
       createWorkspace, updateWorkspace, deleteCurrentWorkspace, currentWorkspace, setCurrentWorkspace, currentUser, setCurrentUser, workspaces, setWorkspaces, isSyncing, syncData, signOut, isLoadingProfile
     }}>

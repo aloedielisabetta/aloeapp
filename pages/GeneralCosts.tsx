@@ -5,7 +5,7 @@ import { GeneralCost } from '../types';
 import { Receipt, DollarSign, Trash2, Home, Lightbulb, Users, Tag, Truck, Plus, X, Calendar, RefreshCw } from 'lucide-react';
 
 const GeneralCosts: React.FC = () => {
-  const { generalCosts, addGeneralCost, deleteGeneralCost } = useApp();
+  const { generalCosts, addGeneralCost, deleteGeneralCost, laborRecords, deleteLaborRecord, salespersons } = useApp();
 
   const [showModal, setShowModal] = useState<'single' | 'recurring' | null>(null);
   const [form, setForm] = useState<Partial<GeneralCost>>({
@@ -49,9 +49,13 @@ const GeneralCosts: React.FC = () => {
     setShowModal(null);
   };
 
-  const handleRemove = async (id: string) => {
-    if (confirm('Eliminare questa spesa?')) {
-      await deleteGeneralCost(id);
+  const handleRemove = async (id: string, isLabor?: boolean) => {
+    if (confirm(isLabor ? 'Eliminare questa registrazione di manodopera?' : 'Eliminare questa spesa?')) {
+      if (isLabor) {
+        await deleteLaborRecord(id);
+      } else {
+        await deleteGeneralCost(id);
+      }
     }
   };
 
@@ -69,7 +73,28 @@ const GeneralCosts: React.FC = () => {
     return d && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
   });
 
-  const totalMonthlyLoad = recurringCosts.reduce((sum, c) => sum + c.amount, 0) + singleCosts.reduce((sum, c) => sum + c.amount, 0);
+  const monthlyLaborRecords = laborRecords.filter(r => {
+    const d = parseDate(r.date);
+    return d && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+  });
+
+  const mappedLaborCosts = monthlyLaborRecords.map(r => {
+    const collaboratorName = salespersons.find(s => s.id === r.salespersonId)?.name || 'Collaboratore';
+    return {
+      id: r.id,
+      workspaceId: r.workspaceId,
+      name: `Manodopera - ${collaboratorName}`,
+      amount: r.hours * r.hourlyRate,
+      category: 'Manodopera Tot.',
+      date: r.date,
+      isRecurring: false,
+      isLabor: true
+    };
+  });
+
+  const displaySingleCosts = [...singleCosts, ...mappedLaborCosts];
+
+  const totalMonthlyLoad = recurringCosts.reduce((sum, c) => sum + c.amount, 0) + displaySingleCosts.reduce((sum, c) => sum + c.amount, 0);
 
   return (
     <div className="space-y-8">
@@ -164,10 +189,10 @@ const GeneralCosts: React.FC = () => {
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <Calendar size={14} /> Spese Mensili (Non Ricorrenti)
             </h4>
-            <span className="text-[10px] font-black text-slate-300 uppercase">{singleCosts.length} items</span>
+            <span className="text-[10px] font-black text-slate-300 uppercase">{displaySingleCosts.length} items</span>
           </div>
           <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 hide-scrollbar">
-            {singleCosts.map(cost => (
+            {displaySingleCosts.map(cost => (
               <div key={cost.id} className="p-6 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm flex justify-between items-center group hover:border-slate-300 transition-all">
                 <div className="flex items-center gap-5">
                   <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-all">
@@ -180,13 +205,13 @@ const GeneralCosts: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-5">
                   <p className="text-xl font-black text-slate-900">€{cost.amount.toFixed(2)}</p>
-                  <button onClick={() => handleRemove(cost.id)} className="p-3 text-slate-300 hover:text-red-500 bg-slate-50 rounded-xl transition-colors">
+                  <button onClick={() => handleRemove(cost.id, (cost as any).isLabor)} className="p-3 text-slate-300 hover:text-red-500 bg-slate-50 rounded-xl transition-colors">
                     <Trash2 size={20} />
                   </button>
                 </div>
               </div>
             ))}
-            {singleCosts.length === 0 && (
+            {displaySingleCosts.length === 0 && (
               <div className="py-20 text-center bg-slate-50/50 border border-dashed border-slate-200 rounded-[3rem] text-slate-300">
                 <p className="text-[10px] font-black uppercase tracking-widest">Nessuna spesa mensile</p>
               </div>

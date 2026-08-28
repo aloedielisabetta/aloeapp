@@ -158,6 +158,16 @@ export interface Workspace {
   ownerAvailability?: string;
 }
 
+export interface LaborRecord {
+  id: string;
+  workspaceId: string;
+  salespersonId: string;
+  hours: number;
+  hourlyRate: number;
+  date: string;
+  createdAt?: string;
+}
+
 export interface AppData {
   patients: Patient[];
   products: Product[];
@@ -169,4 +179,5 @@ export interface AppData {
   generalCosts: GeneralCost[];
   workspaceUsers: WorkspaceUser[];
   rawMaterials: RawMaterial[];
+  laborRecords: LaborRecord[];
 }

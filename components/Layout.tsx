@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Users, Package, ShoppingBag, TrendingUp,
   Settings, ClipboardList, Database, Thermometer,
   ChevronLeft, ChevronRight, FileText, UserPlus, LogOut, ShieldCheck, CloudLightning, Check, Share2, Receipt, User,
-  Settings2, Tag, Lock, Sparkles, Loader2, Key
+  Settings2, Tag, Lock, Sparkles, Loader2, Key, Clock, Coins
 } from 'lucide-react';
 import { useApp } from '../store';
 import { supabase } from '../supabase';
@@ -158,6 +157,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       { to: '/variants', icon: <Settings2 size={20} />, label: 'Gestisci varianti', color: 'rose' },
       { to: '/materials', icon: <Database size={20} />, label: 'Ordini per produzione', color: 'purple' },
       { to: '/general-costs', icon: <Receipt size={20} />, label: 'Costi Generali', color: 'sky' },
+      { to: '/manodopera', icon: <Clock size={20} />, label: 'Manodopera', color: 'rose' },
       { to: '/profits', icon: <TrendingUp size={20} />, label: 'Profitti', color: 'sky' },
       { to: '/reports', icon: <FileText size={20} />, label: 'Report', color: 'slate' },
       { to: '/users', icon: <UserPlus size={20} />, label: 'Accesso Collaboratori', color: 'slate' },
@@ -168,6 +168,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   } else {
     navItems.push(
       { to: '/my-sales', icon: <TrendingUp size={20} />, label: 'Mie Vendite', color: 'sky' },
+      { to: '/manodopera', icon: <Clock size={20} />, label: 'Manodopera', color: 'rose' },
+      { to: '/guadagno-mensile', icon: <Coins size={20} />, label: 'Guadagno Mensile', color: 'sky' },
       { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo', color: 'slate' }
     );
   }

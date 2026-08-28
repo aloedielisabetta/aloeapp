@@ -4,7 +4,7 @@ import { useApp } from '../store';
 import { TrendingUp, Wallet, ArrowUpRight, Receipt, PieChart, RefreshCw, Users } from 'lucide-react';
 
 const Profits: React.FC = () => {
-  const { orders, products, generalCosts, recipes, rawMaterials, salespersons, workspaceUsers } = useApp();
+  const { orders, products, generalCosts, recipes, rawMaterials, salespersons, workspaceUsers, laborRecords } = useApp();
   const [selectedMonth, setSelectedMonth] = React.useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = React.useState(new Date().getFullYear());
 
@@ -62,7 +62,13 @@ const Profits: React.FC = () => {
     const d = parseDate(c.date);
     return d && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
   });
-  const totalMonthlyExpenses = monthlyExpenses.reduce((sum, c) => sum + c.amount, 0);
+  
+  const monthlyLaborCost = (laborRecords || []).filter(r => {
+    const d = parseDate(r.date);
+    return d && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+  }).reduce((sum, r) => sum + (r.hours * r.hourlyRate), 0);
+
+  const totalMonthlyExpenses = monthlyExpenses.reduce((sum, c) => sum + c.amount, 0) + monthlyLaborCost;
 
   // ── 4. COLLABORATORI PROVVIGIONE: commission per order salesperson this month ──
   // For each order this month that has a salespersonId, sum commission field or

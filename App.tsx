@@ -21,6 +21,8 @@ import MySales from './pages/MySales';
 import LinkPage from './pages/Link';
 import Profile from './pages/Profile';
 import SetupPassword from './pages/SetupPassword';
+import Manodopera from './pages/Manodopera';
+import GuadagnoMensile from './pages/GuadagnoMensile';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LogOut } from 'lucide-react';
@@ -90,6 +92,8 @@ const App: React.FC = () => {
           <Route path="/production" element={<ProtectedRoute><Production /></ProtectedRoute>} />
 
           <Route path="/my-sales" element={<ProtectedRoute><MySales /></ProtectedRoute>} />
+          <Route path="/manodopera" element={<ProtectedRoute><Manodopera /></ProtectedRoute>} />
+          <Route path="/guadagno-mensile" element={<ProtectedRoute><GuadagnoMensile /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
           <Route path="/products" element={<ProtectedRoute adminOnly><Products /></ProtectedRoute>} />
