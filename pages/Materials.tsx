@@ -129,7 +129,7 @@ const Materials: React.FC = () => {
       ? rawMaterials.find(r => r.id === key.replace('rm-', ''))?.name || 'Materia Prima'
       : key.split('-')[0];
     return { name, ...data };
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name, 'it', { sensitivity: 'base' }));
 
   const totalProcurementCost = materialList.reduce((sum, m) => sum + m.cost, 0);
 
