@@ -141,7 +141,7 @@ const Recipes: React.FC = () => {
                       <Droplets size={20} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-slate-800 leading-tight truncate max-w-[150px]">{product?.name || 'Prodotto'}</h3>
+                      <h3 className="text-sm font-black text-slate-800 leading-tight uppercase">{product?.name || 'Prodotto'}</h3>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ricetta Prodotto</p>
                     </div>
                   </div>
