@@ -438,7 +438,7 @@ const Variants: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      if (ingForm.name && ingForm.qty > 0) {
+                      if (ingForm.name && ingForm.qty !== 0) {
                         setEditingIngredients([...editingIngredients, {
                           name: ingForm.name,
                           quantity: ingForm.qty,
@@ -448,7 +448,7 @@ const Variants: React.FC = () => {
                         }]);
                         setIngForm({ name: '', qty: 0, unit: 'gr', cost: 0, rawMaterialId: '' });
                       } else {
-                        alert("Inserisci nome e quantità dell'ingrediente.");
+                        alert("Inserisci nome e una quantità valida (diversa da zero) dell'ingrediente.");
                       }
                     }}
                     className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"

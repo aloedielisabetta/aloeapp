@@ -415,7 +415,7 @@ const Orders: React.FC = () => {
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-wider">Data / ID</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-wider">Paziente / Collaboratore</th>
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-wider">Prodotti</th>
-                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-wider">Stato</th>
+
                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-wider text-right">Azioni</th>
               </tr>
             </thead>
@@ -509,9 +509,7 @@ const Orders: React.FC = () => {
                         })}
                       </div>
                     </td>
-                    <td className="px-8 py-5">
-                      <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border border-blue-100">{order.status}</span>
-                    </td>
+
                     <td className="px-8 py-5 text-right">
                       {canModify && (
                         <div className="flex items-center justify-end gap-2">

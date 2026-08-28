@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Users, Package, ShoppingBag, TrendingUp,
   Settings, ClipboardList, Database, Thermometer,
@@ -140,36 +140,70 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     navigate('/');
   };
 
+  const location = useLocation();
   const isAdmin = currentUser?.role === 'admin';
   const userRecord = workspaceUsers.find(u => u.userId === currentUser?.id || u.id === currentUser?.id);
 
   const navItems = [
-    { to: '/', icon: <Users size={20} />, label: 'Pazienti' },
-    { to: '/orders', icon: <ShoppingBag size={20} />, label: 'Ordini' },
-    { to: '/production', icon: <ClipboardList size={20} />, label: 'Produzione' },
+    { to: '/', icon: <Users size={20} />, label: 'Pazienti', color: 'green' },
+    { to: '/orders', icon: <ShoppingBag size={20} />, label: 'Ordini', color: 'green' },
+    { to: '/production', icon: <ClipboardList size={20} />, label: 'Produzione', color: 'green' },
   ];
 
   if (isAdmin) {
     navItems.push(
-      { to: '/products', icon: <Tag size={20} />, label: 'Prodotti/Crea' },
-      { to: '/recipes', icon: <Thermometer size={20} />, label: 'Prodotti / ricette' },
-      { to: '/cambusa', icon: <Package size={20} />, label: 'Cambusa/Materie Prime' },
-      { to: '/variants', icon: <Settings2 size={20} />, label: 'Gestisci varianti' },
-      { to: '/general-costs', icon: <Receipt size={20} />, label: 'Costi Generali' },
-      { to: '/materials', icon: <Database size={20} />, label: 'Ordini per produzione' },
-      { to: '/profits', icon: <TrendingUp size={20} />, label: 'Profitti' },
-      { to: '/reports', icon: <FileText size={20} />, label: 'Report' },
-      { to: '/users', icon: <UserPlus size={20} />, label: 'Accesso Collaboratori' },
-      { to: '/settings', icon: <Settings size={20} />, label: 'Crea Città e Collaboratori' },
-      { to: '/link', icon: <Share2 size={20} />, label: 'Condivisione App' },
-      { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo' }
+      { to: '/products', icon: <Tag size={20} />, label: 'Prodotti/Crea', color: 'amber' },
+      { to: '/recipes', icon: <Thermometer size={20} />, label: 'Prodotti / ricette', color: 'amber' },
+      { to: '/cambusa', icon: <Package size={20} />, label: 'Cambusa/Materie Prime', color: 'rose' },
+      { to: '/variants', icon: <Settings2 size={20} />, label: 'Gestisci varianti', color: 'rose' },
+      { to: '/materials', icon: <Database size={20} />, label: 'Ordini per produzione', color: 'purple' },
+      { to: '/general-costs', icon: <Receipt size={20} />, label: 'Costi Generali', color: 'sky' },
+      { to: '/profits', icon: <TrendingUp size={20} />, label: 'Profitti', color: 'sky' },
+      { to: '/reports', icon: <FileText size={20} />, label: 'Report', color: 'slate' },
+      { to: '/users', icon: <UserPlus size={20} />, label: 'Accesso Collaboratori', color: 'slate' },
+      { to: '/settings', icon: <Settings size={20} />, label: 'Crea Città e Collaboratori', color: 'slate' },
+      { to: '/link', icon: <Share2 size={20} />, label: 'Condivisione App', color: 'slate' },
+      { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo', color: 'slate' }
     );
   } else {
     navItems.push(
-      { to: '/my-sales', icon: <TrendingUp size={20} />, label: 'Mie Vendite' },
-      { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo' }
+      { to: '/my-sales', icon: <TrendingUp size={20} />, label: 'Mie Vendite', color: 'sky' },
+      { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo', color: 'slate' }
     );
   }
+
+  const colorConfig: Record<string, { activeBg: string; iconActive: string; iconInactive: string }> = {
+    green: {
+      activeBg: 'bg-emerald-50/80 text-emerald-800 border-l-4 border-emerald-500 rounded-r-xl rounded-l-none font-bold shadow-sm',
+      iconActive: 'text-emerald-600',
+      iconInactive: 'text-emerald-500/80 group-hover:text-emerald-600'
+    },
+    amber: {
+      activeBg: 'bg-amber-50/80 text-amber-800 border-l-4 border-amber-500 rounded-r-xl rounded-l-none font-bold shadow-sm',
+      iconActive: 'text-amber-600',
+      iconInactive: 'text-amber-500/80 group-hover:text-amber-600'
+    },
+    rose: {
+      activeBg: 'bg-rose-50/80 text-rose-800 border-l-4 border-rose-500 rounded-r-xl rounded-l-none font-bold shadow-sm',
+      iconActive: 'text-rose-600',
+      iconInactive: 'text-rose-500/80 group-hover:text-rose-600'
+    },
+    purple: {
+      activeBg: 'bg-purple-50/80 text-purple-855 border-l-4 border-purple-500 rounded-r-xl rounded-l-none font-bold shadow-sm',
+      iconActive: 'text-purple-600',
+      iconInactive: 'text-purple-500/80 group-hover:text-purple-600'
+    },
+    sky: {
+      activeBg: 'bg-sky-50/80 text-sky-800 border-l-4 border-sky-500 rounded-r-xl rounded-l-none font-bold shadow-sm',
+      iconActive: 'text-sky-600',
+      iconInactive: 'text-sky-500/80 group-hover:text-sky-600'
+    },
+    slate: {
+      activeBg: 'bg-slate-100 text-slate-700 border-l-4 border-slate-500 rounded-r-xl rounded-l-none font-bold shadow-sm',
+      iconActive: 'text-slate-600',
+      iconInactive: 'text-slate-400 group-hover:text-slate-500'
+    }
+  };
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -209,24 +243,28 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </button>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto hide-scrollbar mt-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl transition-all ${isCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to));
+            const config = colorConfig[item.color || 'slate'];
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={`flex items-center gap-3 rounded-xl transition-all group ${isCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'
                 } ${isActive
-                  ? 'bg-green-50 text-green-700 font-semibold shadow-sm'
+                  ? `${config.activeBg}`
                   : 'text-slate-600 hover:bg-slate-50'
-                }`
-              }
-            >
-              <div className="shrink-0">{item.icon}</div>
-              {!isCollapsed && (
-                <span className="overflow-hidden whitespace-nowrap text-sm font-black uppercase tracking-tight text-[10px]">{item.label}</span>
-              )}
-            </NavLink>
-          ))}
+                }`}
+              >
+                <div className={`shrink-0 transition-colors ${isActive ? config.iconActive : config.iconInactive}`}>
+                  {item.icon}
+                </div>
+                {!isCollapsed && (
+                  <span className="overflow-hidden whitespace-nowrap text-sm font-black uppercase tracking-tight text-[10px]">{item.label}</span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="p-4 border-t border-slate-100 space-y-2">
