@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
-import { Coins, TrendingUp, Clock, ShoppingBag, ArrowUpRight, DollarSign, Wallet, FileText } from 'lucide-react';
+import { Coins, Clock, ShoppingBag, Wallet, TrendingUp, DollarSign } from 'lucide-react';
 
 const GuadagnoMensile: React.FC = () => {
   const { orders, products, patients, laborRecords, currentUser, salespersons } = useApp();
@@ -51,7 +51,6 @@ const GuadagnoMensile: React.FC = () => {
     monthlyCommissions += order.commission;
   });
 
-  const monthlyNetSales = monthlySalesValue - monthlyCommissions;
 
   // 2. FILTER LABOR RECORDS
   const monthlyLaborRecords = laborRecords.filter(r => {
@@ -64,6 +63,9 @@ const GuadagnoMensile: React.FC = () => {
 
   // 3. TOTAL COLLABORATOR EARNINGS
   const totalCollaboratorEarnings = monthlyCommissions + monthlyLaborEarnings;
+
+  // 4. NET TO WORKSPACE (Total sold - commissions - labor earnings)
+  const monthlyNetSales = monthlySalesValue - monthlyCommissions - monthlyLaborEarnings;
 
   if (!currentUser?.salespersonId) {
     return (
@@ -152,13 +154,13 @@ const GuadagnoMensile: React.FC = () => {
         </div>
 
         {/* Netto aziendale card */}
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-slate-300 transition-all">
+        <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between group hover:border-slate-800 transition-all">
           <div>
             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Netto Aziendale</p>
-            <h4 className="text-3xl font-black text-slate-800">€{monthlyNetSales.toFixed(2)}</h4>
+            <h4 className="text-3xl font-black text-white">€{monthlyNetSales.toFixed(2)}</h4>
           </div>
-          <div className="mt-6 flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase">
-            <TrendingUp size={14} className="text-slate-400" /> Ritenuta Azienda
+          <div className="mt-6 flex items-center gap-2 text-green-400 text-[10px] font-black uppercase">
+            <TrendingUp size={14} className="text-green-400" /> Spettanza Azienda
           </div>
         </div>
       </div>

@@ -157,7 +157,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       { to: '/variants', icon: <Settings2 size={20} />, label: 'Gestisci varianti', color: 'rose' },
       { to: '/materials', icon: <Database size={20} />, label: 'Ordini per produzione', color: 'purple' },
       { to: '/general-costs', icon: <Receipt size={20} />, label: 'Costi Generali', color: 'sky' },
-      { to: '/manodopera', icon: <Clock size={20} />, label: 'Manodopera', color: 'rose' },
       { to: '/profits', icon: <TrendingUp size={20} />, label: 'Profitti', color: 'sky' },
       { to: '/reports', icon: <FileText size={20} />, label: 'Report', color: 'slate' },
       { to: '/users', icon: <UserPlus size={20} />, label: 'Accesso Collaboratori', color: 'slate' },

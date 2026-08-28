@@ -30,7 +30,6 @@ const MySales: React.FC = () => {
     totalCommissions += order.commission;
   });
 
-  const netSales = totalSales - totalCommissions;
 
   return (
     <div className="space-y-8">
@@ -39,7 +38,7 @@ const MySales: React.FC = () => {
         <p className="text-slate-500 font-medium">Tracciamento delle tue performance e provvigioni.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Totale Venduto</p>
            <h3 className="text-4xl font-black text-slate-800">€{totalSales.toFixed(2)}</h3>
@@ -53,14 +52,6 @@ const MySales: React.FC = () => {
            <h3 className="text-4xl font-black text-orange-700">€{totalCommissions.toFixed(2)}</h3>
            <div className="mt-4 flex items-center gap-2 text-orange-600 text-[10px] font-black uppercase">
               <UserCheck size={14} /> Credito Maturato
-           </div>
-        </div>
-
-        <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl">
-           <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Netto Aziendale</p>
-           <h3 className="text-4xl font-black">€{netSales.toFixed(2)}</h3>
-           <div className="mt-4 flex items-center gap-2 text-green-400 text-[10px] font-black uppercase">
-              <ArrowUpRight size={14} /> Ritenuta Azienda
            </div>
         </div>
       </div>

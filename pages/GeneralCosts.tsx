@@ -88,11 +88,17 @@ const GeneralCosts: React.FC = () => {
       category: 'Manodopera Tot.',
       date: r.date,
       isRecurring: false,
-      isLabor: true
+      isLabor: true,
+      hours: r.hours,
+      hourlyRate: r.hourlyRate
     };
   });
 
-  const displaySingleCosts = [...singleCosts, ...mappedLaborCosts];
+  const displaySingleCosts = [...singleCosts, ...mappedLaborCosts].sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    return dateB - dateA;
+  });
 
   const totalMonthlyLoad = recurringCosts.reduce((sum, c) => sum + c.amount, 0) + displaySingleCosts.reduce((sum, c) => sum + c.amount, 0);
 
@@ -153,24 +159,24 @@ const GeneralCosts: React.FC = () => {
             </h4>
             <span className="text-[10px] font-black text-slate-300 uppercase">{recurringCosts.length} items</span>
           </div>
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 hide-scrollbar">
+          <div className="space-y-2 max-h-[850px] overflow-y-auto pr-2 modal-scrollbar">
             {recurringCosts.map(cost => (
-              <div key={cost.id} className="p-6 bg-amber-50/30 border border-amber-100/50 rounded-[2.5rem] shadow-sm flex justify-between items-center group hover:border-amber-300 transition-all">
-                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 bg-white border border-amber-100 rounded-2xl flex items-center justify-center text-amber-600 shadow-sm group-hover:bg-amber-600 group-hover:text-white transition-all">
-                    {categories.find(c => c.name === cost.category)?.icon || <DollarSign size={24} />}
+              <div key={cost.id} className="p-3.5 bg-amber-50/30 border border-amber-100/50 rounded-[1.75rem] shadow-sm flex justify-between items-center group hover:border-amber-300 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-white border border-amber-100 rounded-xl flex items-center justify-center text-amber-600 shadow-sm group-hover:bg-amber-600 group-hover:text-white transition-all">
+                    {categories.find(c => c.name === cost.category)?.icon || <DollarSign size={16} />}
                   </div>
                   <div>
                     <p className="font-black text-slate-800 uppercase text-xs tracking-tight">{cost.name}</p>
-                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mt-1 flex items-center gap-1.5">
-                      <RefreshCw size={10} /> Ogni Mese • {cost.category}
+                    <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                      <RefreshCw size={8} /> Ogni Mese • {cost.category}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-5">
-                  <p className="text-xl font-black text-slate-900">€{cost.amount.toFixed(2)}</p>
-                  <button onClick={() => handleRemove(cost.id)} className="p-3 text-slate-300 hover:text-red-500 bg-white rounded-xl transition-colors border border-slate-50">
-                    <Trash2 size={20} />
+                <div className="flex items-center gap-4">
+                  <p className="text-lg font-black text-slate-900">€{cost.amount.toFixed(2)}</p>
+                  <button onClick={() => handleRemove(cost.id)} className="p-2.5 text-slate-300 hover:text-red-500 bg-white rounded-xl transition-colors border border-slate-50">
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -191,22 +197,32 @@ const GeneralCosts: React.FC = () => {
             </h4>
             <span className="text-[10px] font-black text-slate-300 uppercase">{displaySingleCosts.length} items</span>
           </div>
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 hide-scrollbar">
+          <div className="space-y-2 max-h-[850px] overflow-y-auto pr-2 modal-scrollbar">
             {displaySingleCosts.map(cost => (
-              <div key={cost.id} className="p-6 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm flex justify-between items-center group hover:border-slate-300 transition-all">
-                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-all">
-                    {categories.find(c => c.name === cost.category)?.icon || <DollarSign size={24} />}
+              <div key={cost.id} className="p-3.5 bg-white border border-slate-100 rounded-[1.75rem] shadow-sm flex justify-between items-center group hover:border-slate-300 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 shadow-inner group-hover:bg-slate-900 group-hover:text-white transition-all">
+                    {categories.find(c => c.name === cost.category)?.icon || <DollarSign size={16} />}
                   </div>
                   <div>
-                    <p className="font-black text-slate-800 uppercase text-xs tracking-tight">{cost.name}</p>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{cost.category} • {new Date(cost.date).toLocaleDateString('it-IT')}</p>
+                    <p className="font-black text-slate-800 uppercase text-xs tracking-tight flex items-center gap-2">
+                      {cost.name}
+                      {(cost as any).isLabor && (
+                        <span className="bg-rose-50 text-rose-600 text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                          {(cost as any).hours} ore
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                      {cost.category} • {new Date(cost.date).toLocaleDateString('it-IT')}
+                      {(cost as any).isLabor && ` • €${(cost as any).hourlyRate.toFixed(2)}/ora`}
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-5">
-                  <p className="text-xl font-black text-slate-900">€{cost.amount.toFixed(2)}</p>
-                  <button onClick={() => handleRemove(cost.id, (cost as any).isLabor)} className="p-3 text-slate-300 hover:text-red-500 bg-slate-50 rounded-xl transition-colors">
-                    <Trash2 size={20} />
+                <div className="flex items-center gap-4">
+                  <p className="text-lg font-black text-slate-900">€{cost.amount.toFixed(2)}</p>
+                  <button onClick={() => handleRemove(cost.id, (cost as any).isLabor)} className="p-2.5 text-slate-300 hover:text-red-500 bg-slate-50 rounded-xl transition-colors">
+                    <Trash2 size={16} />
                   </button>
                 </div>
               </div>
