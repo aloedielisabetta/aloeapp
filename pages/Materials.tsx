@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../store';
-import { Database, AlertCircle, Coins, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { Database, AlertCircle, Coins, ChevronLeft, ChevronRight, Calendar, RefreshCw } from 'lucide-react';
 
 const Materials: React.FC = () => {
-  const { orders, recipes, rawMaterials } = useApp();
+  const { orders, recipes, rawMaterials, syncData, isSyncing } = useApp();
   const [viewDate, setViewDate] = useState(new Date());
 
   const changeMonth = (offset: number) => {
@@ -70,6 +70,8 @@ const Materials: React.FC = () => {
   });
 
   const materialTotals: Record<string, { quantity: number; unit: string; cost: number; isRawMaterial: boolean }> = {};
+
+
 
   selectedMonthOrders.forEach(order => {
     order.items.forEach(item => {
@@ -156,6 +158,14 @@ const Materials: React.FC = () => {
         </div>
         <button onClick={() => changeMonth(1)} className="p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-slate-400">
           <ChevronRight size={20} />
+        </button>
+        <button
+          onClick={() => syncData()}
+          disabled={isSyncing}
+          className="ml-4 flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl shadow-lg transition-all text-xs font-black uppercase tracking-widest disabled:opacity-50"
+        >
+          <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
+          {isSyncing ? 'Aggiornamento...' : 'Aggiorna'}
         </button>
       </div>
 

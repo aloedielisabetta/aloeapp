@@ -68,11 +68,14 @@ interface AppContextType extends AppData {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const toSnake = (obj: any): any => {
   if (Array.isArray(obj)) return obj.map(toSnake);
   if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
     return Object.keys(obj).reduce((acc, key) => {
-      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      // Skip UUID keys (e.g. selectedModifiers keys are group UUIDs)
+      const snakeKey = UUID_RE.test(key) ? key : key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
       let val = obj[key];
       // Convert empty strings for UUID columns to null so Postgres doesn't throw 'invalid input syntax for type uuid: ""'
       if (val === '' && (
@@ -96,7 +99,8 @@ const toCamel = (obj: any): any => {
   if (Array.isArray(obj)) return obj.map(toCamel);
   if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
     return Object.keys(obj).reduce((acc, key) => {
-      const camelKey = key.replace(/([-_][a-z])/g, group =>
+      // Skip UUID keys (e.g. selectedModifiers keys are group UUIDs)
+      const camelKey = UUID_RE.test(key) ? key : key.replace(/([-_][a-z])/g, group =>
         group.toUpperCase().replace('-', '').replace('_', '')
       );
       acc[camelKey] = toCamel(obj[key]);
@@ -269,21 +273,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ]);
 
       // Sanitize orders: ensure items is always an array, and each item has selectedModifiers as string[]
+      // We also repair any corrupted modifier keys (e.g. from prior camel/snake conversion) by matching against the modifier groups list (m)
       const sanitizedOrders = o.map((order: any) => ({
         ...order,
         isHome: !!order.isHome,
         isLab: !!order.isLab,
         isDelivery: !!order.isDelivery,
         isShipping: !!order.isShipping,
-        items: (order.items || []).map((item: any) => ({
-          ...item,
-          selectedModifiers: Object.fromEntries(
-            Object.entries(item.selectedModifiers || {}).map(([k, v]) => [
-              k,
-              Array.isArray(v) ? v : (v && v !== '' ? [v] : [])
-            ])
-          ),
-        })),
+        items: (order.items || []).map((item: any) => {
+          const repairedModifiers: Record<string, string[]> = {};
+          Object.entries(item.selectedModifiers || {}).forEach(([k, v]) => {
+            const normK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const matchingGroup = m.find((group: any) => group.id.toLowerCase().replace(/[^a-z0-9]/g, '') === normK);
+            const targetKey = matchingGroup ? matchingGroup.id : k;
+            repairedModifiers[targetKey] = Array.isArray(v) ? v : (v && v !== '' ? [v] : []);
+          });
+          return {
+            ...item,
+            selectedModifiers: repairedModifiers
+          };
+        }),
       }));
 
       // Sanitize recipes: ensure ingredients is always an array
