@@ -174,7 +174,7 @@ const Orders: React.FC = () => {
         await addOrder({
           patientId: orderData.patientId,
           items: cleanedItems.filter(item => item.quantity > 0),
-          date: new Date(viewDate.getFullYear(), viewDate.getMonth(), 15, 12, 0, 0).toISOString(),
+          date: new Date().toISOString(),
           isExternal: finalIsExternal,
           isHome: orderData.isHome,
           isLab: orderData.isLab,
