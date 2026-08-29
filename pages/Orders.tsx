@@ -134,7 +134,7 @@ const Orders: React.FC = () => {
 
     // Determine target salesperson ID
     const targetSalespersonId = isAdmin
-      ? (orderData.salespersonId || selectedPatient?.salespersonId || undefined)
+      ? (isExternal ? (orderData.salespersonId || selectedPatient?.salespersonId || undefined) : undefined)
       : currentUser?.salespersonId;
 
     // Any order with a salesperson assigned to a collaborator is an external/collaborator order
@@ -368,7 +368,7 @@ const Orders: React.FC = () => {
             <ExternalLink size={18} /> Ordine collaboratore
           </button>
           {isAdmin && (
-            <button onClick={() => { setIsExternal(false); setShowAdd(true); }} className="bg-green-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all font-bold text-sm shadow-xl shadow-green-100">
+            <button onClick={() => { setIsExternal(false); setOrderData(prev => ({ ...prev, salespersonId: '' })); setShowAdd(true); }} className="bg-green-600 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-green-700 transition-all font-bold text-sm shadow-xl shadow-green-100">
               <Plus size={18} /> Mio ordine
             </button>
           )}
@@ -677,9 +677,9 @@ const Orders: React.FC = () => {
                             key={p.id}
                             className="w-full text-left px-6 py-4 hover:bg-slate-50 flex flex-col transition-colors border-b border-slate-50 last:border-0"
                             onClick={() => {
-                              const targetSpId = p.salespersonId || orderData.salespersonId;
+                              const targetSpId = isExternal ? (p.salespersonId || orderData.salespersonId) : '';
                               setOrderData({ ...orderData, patientId: p.id, salespersonId: targetSpId });
-                              if (p.salespersonId) setIsExternal(true);
+                              if (isExternal && p.salespersonId) setIsExternal(true);
                               setPatientSearch(`${p.firstName} ${p.lastName}`);
                               setShowPatientResults(false);
                             }}
@@ -778,7 +778,7 @@ const Orders: React.FC = () => {
               </div>
 
               {/* Sezione Collaboratore (Solo Admin) */}
-              {isAdmin && (
+              {isAdmin && isExternal && (
                 <div className="bg-orange-50/50 p-6 rounded-[2.5rem] border border-orange-100 space-y-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-orange-600 uppercase tracking-widest ml-1">Assegna a Collaboratore</label>
