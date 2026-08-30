@@ -107,8 +107,19 @@ const Recipes: React.FC = () => {
     }
   };
 
-  // Only show recipes that are linked to a product
-  const productRecipes = recipes.filter(r => r.productId);
+  // Only show recipes that are linked to a product, sorted alphabetically by product name
+  const productRecipes = useMemo(() => {
+    return recipes
+      .filter(r => r.productId)
+      .map(recipe => {
+        const product = products.find(p => p.id === recipe.productId);
+        return {
+          ...recipe,
+          productName: product?.name || 'Sconosciuto'
+        };
+      })
+      .sort((a, b) => a.productName.localeCompare(b.productName, 'it', { sensitivity: 'base' }));
+  }, [recipes, products]);
 
   return (
     <div className="space-y-6">
