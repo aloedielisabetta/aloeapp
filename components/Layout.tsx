@@ -166,9 +166,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     );
   } else {
     navItems.push(
+      { to: '/guadagno-mensile', icon: <Coins size={20} />, label: 'Guadagno Mensile', color: 'sky' },
       { to: '/my-sales', icon: <TrendingUp size={20} />, label: 'Mie Vendite', color: 'sky' },
       { to: '/manodopera', icon: <Clock size={20} />, label: 'Manodopera', color: 'rose' },
-      { to: '/guadagno-mensile', icon: <Coins size={20} />, label: 'Guadagno Mensile', color: 'sky' },
       { to: '/profile', icon: <User size={20} />, label: 'Il Mio Profilo', color: 'slate' }
     );
   }
