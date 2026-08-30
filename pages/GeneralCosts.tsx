@@ -90,7 +90,8 @@ const GeneralCosts: React.FC = () => {
       isRecurring: false,
       isLabor: true,
       hours: r.hours,
-      hourlyRate: r.hourlyRate
+      hourlyRate: r.hourlyRate,
+      notes: r.notes
     };
   });
 
@@ -217,6 +218,11 @@ const GeneralCosts: React.FC = () => {
                       {cost.category} • {new Date(cost.date).toLocaleDateString('it-IT')}
                       {(cost as any).isLabor && ` • €${(cost as any).hourlyRate.toFixed(2)}/ora`}
                     </p>
+                    {(cost as any).isLabor && (cost as any).notes && (
+                      <p className="text-[10px] font-bold text-slate-500 italic mt-1 bg-slate-50 border border-slate-100/50 px-2.5 py-1 rounded-xl inline-block max-w-xs truncate" title={(cost as any).notes}>
+                        Nota: {(cost as any).notes}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-4">

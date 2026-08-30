@@ -166,6 +166,7 @@ export interface LaborRecord {
   hourlyRate: number;
   date: string;
   createdAt?: string;
+  notes?: string;
 }
 
 export interface AppData {

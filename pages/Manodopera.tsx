@@ -14,7 +14,8 @@ const Manodopera: React.FC = () => {
     date: new Date().toISOString().split('T')[0],
     hours: 0,
     hourlyRate: 0,
-    salespersonId: currentUser?.salespersonId || ''
+    salespersonId: currentUser?.salespersonId || '',
+    notes: ''
   });
 
   const [errorMsg, setErrorMsg] = useState('');
@@ -74,7 +75,8 @@ const Manodopera: React.FC = () => {
         salespersonId: form.salespersonId,
         hours: form.hours,
         hourlyRate: form.hourlyRate,
-        date: finalDate
+        date: finalDate,
+        notes: form.notes.trim() || undefined
       });
 
       // Reset
@@ -82,7 +84,8 @@ const Manodopera: React.FC = () => {
         date: new Date().toISOString().split('T')[0],
         hours: 0,
         hourlyRate: 0,
-        salespersonId: currentUser?.salespersonId || ''
+        salespersonId: currentUser?.salespersonId || '',
+        notes: ''
       });
       setShowModal(false);
     } catch (e: any) {
@@ -170,7 +173,12 @@ const Manodopera: React.FC = () => {
                 return (
                   <tr key={record.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-4 text-xs font-bold text-slate-500 uppercase">
-                      {new Date(record.date).toLocaleDateString('it-IT')}
+                      <div>{new Date(record.date).toLocaleDateString('it-IT')}</div>
+                      {record.notes && (
+                        <div className="text-[10px] text-slate-400 font-medium normal-case mt-0.5 max-w-xs truncate" title={record.notes}>
+                          {record.notes}
+                        </div>
+                      )}
                     </td>
                     {isAdmin && (
                       <td className="px-8 py-4 text-xs font-black text-slate-700 uppercase">
@@ -308,6 +316,17 @@ const Manodopera: React.FC = () => {
                     />
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Note / Descrizione</label>
+                <textarea
+                  className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-bold text-slate-700 outline-none focus:ring-4 focus:ring-rose-500/10 transition-all text-sm resize-none"
+                  rows={2}
+                  placeholder="Aggiungi una nota sul lavoro svolto (opzionale)..."
+                  value={form.notes}
+                  onChange={e => setForm({ ...form, notes: e.target.value })}
+                />
               </div>
 
               {/* Total preview */}
