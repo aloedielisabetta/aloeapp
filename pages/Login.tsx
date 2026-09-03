@@ -19,12 +19,10 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
 
-  // If user is already authenticated, redirect to main portal
+  // Ensure user is signed out when on the login page; never auto-redirect without user entering credentials
   useEffect(() => {
-    if (!isLoadingProfile && currentUser) {
-      navigate('/');
-    }
-  }, [currentUser, isLoadingProfile, navigate]);
+    supabase.auth.signOut();
+  }, []);
 
   const handleLogin = async () => {
     setLoading(true);

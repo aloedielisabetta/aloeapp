@@ -223,8 +223,8 @@ const Manodopera: React.FC = () => {
       {/* Modal to log hours */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20 flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-rose-50/30">
+          <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-rose-50/30 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-rose-500 text-white shadow-lg shadow-rose-100">
                   <Clock size={24} />
@@ -245,7 +245,7 @@ const Manodopera: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleAdd} className="p-8 space-y-6">
+            <form onSubmit={handleAdd} className="p-8 space-y-6 flex-1 overflow-y-auto modal-scrollbar">
               {errorMsg && (
                 <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-xs font-bold flex items-center gap-2">
                   <AlertCircle size={16} /> {errorMsg}
