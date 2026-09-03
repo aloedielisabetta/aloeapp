@@ -3,4 +3,23 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Clear legacy persistent localStorage auth tokens so closing tab/browser always prompts for login
+if (typeof window !== 'undefined' && window.localStorage) {
+  try {
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (e) {
+    // ignore
+  }
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
+    autoRefreshToken: true,
+    persistSession: true,
+  }
+});
