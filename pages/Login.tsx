@@ -19,10 +19,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(false);
 
-  // Ensure user is signed out when on the login page; never auto-redirect without user entering credentials
-  useEffect(() => {
-    supabase.auth.signOut();
-  }, []);
+
 
   const handleLogin = async () => {
     setLoading(true);
