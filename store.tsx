@@ -380,7 +380,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addOrder = async (o: Omit<Order, 'id' | 'workspaceId'>) => {
     if (!currentWorkspace) return;
-    const newO = { ...o, id: crypto.randomUUID(), workspaceId: currentWorkspace.id };
+    const nowIso = new Date().toISOString();
+    const newO = {
+      ...o,
+      id: crypto.randomUUID(),
+      workspaceId: currentWorkspace.id,
+      createdAt: o.createdAt || nowIso
+    };
     const { error } = await supabase.from('orders').insert(toSnake(newO));
     if (error) throw error;
     setOrders(prev => [newO as Order, ...prev]);

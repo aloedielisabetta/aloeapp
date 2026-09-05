@@ -188,6 +188,7 @@ const Orders: React.FC = () => {
           patientId: orderData.patientId,
           items: cleanedItems.filter(item => item.quantity > 0),
           date: finalOrderDateISO,
+          createdAt: now.toISOString(),
           isExternal: finalIsExternal,
           isHome: orderData.isHome,
           isLab: orderData.isLab,
