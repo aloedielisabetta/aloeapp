@@ -127,6 +127,7 @@ export interface Order {
   patientId: string;
   items: OrderItem[];
   date: string;
+  createdAt?: string;
   isExternal: boolean;
   isHome?: boolean;
   isLab?: boolean;

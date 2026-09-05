@@ -171,10 +171,23 @@ const Orders: React.FC = () => {
           salespersonId: targetSalespersonId,
         });
       } else {
+        const now = new Date();
+        const targetYear = viewDate.getFullYear();
+        const targetMonth = viewDate.getMonth();
+        let finalOrderDateISO: string;
+
+        if (targetYear === now.getFullYear() && targetMonth === now.getMonth()) {
+          finalOrderDateISO = now.toISOString();
+        } else {
+          const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+          const targetDay = Math.min(now.getDate(), daysInMonth);
+          finalOrderDateISO = new Date(targetYear, targetMonth, targetDay, now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
+        }
+
         await addOrder({
           patientId: orderData.patientId,
           items: cleanedItems.filter(item => item.quantity > 0),
-          date: new Date().toISOString(),
+          date: finalOrderDateISO,
           isExternal: finalIsExternal,
           isHome: orderData.isHome,
           isLab: orderData.isLab,
@@ -431,7 +444,9 @@ const Orders: React.FC = () => {
                 return (
                   <tr key={order.id} className={`hover:bg-slate-50/50 transition-colors ${isDeleting ? 'opacity-50 animate-pulse bg-red-50' : ''}`}>
                     <td className="px-8 py-5">
-                      <p className="text-[10px] text-slate-700 font-black flex items-center gap-1 uppercase tracking-tight"><Calendar size={10} /> {order.date ? new Date(order.date).toLocaleDateString('it-IT') : '---'}</p>
+                      <p className="text-[10px] text-slate-700 font-black flex items-center gap-1 uppercase tracking-tight">
+                        <Calendar size={10} /> {order.createdAt ? new Date(order.createdAt).toLocaleDateString('it-IT') : (order.date ? new Date(order.date).toLocaleDateString('it-IT') : '---')}
+                      </p>
                       <p className="text-[9px] text-slate-300 font-bold mt-1 uppercase">ID: {order.id.slice(0, 8)}</p>
                     </td>
                     <td className="px-8 py-5">
