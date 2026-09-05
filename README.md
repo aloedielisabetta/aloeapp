@@ -2,6 +2,10 @@
 
 Comprehensive technical documentation and reference guide for the **Aloe di Elisabetta Management System**.
 
+> [!IMPORTANT]
+> **CRITICAL DEPLOYMENT DIRECTIVE FOR AI ASSISTANTS**:
+> NEVER push or upload code changes to GitHub (`git push`) automatically. ALWAYS keep changes local and wait until the user explicitly requests to push changes to GitHub.
+
 ---
 
 ## 📌 Executive Overview
