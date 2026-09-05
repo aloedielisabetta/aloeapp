@@ -446,7 +446,7 @@ const Orders: React.FC = () => {
                   <tr key={order.id} className={`hover:bg-slate-50/50 transition-colors ${isDeleting ? 'opacity-50 animate-pulse bg-red-50' : ''}`}>
                     <td className="px-8 py-5">
                       <p className="text-[10px] text-slate-700 font-black flex items-center gap-1 uppercase tracking-tight">
-                        <Calendar size={10} /> {order.createdAt ? new Date(order.createdAt).toLocaleDateString('it-IT') : (order.date ? new Date(order.date).toLocaleDateString('it-IT') : '---')}
+                        <Calendar size={10} /> {new Date(order.createdAt || order.date).toLocaleDateString('it-IT')}
                       </p>
                       <p className="text-[9px] text-slate-300 font-bold mt-1 uppercase">ID: {order.id.slice(0, 8)}</p>
                     </td>

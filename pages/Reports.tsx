@@ -150,7 +150,7 @@ const Reports: React.FC = () => {
                 return (
                   <tr key={order.id} className="hover:bg-slate-50/50 transition-colors print:hover:bg-white">
                     <td className="px-8 py-4 text-sm font-medium text-slate-500">
-                      {new Date(order.date).toLocaleDateString('it-IT')}
+                      {new Date(order.createdAt || order.date).toLocaleDateString('it-IT')}
                     </td>
                     <td className="px-8 py-4 font-bold text-slate-700 capitalize">
                       <div className="flex flex-col">

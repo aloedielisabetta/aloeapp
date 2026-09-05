@@ -192,7 +192,7 @@ const GuadagnoMensile: React.FC = () => {
                 return (
                   <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-8 py-4 text-xs font-bold text-slate-500 uppercase">
-                      {new Date(order.date).toLocaleDateString('it-IT')}
+                      {new Date(order.createdAt || order.date).toLocaleDateString('it-IT')}
                     </td>
                     <td className="px-8 py-4">
                       <p className="font-bold text-slate-700">{patient?.firstName} {patient?.lastName}</p>
